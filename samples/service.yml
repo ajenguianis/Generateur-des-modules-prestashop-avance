@@ -1,0 +1,6 @@
+
+  company_name.module_class.service.service_name:
+    class: 'EvoGroup\Module\Moduleclass\Helper\ServiceName'
+    public: true
+    arguments:
+      - '@module_class.logger'

@@ -1,0 +1,65 @@
+
+  module_class.logger.directory:
+    class: 'EvoGroup\Module\Moduleclass\Logger\LoggerDirectory'
+    public: true
+    arguments:
+      - !php/const _PS_ROOT_DIR_
+      - '@=service("module_class.module")'
+  module_class.logger.configuration:
+    class: 'EvoGroup\Module\Moduleclass\Logger\LoggerConfiguration'
+    public: true
+    arguments:
+      - '@module_class.configuration'
+
+  module_class.logger.handler.factory:
+    class: 'EvoGroup\Module\Moduleclass\Logger\LoggerHandlerFactory'
+    public: true
+    arguments:
+      - '@=service("module_class.logger.directory").getPath()'
+      - '@=service("module_class.logger.filename").get()'
+      - '@=service("module_class.logger.configuration").getMaxFiles()'
+      - '@=service("module_class.logger.configuration").getLevel()'
+
+  module_class.logger.handler:
+    class: 'Monolog\Handler\HandlerInterface'
+    public: true
+    factory: ['@module_class.logger.handler.factory', 'build']
+
+  module_class.logger.factory:
+    class: 'EvoGroup\Module\Moduleclass\Logger\LoggerFactory'
+    public: true
+    arguments:
+      - '@=service("module_class.module").name'
+      - '@module_class.logger.handler'
+  module_class.module:
+    class: 'Moduleclass'
+    factory: ['Module', 'getInstanceByName']
+    public: true
+    arguments:
+      - 'Moduleclass'
+  module_class.logger:
+    class: 'Psr\Log\LoggerInterface'
+    public: true
+    factory: ['@module_class.logger.factory', 'build']
+    arguments:
+      - '@module_class.logger.directory'
+  module_class.configuration:
+    class: 'EvoGroup\Module\Moduleclass\Configuration\PrestaShopConfiguration'
+    public: true
+    arguments:
+      - '@module_class.configuration.options.resolver'
+  module_class.configuration.options.resolver:
+    class: 'EvoGroup\Module\Moduleclass\Configuration\PrestaShopConfigurationOptionsResolver'
+    public: true
+    arguments:
+      - '@=service("module_class.shop.provider").getIdentifier()'
+  module_class.shop.provider:
+    class: 'EvoGroup\Module\Moduleclass\Provider\ShopProvider'
+    public: true
+
+  module_class.logger.filename:
+    class: 'EvoGroup\Module\Moduleclass\Logger\LoggerFilename'
+    public: true
+    arguments:
+      - '@=service("module_class.module").name'
+      - '@=service("module_class.shop.provider").getIdentifier()'

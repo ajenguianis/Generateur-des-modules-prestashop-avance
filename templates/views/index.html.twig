@@ -1,0 +1,243 @@
+{% extends 'layouts/base.html.twig' %}
+ {% block body %}
+     <div class="image-container set-full-height">
+
+         <!--   Big container   -->
+         <div class="container">
+             <div class="row">
+                 <div class="col-sm-8 col-sm-offset-2">
+                     <!--      Wizard container        -->
+                     <div class="wizard-container">
+                         <div class="card wizard-card" data-color="green" id="wizardProfile">
+                             <form action="{{ path('generate_module') }}" method="post" enctype="multipart/form-data">
+                                 <!--        You can switch " data-color="purple" "  with one of the next bright colors: "green", "orange", "red", "blue"       -->
+
+                                 <div class="wizard-header">
+                                     <h3 class="wizard-title">
+                                         Create your custom module
+                                     </h3>
+                                     <h5>At the end of this form you will be able to download modules.</h5>
+                                 </div>
+                                 <div class="wizard-navigation">
+                                     <ul>
+                                         <li><a href="#about" data-toggle="tab">General</a></li>
+                                         <li><a href="#backend-tab" data-toggle="tab">Backend setting</a></li>
+                                         <li><a href="#front-tab" data-toggle="tab">Frontend setting</a></li>
+                                         <li><a href="#hooks-tab" data-toggle="tab">Hooks</a></li>
+                                     </ul>
+                                 </div>
+
+                                 <div class="tab-content">
+                                     <div class="tab-pane" id="about">
+                                         <div class="row">
+                                             <h4 class="info-text"> Basic information</h4>
+                                             <div class="col-sm-4 col-sm-offset-1">
+                                                 <div class="picture-container">
+                                                     <div class="picture">
+                                                         <img src="/assets/img/default-avatar.png" class="picture-src"
+                                                              id="wizardPicturePreview" title=""/>
+                                                         <input type="file" id="wizard-picture" name="module_logo">
+                                                         {#                                                         <input type="file" name="logo" id="wizard-picture">#}
+                                                     </div>
+                                                     <h6>Logo</h6>
+                                                 </div>
+                                             </div>
+                                             <div class="col-sm-6">
+                                                 <div class="input-group">
+													<span class="input-group-addon">
+														<i class="material-icons">business</i>
+													</span>
+                                                     <div class="form-group label-floating">
+                                                         <label class="control-label">Company Name
+                                                             <small>(required)</small></label>
+                                                         <input name="company_name" type="text" class="form-control"
+                                                                required>
+                                                     </div>
+                                                 </div>
+
+                                                 <div class="input-group">
+													<span class="input-group-addon">
+														<i class="material-icons">view_module</i>
+													</span>
+                                                     <div class="form-group label-floating">
+                                                         <label class="control-label">Module Name
+                                                             <small>(required)</small></label>
+                                                         <input name="module_name" type="text" class="form-control"
+                                                                required>
+                                                     </div>
+                                                 </div>
+
+                                                 <div class="input-group">
+													<span class="input-group-addon">
+														<i class="material-icons">merge_type</i>
+													</span>
+                                                     <div class="form-group label-floating">
+                                                         <label class="control-label">Module Type
+                                                             <small>(required)</small></label>
+                                                         <select name="module_type" class="form-control" required>
+                                                             <option value=""></option>
+                                                             <option value="standard">Generic module</option>
+                                                             <option value="payment">Payment module</option>
+                                                             <option value="shipping">Shipping module</option>
+                                                         </select>
+                                                     </div>
+                                                 </div>
+
+                                             </div>
+                                             <div class="col-sm-10 col-sm-offset-1">
+                                                 <div class="input-group">
+													<span class="input-group-addon">
+											<i class="material-icons">email</i>
+													</span>
+                                                     <div class="form-group label-floating">
+                                                         <label class="control-label">Contact email
+                                                             <small>(required)</small></label>
+                                                         <input name="email" type="email" class="form-control" required>
+                                                     </div>
+                                                 </div>
+                                                 <div class="input-group">
+													<span class="input-group-addon">
+														<i class="material-icons">badge</i>
+													</span>
+                                                     <div class="form-group label-floating">
+                                                         <label class="control-label">Display name
+                                                             <small>(required)</small></label>
+                                                         <input name="display_name" type="text" class="form-control"
+                                                                required>
+                                                     </div>
+                                                 </div>
+                                                 <div class="input-group">
+													<span class="input-group-addon">
+														<i class="material-icons">description</i>
+													</span>
+                                                     <div class="form-group label-floating">
+                                                         <label class="control-label">Description
+                                                             <small>(required)</small></label>
+                                                         <input name="description" type="text" class="form-control"
+                                                                required>
+                                                     </div>
+                                                 </div>
+                                             </div>
+                                         </div>
+                                     </div>
+                                     <div class="tab-pane" id="backend-tab">
+                                         {{ include('./_partials/models/commandModel.html.twig') }}
+                                         {{ include('./_partials/models/helperModel.html.twig') }}
+                                         {{ include('./_partials/models/serviceModel.html.twig') }}
+                                         <h4 class="info-text"> What are you doing? (checkboxes) </h4>
+                                         <div class="row">
+                                             <div class="col-sm-10 col-sm-offset-1">
+                                                 <div class="col-sm-4">
+                                                     <div class="choice" data-toggle="wizard-checkbox"
+                                                          data-show="command">
+                                                         <input type="checkbox" name="command" value="1">
+                                                         <div class="icon">
+                                                             <i class="fa fa-terminal"></i>
+                                                         </div>
+                                                         <h6>Command</h6>
+                                                     </div>
+                                                 </div>
+                                                 <div class="col-sm-4">
+                                                     <div class="choice" data-toggle="wizard-checkbox" data-show="helper">
+                                                         <input type="checkbox" name="hepler" value="1">
+                                                         <div class="icon">
+                                                             <i class="fa fa-question-circle" aria-hidden="true"></i>
+                                                         </div>
+                                                         <h6>Helper</h6>
+                                                     </div>
+                                                 </div>
+                                                 <div class="col-sm-4">
+                                                     <div class="choice" data-toggle="wizard-checkbox" data-show="service">
+                                                         <input type="checkbox" name="service" value="1">
+                                                         <div class="icon">
+                                                             <i class="fa fa-wrench" aria-hidden="true"></i>
+                                                         </div>
+                                                         <h6>Service</h6>
+                                                     </div>
+                                                 </div>
+                                             </div>
+                                         </div>
+                                         <div class="row">
+                                             <div class="col-sm-10 col-sm-offset-1">
+                                                 <div class="col-sm-4">
+                                                     <div class="choice" data-toggle="wizard-checkbox">
+                                                         <input type="checkbox" name="object_model" value="1">
+                                                         <div class="icon">
+                                                             <i class="fa fa-terminal"></i>
+                                                         </div>
+                                                         <h6>Object Model</h6>
+                                                     </div>
+                                                 </div>
+                                                 <div class="col-sm-4">
+                                                     <div class="choice" data-toggle="wizard-checkbox">
+                                                         <input type="checkbox" name="sym_entity" value="1">
+                                                         <div class="icon">
+                                                             <i class="fa fa-terminal"></i>
+                                                         </div>
+                                                         <h6>Custom model fields</h6>
+                                                     </div>
+                                                 </div>
+                                                 <div class="col-sm-4">
+                                                     <div class="choice" data-toggle="wizard-checkbox">
+                                                         <input type="checkbox" name="log_sys" value="1">
+                                                         <div class="icon">
+                                                             <i class="fa fa-terminal" aria-hidden="true"></i>
+                                                         </div>
+                                                         <h6>Log system</h6>
+                                                     </div>
+                                                 </div>
+                                             </div>
+                                         </div>
+
+                                     </div>
+                                     <div class="tab-pane" id="front-tab">
+
+                                     </div>
+
+                                     <div class="tab-pane" id="hooks-tab">
+                                         <div class="row">
+                                             <div class="form-group col-sm-2">
+                                             </div>
+                                             <div class="form-group col-sm-8">
+                                                 <select name="hooks[]" class="form-control" multiple>
+                                                     <option value="" selected disabled>Choose hooks</option>
+                                                     {% for hook in hooks %}
+                                                         <option value="{{ hook.name }}">{{ hook.name }}</option>
+                                                     {% endfor %}
+                                                 </select>
+                                             </div>
+                                             <div class="form-group col-sm-2">
+                                             </div>
+                                         </div>
+                                     </div>
+                                 </div>
+                                 <div class="wizard-footer">
+                                     <div class="pull-right">
+                                         <input type='button' class='btn btn-next btn-fill btn-success btn-wd'
+                                                name='next' value='Next'/>
+                                         <input type='submit' class='btn btn-finish btn-fill btn-success btn-wd'
+                                                name='download' value='download' Onc/>
+                                     </div>
+
+                                     <div class="pull-left">
+                                         <input type='button' class='btn btn-previous btn-fill btn-default btn-wd'
+                                                name='previous' value='Previous'/>
+                                     </div>
+                                     <div class="clearfix"></div>
+                                 </div>
+                             </form>
+                         </div>
+                     </div> <!-- wizard container -->
+                 </div>
+             </div><!-- end row -->
+         </div> <!--  big container -->
+
+         <div class="footer">
+             <div class="container text-center">
+                 Made with <i class="fa fa-heart heart"></i> by <a href="https://www.evolutive-group.com/">Evolutive
+                     Group</a>.
+             </div>
+         </div>
+     </div>
+
+ {% endblock %}

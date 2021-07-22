@@ -1,0 +1,22 @@
+{
+  "name": "$companyNameLower/$moduleName",
+  "description": "$companyName module $companyNameLower",
+  "type": "prestashop-module",
+  "authors": [
+    {
+      "name": "$companyNameLower",
+      "email": "$contact_email"
+    }
+  ],
+  "config": {
+    "preferred-install": "dist",
+    "prepend-autoloader": false
+  },
+  "autoload": {
+    "psr-4": {
+      "$companyName\\Module\\$nameSpace\\": "src/"
+    },
+    "classmap": ["$moduleName.php", "src/"],
+    "exclude-from-classmap": []
+  }
+}
