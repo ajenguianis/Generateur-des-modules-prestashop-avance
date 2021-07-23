@@ -67,7 +67,6 @@ class GeneratorController extends AbstractController
         $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
         $base_dir = $this->getParameter('kernel.project_dir');
         $this->dir = $base_dir . DIRECTORY_SEPARATOR . 'downloads';
-
         $module_name = $request->request->get('module_name');
 
         $module_dir = $this->dir . '/' . $module_name;
