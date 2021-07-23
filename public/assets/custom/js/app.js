@@ -117,7 +117,7 @@ $(document).ready(function () {
                 '                            <div class="help-block"></div>\n' +
                 '                        </div>\n' +
                 '                    </div>\n' +
-                '                    <div class="field-input col-xs-2">\n' +
+                '                    <div class="field-input col-xs-1">\n' +
                 '                        <div class="form-group">\n' +
                 '                            <label for="field_type_' + count + '_' + CurentModelCount + '" class="control-label">Type</label>\n' +
                 '                            <select class="form-control" name="field_type_' + count + '_' + CurentModelCount + '">\n' +
@@ -167,7 +167,7 @@ $(document).ready(function () {
                 '                            <div class="help-block"></div>\n' +
                 '                        </div>\n' +
                 '                    </div>\n' +
-                '                    <div class="field-input col-xs-2">\n' +
+                '                    <div class="field-input col-xs-1">\n' +
                 '                        <div class="form-group">\n' +
                 '                            <label for="field_length_' + count + '_' + CurentModelCount + '" class="control-label">Length</label>\n' +
                 '                            <input value="" id="service_' + count + '_' + CurentModelCount + '" name="field_length" class="form-control" type="text"\n' +
@@ -191,6 +191,22 @@ $(document).ready(function () {
                 '                            <div class="help-block"></div>\n' +
                 '                        </div>\n' +
                 '                    </div>\n' +
+                '                    <div class="field-input col-xs-1">\n' +
+                '                        <div class="form-group">\n' +
+                '                            <label for="is_lang_' + count + '_' + CurentModelCount + '" class="control-label">Lang?</label>\n' +
+                '                            <input value="" id="service_' + count + '_' + CurentModelCount + '" name="is_lang_' + count + '_' + CurentModelCount + '" class="form-control" type="checkbox"\n' +
+                '                                   placeholder="">\n' +
+                '                            <div class="help-block"></div>\n' +
+                '                        </div>\n' +
+                '                    </div>\n' +
+                '                    <div class="field-input col-xs-1">\n' +
+                '                        <div class="form-group">\n' +
+                '                            <label for="is_shop_' + count + '_' + CurentModelCount + '" class="control-label">Shop?</label>\n' +
+                '                            <input value="" id="service_' + count + '_' + CurentModelCount + '" name="is_shop_' + count + '_' + CurentModelCount + '" class="form-control" type="checkbox"\n' +
+                '                                   placeholder="">\n' +
+                '                            <div class="help-block"></div>\n' +
+                '                        </div>\n' +
+                '                    </div>\n' +
                 '                    <div class="field-input col-xs-2">\n' +
                 '                        <div class="form-group">\n' +
                 '                            <label for="default_value_' + count + '_' + CurentModelCount + '" class="control-label">Default Value</label>\n' +
@@ -199,7 +215,7 @@ $(document).ready(function () {
                 '                            <div class="help-block"></div>\n' +
                 '                        </div>\n' +
                 '                    </div>\n' +
-                '                    <div class="field-input col-xs-2">\n' +
+                '                    <div class="field-input col-xs-1">\n' +
                 '                        <div class="form-group">\n' +
                 '                            <button type="button" class="btn btn-danger remove">\n' +
                 '                                Remove\n' +
@@ -253,7 +269,7 @@ $(document).ready(function () {
                 '                                <div class="help-block"></div>\n' +
                 '                            </div>\n' +
                 '                        </div>\n' +
-                '                        <div class="field-input col-xs-2">\n' +
+                '                        <div class="field-input col-xs-1">\n' +
                 '                            <div class="form-group">\n' +
                 '                                <label for="field_type-1" class="control-label">Type</label>\n' +
                 '                                <select class="form-control" name="field_type_' + count + '_' + modelCount + '">\n' +
@@ -306,7 +322,7 @@ $(document).ready(function () {
                 '                                <div class="help-block"></div>\n' +
                 '                            </div>\n' +
                 '                        </div>\n' +
-                '                        <div class="field-input col-xs-2">\n' +
+                '                        <div class="field-input col-xs-1">\n' +
                 '                            <div class="form-group">\n' +
                 '                                <label for="field_length-1" class="control-label">Length</label>\n' +
                 '                                <input value="" id="service-1" name="field_length_' + count + '_' + modelCount + '" class="form-control" type="text"\n' +
@@ -331,6 +347,24 @@ $(document).ready(function () {
                 '                                <div class="help-block"></div>\n' +
                 '                            </div>\n' +
                 '                        </div>\n' +
+                '                        <div class="field-input col-xs-1">\n' +
+                '                            <div class="form-group">\n' +
+                '                                <label for="is_lang-1" class="control-label">Lang?</label>\n' +
+                '                                <input value="" id="service-1" name="is_lang_' + count + '_' + modelCount + '" class="form-control"\n' +
+                '                                       type="checkbox"\n' +
+                '                                       placeholder="">\n' +
+                '                                <div class="help-block"></div>\n' +
+                '                            </div>\n' +
+                '                        </div>\n' +
+                '                        <div class="field-input col-xs-1">\n' +
+                '                            <div class="form-group">\n' +
+                '                                <label for="is_shop-1" class="control-label">Shop?</label>\n' +
+                '                                <input value="" id="service-1" name="is_shop_' + count + '_' + modelCount + '" class="form-control"\n' +
+                '                                       type="checkbox"\n' +
+                '                                       placeholder="">\n' +
+                '                                <div class="help-block"></div>\n' +
+                '                            </div>\n' +
+                '                        </div>\n' +
                 '                        <div class="field-input col-xs-2">\n' +
                 '                            <div class="form-group">\n' +
                 '                                <label for="default_value-1" class="control-label">Default Value</label>\n' +
@@ -339,7 +373,7 @@ $(document).ready(function () {
                 '                                <div class="help-block"></div>\n' +
                 '                            </div>\n' +
                 '                        </div>\n' +
-                '                        <div class="field-input col-xs-2">\n' +
+                '                        <div class="field-input col-xs-1">\n' +
                 '                            <div class="form-group">\n' +
                 '                                <button type="button" class="btn btn-danger remove">\n' +
                 '                                    Remove\n' +
