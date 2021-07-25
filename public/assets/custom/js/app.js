@@ -170,7 +170,7 @@ $(document).ready(function () {
                 '                    <div class="field-input col-xs-1">\n' +
                 '                        <div class="form-group">\n' +
                 '                            <label for="field_length_' + count + '_' + CurentModelCount + '" class="control-label">Length</label>\n' +
-                '                            <input value="" id="service_' + count + '_' + CurentModelCount + '" name="field_length" class="form-control" type="text"\n' +
+                '                            <input value="" id="service_' + count + '_' + CurentModelCount + '" name="field_length_' + count + '_' + CurentModelCount + '" class="form-control" type="text"\n' +
                 '                                   placeholder="">\n' +
                 '                            <div class="help-block"></div>\n' +
                 '                        </div>\n' +
