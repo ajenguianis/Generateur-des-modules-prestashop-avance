@@ -431,10 +431,13 @@ class ModuleGenerator
         $firstShopIteration = 1;
         $firstLangIteration = 1;
         foreach ($modelData['fields'] as $index => $fieldData) {
-
+            $separator=',';
+            if ($index === array_key_last($modelData['fields'])){
+                $separator=',';
+            }
             $property = $class->addProperty($fieldData['field_name']);
             if ($fieldData['is_auto_increment'] === '1') {
-                $sql .= '`' . $fieldData['field_name'] . '` int(11) NOT NULL AUTO_INCREMENT,' . PHP_EOL;
+                $sql .= '`' . $fieldData['field_name'] . '` int(11) NOT NULL AUTO_INCREMENT'.$separator . PHP_EOL;
                 continue;
             }
             if ($fieldData['is_nullable'] === '1') {
@@ -482,10 +485,10 @@ class ModuleGenerator
                 $fieldsDef[$index]['type'] = '/*self::TYPE_INT*/';
                 if ($fieldData['field_type'] === 'UnsignedInt') {
                     $fieldsDef[$index]['validate'] = 'isUnsignedInt';
-                    $sql .= '`' . $fieldData['field_name'] . '` INT(11) UNSIGNED ' . $nullableCondition . $default_value . ',' . PHP_EOL;
+                    $sql .= '`' . $fieldData['field_name'] . '` INT(11) UNSIGNED ' . $nullableCondition . $default_value . $separator . PHP_EOL;
                 }
                 if ($fieldData['field_type'] === 'INT') {
-                    $sql .= '`' . $fieldData['field_name'] . '` INT(11) ' . $nullableCondition . $default_value . ',' . PHP_EOL;
+                    $sql .= '`' . $fieldData['field_name'] . '` INT(11) ' . $nullableCondition . $default_value . $separator . PHP_EOL;
                 }
             }
             if ($fieldData['field_type'] === 'EMAIL' || $fieldData['field_type'] === 'VARCHAR' || $fieldData['field_type'] === 'HTML') {
@@ -505,7 +508,7 @@ class ModuleGenerator
                     $fieldsDef[$index]['size'] = (int)$fieldData['field_length'];
                 }
                 $size = $fieldsDef[$index]['size'] ?? 255;
-                $sql .= '`' . $fieldData['field_name'] . '` VARCHAR(' . $size . ')  ' . $nullableCondition . $default_value . ',' . PHP_EOL;
+                $sql .= '`' . $fieldData['field_name'] . '` VARCHAR(' . $size . ')  ' . $nullableCondition . $default_value . $separator . PHP_EOL;
             }
             if ($fieldData['field_type'] === 'DECIMAL' || $fieldData['field_type'] === 'FLOAT') {
                 $property->addComment('@var float');
@@ -515,12 +518,12 @@ class ModuleGenerator
                     $size = ($fieldData['field_length'] ?? 20.6);
                 }
                 $size = $size ?? 20.6;
-                $sql .= '`' . $fieldData['field_name'] . '` DECIMAL(' . $size . ')  ' . $nullableCondition . $default_value . ',' . PHP_EOL;
+                $sql .= '`' . $fieldData['field_name'] . '` DECIMAL(' . $size . ')  ' . $nullableCondition . $default_value . $separator . PHP_EOL;
             }
             if ($fieldData['field_type'] === 'TEXT' || $fieldData['field_type'] === 'LONGTEXT') {
                 $property->addComment('@var string');
                 $fieldsDef[$index]['type'] = '/*self::TYPE_STRING*/';
-                $sql .= '`' . $fieldData['field_name'] . '` ' . $fieldData['field_type'] . $nullableCondition . $default_value . ',' . PHP_EOL;
+                $sql .= '`' . $fieldData['field_name'] . '` ' . $fieldData['field_type'] . $nullableCondition . $default_value . $separator . PHP_EOL;
             }
             if ($fieldData['field_type'] === 'TINYINT' || $fieldData['field_type'] === 'BOOLEAN') {
                 $property->addComment('@var bool');
@@ -530,13 +533,13 @@ class ModuleGenerator
                     $size = ($fieldData['field_length'] ?? 1);
                 }
                 $size = $size ?? 1;
-                $sql .= '`' . $fieldData['field_name'] . '` TINYINT(' . $size . ')  ' . $nullableCondition . $default_value . ',' . PHP_EOL;
+                $sql .= '`' . $fieldData['field_name'] . '` TINYINT(' . $size . ')  ' . $nullableCondition . $default_value . $separator . PHP_EOL;
             }
             if ($fieldData['field_type'] === 'DATE' || $fieldData['field_type'] === 'DATETIME') {
                 $fieldsDef[$index]['type'] = '/*self::TYPE_DATE*/';
                 $fieldsDef[$index]['validate'] = 'isDate';
                 $fieldsDef[$index]['copy_post'] = false;
-                $sql .= '`' . $fieldData['field_name'] . '` ' . $fieldData['field_type'] . '  ,' . PHP_EOL;
+                $sql .= '`' . $fieldData['field_name'] . '` ' . $fieldData['field_type'] . '  '.$separator . PHP_EOL;
             }
 
             $fields[$fieldData['field_name']] = $fieldsDef[$index];
@@ -544,12 +547,17 @@ class ModuleGenerator
         if (!empty($sql)) {
             $sql = "'" . $sql;
         }
+
         if (!empty($sql_shop)) {
+
+            $sql_shop=substr($sql_shop, 0, -3);
             $sql_shop = "'" . $sql_shop;
         }
         if (!empty($sql_lang)) {
+            $sql_lang=substr($sql_lang, 0, -3);
             $sql_lang = "'" . $sql_lang;
         }
+
         return ['fields' => $fields, 'sql' => $sql, 'sql_shop' => $sql_shop, 'sql_lang' => $sql_lang];
     }
 
