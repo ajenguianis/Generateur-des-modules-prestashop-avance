@@ -89,6 +89,7 @@ class GeneratorController extends AbstractController
         if ($request->request->get('log_sys')) {
             $this->_codeGen->generateLogPachage();
         }
+
         if (isset($this->_codeGen->module_data['commands']) && !empty($this->_codeGen->module_data['commands'])) {
             $this->_codeGen->generateCommands();
         }
@@ -101,7 +102,9 @@ class GeneratorController extends AbstractController
             }
             $this->_codeGen->generateServices();
         }
-
+        if (isset($this->_codeGen->module_data['models']) && !empty($this->_codeGen->module_data['models'])) {
+            $this->_codeGen->generateModels();
+        }
         $zip_path = $base_dir.'/downloads/'.$module_name.'.zip';
         HZip::zipDir($module_dir, $zip_path);
         $response = new Response();
@@ -134,25 +137,53 @@ class GeneratorController extends AbstractController
         $commands = [];
         $helpers = [];
         $services = [];
+        $models=[];
+
         if (!empty($data = $request->request->all())) {
             foreach ($request->request->all() as $key => $item) {
 
-                if (strpos($key, 'command_name') !== false) {
+                if (!empty($item) && strpos($key, 'command_name') !== false) {
                     $commands[$key]['class'] = $item;
                     $callKey = str_replace('command_name', 'command_call', $key);
                     if (isset($data[$callKey])) {
                         $commands[$key]['call'] = $data[$callKey];
                     }
                 }
-                if (strpos($key, 'helper_name') !== false) {
+                if (!empty($item) && strpos($key, 'helper_name') !== false) {
                     $helpers[] = $item;
 
                 }
-                if (strpos($key, 'service_name') !== false) {
+                if (!empty($item) && strpos($key, 'service_name') !== false) {
                     $services[] = $item;
                 }
-            }
 
+                if (!empty($item) && strpos($key, 'object_name') !== false) {
+                    $object_name_key=explode('_', $key);
+                    $objectIteration=$object_name_key[2];
+                    $models[$objectIteration]['class'] = $item;
+                    $models[$objectIteration]['table'] = $data['table_name_'.$objectIteration];
+                }
+                if (!empty($item) && strpos($key, 'field_name') !== false) {
+                    $field_name_key=explode('_', $key);
+                    $objectIteration=$field_name_key[3];
+                    $fieldIteration=$field_name_key[2];
+                    $combinIteration=$fieldIteration.'_'.$objectIteration;
+                    if(empty($item) || !isset($data['field_type_'.$combinIteration]) || empty($data['field_type_'.$combinIteration])){
+                        continue;
+                    }
+                    if(!empty($data['is_auto_increment_'.$combinIteration])){
+                        $models[$objectIteration]['primary']=$item;
+                    }
+                    $models[$objectIteration]['fields'][$fieldIteration]['field_name']=$item;
+                    $models[$objectIteration]['fields'][$fieldIteration]['field_type']=$data['field_type_'.$combinIteration];
+                    $models[$objectIteration]['fields'][$fieldIteration]['field_length']=$data['field_length_'.$combinIteration] ?? null;
+                    $models[$objectIteration]['fields'][$fieldIteration]['is_auto_increment']=$data['is_auto_increment_'.$combinIteration] ?? null;
+                    $models[$objectIteration]['fields'][$fieldIteration]['is_nullable']=$data['is_nullable_'.$combinIteration] ?? null;
+                    $models[$objectIteration]['fields'][$fieldIteration]['is_lang']=$data['is_lang_'.$combinIteration] ?? null;
+                    $models[$objectIteration]['fields'][$fieldIteration]['is_shop']=$data['is_shop_'.$combinIteration] ?? null;
+                    $models[$objectIteration]['fields'][$fieldIteration]['default_value']=$data['default_value_'.$combinIteration] ?? null;
+                }
+            }
         }
 
         $data = $request->request->all();
@@ -164,6 +195,9 @@ class GeneratorController extends AbstractController
         }
         if (!empty($services)) {
             $data = array_merge(['services' => $services], $data);
+        }
+        if (!empty($models)) {
+            $data = array_merge(['models' => $models], $data);
         }
         return new ModuleGenerator($base_dir, $module_dir, $data);
     }

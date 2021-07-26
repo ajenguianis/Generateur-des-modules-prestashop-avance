@@ -7,9 +7,20 @@ use Symfony\Component\Finder\Finder;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Nette\PhpGenerator\ClassType;
 use Nette\PhpGenerator\Printer;
+use Nette\PhpGenerator\PhpNamespace;
 
 class ModuleGenerator
 {
+    /**
+     * List of field types.
+     */
+    const TYPE_INT = 1;
+    const TYPE_BOOL = 2;
+    const TYPE_FLOAT = 4;
+    const TYPE_DATE = 5;
+    const TYPE_HTML = 6;
+    const TYPE_NOTHING = 7;
+    const TYPE_SQL = 8;
     private $base_dir;
     private $module_dir;
     public $module_data;
@@ -61,7 +72,7 @@ class ModuleGenerator
     {
         if (!empty($_FILES)) {
             $file = $_FILES['module_logo'];
-            if(empty($file['tmp_name'])){
+            if (empty($file['tmp_name'])) {
                 return false;
             }
             $uploadedFile = new UploadedFile($file['tmp_name'], $file['name'], $file['type'], $file['error'], false);
@@ -248,14 +259,14 @@ class ModuleGenerator
     public function generateCommands()
     {
 
-        foreach ($this->module_data['commands'] as $key=>$commandData) {
+        foreach ($this->module_data['commands'] as $key => $commandData) {
 
             $content = file_get_contents($this->base_dir . '/samples/src/Command/SampleCommand.php');
             $content = $this->replaceStandardStrings($content);
             $content = str_replace('SampleCommand', $commandData['class'], $content);
             $callCommand = $commandData['call'] ?? $commandData['class'] . ':execute';
             $content = str_replace('command_call', $callCommand, $content);
-            $commandDir=$this->module_dir . DIRECTORY_SEPARATOR . 'src' . DIRECTORY_SEPARATOR . 'Command';
+            $commandDir = $this->module_dir . DIRECTORY_SEPARATOR . 'src' . DIRECTORY_SEPARATOR . 'Command';
             if (!is_dir($commandDir) && !@mkdir($commandDir, 0777, true) && !is_dir($commandDir)) {
                 throw new \RuntimeException(sprintf('Cannot create directory "%s"', $commandDir));
             }
@@ -280,7 +291,7 @@ class ModuleGenerator
             $content = file_get_contents($this->base_dir . '/samples/src/Helper/Helper.php');
             $content = $this->replaceStandardStrings($content);
             $content = str_replace('SampleHelper', $helper_name, $content);
-            $helperDir=$this->module_dir . DIRECTORY_SEPARATOR . 'src' . DIRECTORY_SEPARATOR . 'Helper';
+            $helperDir = $this->module_dir . DIRECTORY_SEPARATOR . 'src' . DIRECTORY_SEPARATOR . 'Helper';
             if (!is_dir($helperDir) && !@mkdir($helperDir, 0777, true) && !is_dir($helperDir)) {
                 throw new \RuntimeException(sprintf('Cannot create directory "%s"', $helperDir));
             }
@@ -293,6 +304,7 @@ class ModuleGenerator
         }
         return true;
     }
+
     /**
      * @return bool
      */
@@ -304,7 +316,7 @@ class ModuleGenerator
             $content = file_get_contents($this->base_dir . '/samples/src/Service/Service.php');
             $content = $this->replaceStandardStrings($content);
             $content = str_replace('Service', $service_name, $content);
-            $serviceDir=$this->module_dir . DIRECTORY_SEPARATOR . 'src' . DIRECTORY_SEPARATOR . 'Service';
+            $serviceDir = $this->module_dir . DIRECTORY_SEPARATOR . 'src' . DIRECTORY_SEPARATOR . 'Service';
             if (!is_dir($serviceDir) && !@mkdir($serviceDir, 0777, true) && !is_dir($serviceDir)) {
                 throw new \RuntimeException(sprintf('Cannot create directory "%s"', $serviceDir));
             }
@@ -316,6 +328,229 @@ class ModuleGenerator
             $this->addService($ymlcontent);
         }
         return true;
+    }
+
+    public function generateModels()
+    {
+        $modelDir = $this->module_dir . DIRECTORY_SEPARATOR . 'src' . DIRECTORY_SEPARATOR . 'Model';
+        if (!is_dir($modelDir) && !@mkdir($modelDir, 0777, true) && !is_dir($modelDir)) {
+            throw new \RuntimeException(sprintf('Cannot create directory "%s"', $modelDir));
+        }
+        $firstModel = 1;
+        foreach ($this->module_data['models'] as $modelData) {
+
+            if (empty($modelData['class'])) {
+                return false;
+            }
+
+            $params = $this->getParams();
+            $namespace = new PhpNamespace($params['upper']['company_name'] . DIRECTORY_SEPARATOR . 'Module' . DIRECTORY_SEPARATOR . $params['upper']['module_name'] . DIRECTORY_SEPARATOR . 'Model');
+            $namespace->addUse('ObjectModel');
+            $class = $namespace->addClass($modelData['class']);
+            $class->addExtend('ObjectModel');
+            $fielsData = $this->renderModel($modelData, $class);
+            $fields = $fielsData['fields'];
+            $sql = $fielsData['sql'];
+            $sql_shop = $fielsData['sql_shop'];
+            $sql_lang = $fielsData['sql_lang'];
+
+            $definition = [
+                'table' => $modelData['table'],
+                'primary' => $modelData['primary'] ?? 'id_' . $modelData['table'],
+                'fields' => $fields
+            ];
+
+            $definitionProp = $class->addProperty('definition');
+            $definitionProp->setStatic()->setValue($definition);
+            $printer = new Printer;
+            $printer->setTypeResolving(false);
+            $code = $printer->printNamespace($namespace);
+            $code = str_replace(array("'/*", "*/'"), '', $code);
+            file_put_contents($this->module_dir . '/src/Model/' . $modelData['class'] . '.php', '<?php');
+            file_put_contents($this->module_dir . '/src/Model/' . $modelData['class'] . '.php', PHP_EOL, FILE_APPEND);
+            file_put_contents($this->module_dir . '/src/Model/' . $modelData['class'] . '.php', $code, FILE_APPEND);
+
+            $sql .= 'PRIMARY KEY  (`' . $modelData['primary'] . '`)' . PHP_EOL;
+            $sql .= ') ENGINE=/*_MYSQL_ENGINE_*/ DEFAULT CHARSET=utf8;' . PHP_EOL;
+            $sql = str_replace(array("/*", "*/"), array("'.", ".'"), $sql);
+
+
+            if (!empty($sql_shop)) {
+                $sql_shop .= ') ENGINE=/*_MYSQL_ENGINE_*/ DEFAULT CHARSET=utf8;' . PHP_EOL;
+                $sql_shop .= 'ALTER TABLE `/*_DB_PREFIX_*/' . $modelData['table'] . '_shop` DROP PRIMARY KEY, ADD PRIMARY KEY (`' . $modelData['primary'] . '`, `id_shop`) USING BTREE;' . PHP_EOL;
+                $sql_shop = str_replace(array("/*", "*/"), array("'.", ".'"), $sql_shop);
+            }
+            if (!empty($sql_lang)) {
+                $sql_lang .= ') ENGINE=/*_MYSQL_ENGINE_*/ DEFAULT CHARSET=utf8;' . PHP_EOL;
+                $sql_lang .= 'ALTER TABLE `/*_DB_PREFIX_*/' . $modelData['table'] . '_lang` DROP PRIMARY KEY, ADD PRIMARY KEY (`' . $modelData['primary'] . '`, `id_shop`, `id_lang`) USING BTREE;' . PHP_EOL;
+                $sql_lang = str_replace(array("/*", "*/"), array("'.", ".'"), $sql_lang);
+            }
+            $installContent = file($this->base_dir . DIRECTORY_SEPARATOR . 'samples' . DIRECTORY_SEPARATOR . 'install_vg.php');
+            if (!empty($sql)) {
+                $sql = '$sql[]=' . $sql . "';" . PHP_EOL;
+            }
+            if (!empty($sql_shop)) {
+                $sql_shop = '$sql[]=' . $sql_shop . "';" . PHP_EOL;
+            }
+            if (!empty($sql_lang)) {
+                $sql_lang = '$sql[]=' . $sql_lang . "';" . PHP_EOL;
+            }
+            if ($firstModel == 1) {
+                $installContent[26] = $sql . $sql_lang . $sql_shop;
+                file_put_contents($this->module_dir . DIRECTORY_SEPARATOR . 'sql/install.php', implode("", $installContent));
+            } else {
+                file_put_contents($this->module_dir . DIRECTORY_SEPARATOR . 'sql/install.php', PHP_EOL, FILE_APPEND);
+                file_put_contents($this->module_dir . DIRECTORY_SEPARATOR . 'sql/install.php', $sql . $sql_lang . $sql_shop, FILE_APPEND);
+            }
+            $firstModel++;
+        }
+        $executionLoop = 'foreach ($sql as $query) {
+    if (Db::getInstance()->execute($query) == false) {
+        return false;
+    }
+}';
+        file_put_contents($this->module_dir . DIRECTORY_SEPARATOR . 'sql/install.php', PHP_EOL, FILE_APPEND);
+        file_put_contents($this->module_dir . DIRECTORY_SEPARATOR . 'sql/install.php', $executionLoop, FILE_APPEND);
+
+        return true;
+    }
+
+    /**
+     * @param $modelData
+     * @param $class
+     * @return array
+     */
+    public function renderModel($modelData, $class)
+    {
+        $fields = [];
+        $fieldsDef = [];
+        $sql = '';
+        $sql_shop = '';
+        $sql_lang = '';
+        $sql .= 'CREATE TABLE IF NOT EXISTS `/*_DB_PREFIX_*/' . $modelData['table'] . '` (' . PHP_EOL;
+        $firstShopIteration = 1;
+        $firstLangIteration = 1;
+        foreach ($modelData['fields'] as $index => $fieldData) {
+
+            $property = $class->addProperty($fieldData['field_name']);
+            if ($fieldData['is_auto_increment'] === '1') {
+                $sql .= '`' . $fieldData['field_name'] . '` int(11) NOT NULL AUTO_INCREMENT,' . PHP_EOL;
+                continue;
+            }
+            if ($fieldData['is_nullable'] === '1') {
+                $property->setNullable();
+                $nullableCondition = ' NULL';
+            } else {
+                $nullableCondition = ' NOT NULL';
+            }
+            $default_value = '';
+            if (!empty($fieldData['default_value'])) {
+                $default_value = ' DEFAULT ' . $fieldData['default_value'];
+            }
+
+            if (!empty($fieldData['is_shop']) && $fieldData['is_shop'] !== '' && $fieldData['is_shop'] !== null) {
+                $fieldsDef[$index]['shop'] = true;
+
+                if ($firstShopIteration == 1) {
+                    $sql_shop .= 'CREATE TABLE IF NOT EXISTS `/*_DB_PREFIX_*/' . $modelData['table'] . '_shop` (' . PHP_EOL;
+                    $sql_shop .= '`' . $modelData['primary'] . '` int(11) NOT NULL,' . PHP_EOL;
+                    $sql_shop .= '`id_shop` int(11) UNSIGNED NOT NULL,' . PHP_EOL;
+                }
+                if (!empty($fieldData['field_name']) && $fieldData['field_type']) {
+                    $sql_shop .= '`' . $fieldData['field_name'] . '` ' . $fieldData['field_type'] . '(' . $fieldData['field_length'] . ')' . $nullableCondition . $default_value . ',' . PHP_EOL;
+                }
+
+                $firstShopIteration++;
+            }
+
+
+            if (!empty($fieldData['is_lang']) && $fieldData['is_lang'] !== '' && $fieldData['is_lang'] !== null) {
+                $fieldsDef[$index]['lang'] = true;
+
+                if ($firstLangIteration == 1) {
+                    $sql_lang .= 'CREATE TABLE IF NOT EXISTS `/*_DB_PREFIX_*/' . $modelData['table'] . '_lang` (' . PHP_EOL;
+                    $sql_lang .= '`' . $modelData['primary'] . '` int(11) NOT NULL,' . PHP_EOL;
+                    $sql_lang .= '`id_shop` int(11) UNSIGNED NOT NULL,' . PHP_EOL;
+                    $sql_lang .= '`id_lang` int(11) UNSIGNED NOT NULL,' . PHP_EOL;
+                }
+                $sql_lang .= '`' . $fieldData['field_name'] . '` ' . $fieldData['field_type'] . '(' . $fieldData['field_length'] . ')' . $nullableCondition . $default_value . ',' . PHP_EOL;
+                $firstLangIteration++;
+            }
+
+            if ($fieldData['field_type'] === 'INT' || $fieldData['field_type'] === 'UnsignedInt') {
+                $property->addComment('@var int');
+                $fieldsDef[$index]['type'] = '/*self::TYPE_INT*/';
+                if ($fieldData['field_type'] === 'UnsignedInt') {
+                    $fieldsDef[$index]['validate'] = 'isUnsignedInt';
+                    $sql .= '`' . $fieldData['field_name'] . '` INT(11) UNSIGNED ' . $nullableCondition . $default_value . ',' . PHP_EOL;
+                }
+                if ($fieldData['field_type'] === 'INT') {
+                    $sql .= '`' . $fieldData['field_name'] . '` INT(11) ' . $nullableCondition . $default_value . ',' . PHP_EOL;
+                }
+            }
+            if ($fieldData['field_type'] === 'EMAIL' || $fieldData['field_type'] === 'VARCHAR' || $fieldData['field_type'] === 'HTML') {
+                $property->addComment('@var string');
+                $fieldsDef[$index]['type'] = '/*self::TYPE_STRING*/';
+                if ($fieldData['field_type'] === 'EMAIL') {
+                    $fieldsDef[$index]['validate'] = 'isEmail';
+                }
+                if ($fieldData['field_type'] === 'HTML') {
+                    $fieldsDef[$index]['type'] = '/*self::TYPE_HTML*/';
+                    $fieldsDef[$index]['validate'] = 'isCleanHtml';
+                }
+                if ($fieldData['field_type'] === 'VARCHAR') {
+                    $fieldsDef[$index]['validate'] = 'isGenericName';
+                }
+                if (!empty($fieldData['field_length']) && $fieldData['field_length'] !== '') {
+                    $fieldsDef[$index]['size'] = (int)$fieldData['field_length'];
+                }
+                $size = $fieldsDef[$index]['size'] ?? 255;
+                $sql .= '`' . $fieldData['field_name'] . '` VARCHAR(' . $size . ')  ' . $nullableCondition . $default_value . ',' . PHP_EOL;
+            }
+            if ($fieldData['field_type'] === 'DECIMAL' || $fieldData['field_type'] === 'FLOAT') {
+                $property->addComment('@var float');
+                $fieldsDef[$index]['type'] = '/*self::TYPE_FLOAT*/';
+                $fieldsDef[$index]['validate'] = 'isPrice';
+                if (!empty($fieldData['field_length']) && $fieldData['field_length'] !== '') {
+                    $size = ($fieldData['field_length'] ?? 20.6);
+                }
+                $size = $size ?? 20.6;
+                $sql .= '`' . $fieldData['field_name'] . '` DECIMAL(' . $size . ')  ' . $nullableCondition . $default_value . ',' . PHP_EOL;
+            }
+            if ($fieldData['field_type'] === 'TEXT' || $fieldData['field_type'] === 'LONGTEXT') {
+                $property->addComment('@var string');
+                $fieldsDef[$index]['type'] = '/*self::TYPE_STRING*/';
+                $sql .= '`' . $fieldData['field_name'] . '` ' . $fieldData['field_type'] . $nullableCondition . $default_value . ',' . PHP_EOL;
+            }
+            if ($fieldData['field_type'] === 'TINYINT' || $fieldData['field_type'] === 'BOOLEAN') {
+                $property->addComment('@var bool');
+                $fieldsDef[$index]['type'] = '/*self::TYPE_BOOL*/';
+                $fieldsDef[$index]['validate'] = 'isBool';
+                if (!empty($fieldData['field_length']) && $fieldData['field_length'] !== '') {
+                    $size = ($fieldData['field_length'] ?? 1);
+                }
+                $size = $size ?? 1;
+                $sql .= '`' . $fieldData['field_name'] . '` TINYINT(' . $size . ')  ' . $nullableCondition . $default_value . ',' . PHP_EOL;
+            }
+            if ($fieldData['field_type'] === 'DATE' || $fieldData['field_type'] === 'DATETIME') {
+                $fieldsDef[$index]['type'] = '/*self::TYPE_DATE*/';
+                $fieldsDef[$index]['validate'] = 'isDate';
+                $fieldsDef[$index]['copy_post'] = false;
+                $sql .= '`' . $fieldData['field_name'] . '` ' . $fieldData['field_type'] . '  ,' . PHP_EOL;
+            }
+
+            $fields[$fieldData['field_name']] = $fieldsDef[$index];
+        }
+        if (!empty($sql)) {
+            $sql = "'" . $sql;
+        }
+        if (!empty($sql_shop)) {
+            $sql_shop = "'" . $sql_shop;
+        }
+        if (!empty($sql_lang)) {
+            $sql_lang = "'" . $sql_lang;
+        }
+        return ['fields' => $fields, 'sql' => $sql, 'sql_shop' => $sql_shop, 'sql_lang' => $sql_lang];
     }
 
 }
