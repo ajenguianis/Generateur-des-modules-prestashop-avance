@@ -430,6 +430,7 @@ class ModuleGenerator
         $sql .= 'CREATE TABLE IF NOT EXISTS `/*_DB_PREFIX_*/' . $modelData['table'] . '` (' . PHP_EOL;
         $firstShopIteration = 1;
         $firstLangIteration = 1;
+
         foreach ($modelData['fields'] as $index => $fieldData) {
             $separator=',';
             if ($index === array_key_last($modelData['fields'])){
@@ -447,7 +448,7 @@ class ModuleGenerator
                 $nullableCondition = ' NOT NULL';
             }
             $default_value = '';
-            if (!empty($fieldData['default_value'])) {
+            if ($fieldData['default_value']!="") {
                 $default_value = ' DEFAULT ' . $fieldData['default_value'];
             }
 
@@ -491,7 +492,7 @@ class ModuleGenerator
                     $sql .= '`' . $fieldData['field_name'] . '` INT(11) ' . $nullableCondition . $default_value . $separator . PHP_EOL;
                 }
             }
-            if ($fieldData['field_type'] === 'EMAIL' || $fieldData['field_type'] === 'VARCHAR' || $fieldData['field_type'] === 'HTML') {
+            if ($fieldData['field_type'] === 'EMAIL' || $fieldData['field_type'] === 'VARCHAR' || $fieldData['field_type'] === 'HTML' || $fieldData['field_type'] === 'PERCENT') {
                 $property->addComment('@var string');
                 $fieldsDef[$index]['type'] = '/*self::TYPE_STRING*/';
                 if ($fieldData['field_type'] === 'EMAIL') {
