@@ -432,13 +432,13 @@ class ModuleGenerator
         $firstLangIteration = 1;
 
         foreach ($modelData['fields'] as $index => $fieldData) {
-            $separator=',';
-            if ($index === array_key_last($modelData['fields'])){
-                $separator=',';
+            $separator = ',';
+            if ($index === array_key_last($modelData['fields'])) {
+                $separator = ',';
             }
             $property = $class->addProperty($fieldData['field_name']);
             if ($fieldData['is_auto_increment'] === '1') {
-                $sql .= '`' . $fieldData['field_name'] . '` int(11) NOT NULL AUTO_INCREMENT'.$separator . PHP_EOL;
+                $sql .= '`' . $fieldData['field_name'] . '` int(11) NOT NULL AUTO_INCREMENT' . $separator . PHP_EOL;
                 continue;
             }
             if ($fieldData['is_nullable'] === '1') {
@@ -448,7 +448,7 @@ class ModuleGenerator
                 $nullableCondition = ' NOT NULL';
             }
             $default_value = '';
-            if ($fieldData['default_value']!="") {
+            if ($fieldData['default_value'] != "") {
                 $default_value = ' DEFAULT ' . $fieldData['default_value'];
             }
 
@@ -540,7 +540,7 @@ class ModuleGenerator
                 $fieldsDef[$index]['type'] = '/*self::TYPE_DATE*/';
                 $fieldsDef[$index]['validate'] = 'isDate';
                 $fieldsDef[$index]['copy_post'] = false;
-                $sql .= '`' . $fieldData['field_name'] . '` ' . $fieldData['field_type'] . '  '.$separator . PHP_EOL;
+                $sql .= '`' . $fieldData['field_name'] . '` ' . $fieldData['field_type'] . '  ' . $separator . PHP_EOL;
             }
 
             $fields[$fieldData['field_name']] = $fieldsDef[$index];
@@ -551,15 +551,30 @@ class ModuleGenerator
 
         if (!empty($sql_shop)) {
 
-            $sql_shop=substr($sql_shop, 0, -3);
+            $sql_shop = substr($sql_shop, 0, -3);
             $sql_shop = "'" . $sql_shop;
         }
         if (!empty($sql_lang)) {
-            $sql_lang=substr($sql_lang, 0, -3);
+            $sql_lang = substr($sql_lang, 0, -3);
             $sql_lang = "'" . $sql_lang;
         }
 
         return ['fields' => $fields, 'sql' => $sql, 'sql_shop' => $sql_shop, 'sql_lang' => $sql_lang];
+    }
+
+    public function generateModelCustomFields()
+    {
+        $overrideDir = $this->module_dir . DIRECTORY_SEPARATOR . 'override';
+        if (!is_dir($overrideDir) && !@mkdir($overrideDir, 0777, true) && !is_dir($overrideDir)) {
+            throw new \RuntimeException(sprintf('Cannot create directory "%s"', $overrideDir));
+        }
+        $firstModel = 1;
+        foreach ($this->module_data['objectModels'] as $modelData) {
+
+            if (empty($modelData['objectModels'])) {
+                return false;
+            }
+        }
     }
 
 }

@@ -125,6 +125,7 @@
                                          {{ include('./_partials/models/helperModel.html.twig') }}
                                          {{ include('./_partials/models/serviceModel.html.twig') }}
                                          {{ include('./_partials/models/objectModel.html.twig') }}
+                                         {{ include('./_partials/models/customFieldModel.html.twig') }}
                                          <h4 class="info-text"> What are you doing? (checkboxes) </h4>
                                          <div class="row">
                                              <div class="col-sm-10 col-sm-offset-1">
@@ -170,7 +171,7 @@
                                                      </div>
                                                  </div>
                                                  <div class="col-sm-4">
-                                                     <div class="choice" data-toggle="wizard-checkbox">
+                                                     <div class="choice" data-toggle="wizard-checkbox" data-show="custom-field">
                                                          <input type="checkbox" name="sym_entity" value="1">
                                                          <div class="icon">
                                                              <i class="fa fa-terminal"></i>

@@ -50,7 +50,7 @@ class GeneratorController extends AbstractController
         $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
         $connection = $this->getDoctrine()->getConnection();
         $statement = $connection->prepare("
-				SELECT `name` FROM ps_hook s");
+				SELECT `name` FROM hook s");
 
         $statement->execute();
         $hooks = $statement->fetchAll();
@@ -105,6 +105,9 @@ class GeneratorController extends AbstractController
         if (isset($this->_codeGen->module_data['models']) && !empty($this->_codeGen->module_data['models'])) {
             $this->_codeGen->generateModels();
         }
+        if (isset($this->_codeGen->module_data['objectModels']) && !empty($this->_codeGen->module_data['objectModels'])) {
+            $this->_codeGen->generateModelCustomFields();
+        }
         $zip_path = $base_dir.'/downloads/'.$module_name.'.zip';
         HZip::zipDir($module_dir, $zip_path);
         $response = new Response();
@@ -138,6 +141,7 @@ class GeneratorController extends AbstractController
         $helpers = [];
         $services = [];
         $models=[];
+        $objectModels=[];
 
         if (!empty($data = $request->request->all())) {
             foreach ($request->request->all() as $key => $item) {
@@ -183,6 +187,30 @@ class GeneratorController extends AbstractController
                     $models[$objectIteration]['fields'][$fieldIteration]['is_shop']=$data['is_shop_'.$combinIteration] ?? null;
                     $models[$objectIteration]['fields'][$fieldIteration]['default_value']=$data['default_value_'.$combinIteration] ?? null;
                 }
+                if (!empty($item) && strpos($key, 'object_model_name') !== false) {
+                    $object_name_key=explode('_', $key);
+                    if(!isset($object_name_key[3])){
+                        continue;
+                    }
+                    $objectIteration=$object_name_key[3];
+                    $objectModels[$objectIteration]['class'] = $item;
+                }
+                if (!empty($item) && strpos($key, 'column_name') !== false) {
+                    $field_name_key=explode('_', $key);
+                    $objectIteration=$field_name_key[3];
+                    $fieldIteration=$field_name_key[2];
+                    $associationIteration=$fieldIteration.'_'.$objectIteration;
+                    if(empty($item) || !isset($data['column_type_'.$associationIteration]) || empty($data['column_type_'.$associationIteration])){
+                        continue;
+                    }
+                    $objectModels[$objectIteration]['fields'][$fieldIteration]['column_name']=$item;
+                    $objectModels[$objectIteration]['fields'][$fieldIteration]['column_type']=$data['column_type_'.$associationIteration];
+                    $objectModels[$objectIteration]['fields'][$fieldIteration]['column_length']=$data['column_length_'.$associationIteration] ?? null;
+                    $objectModels[$objectIteration]['fields'][$fieldIteration]['is_column_nullable']=$data['is_column_nullable_'.$associationIteration] ?? null;
+                    $objectModels[$objectIteration]['fields'][$fieldIteration]['is_column_lang']=$data['is_column_lang_'.$associationIteration] ?? null;
+                    $objectModels[$objectIteration]['fields'][$fieldIteration]['is_column_shop']=$data['is_column_shop_'.$associationIteration] ?? null;
+                    $objectModels[$objectIteration]['fields'][$fieldIteration]['default_column_value']=$data['default_column_value_'.$associationIteration] ?? null;
+                }
             }
         }
 
@@ -198,6 +226,9 @@ class GeneratorController extends AbstractController
         }
         if (!empty($models)) {
             $data = array_merge(['models' => $models], $data);
+        }
+        if (!empty($objectModels)) {
+            $data = array_merge(['objectModels' => $objectModels], $data);
         }
         return new ModuleGenerator($base_dir, $module_dir, $data);
     }

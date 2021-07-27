@@ -19,7 +19,6 @@ $(document).ready(function () {
     });
     $(document).on("click", '.add-new', function () {
         let type = $(this).attr('data-type');
-        console.log(type);
         displayForm(this, type);
     });
     function displayForm(elm, type) {
@@ -414,6 +413,291 @@ $(document).ready(function () {
             $(elm).attr('data-child', parseInt(count) + 1);
             $(elm).closest('.modal-body').find('.liste-box').attr('data-currentCount', modelCount)
             $(elm).attr('data-model', parseInt(modelCount) + 1);
+        }
+        if (type == 'custom-field') {
+            let html = '<div class="liste-box" data-currentCount="1">\n' +
+                '                    <div class="snippet-fields row">\n' +
+                '                        <div class="field-input col-xs-8">\n' +
+                '                            <div class="form-group label-floating">\n' +
+                '                                <select name="object_model_name_' + modelCount + '" class="form-control" required>\n' +
+                '                                    <option value="">Choose Object Model</option>\n' +
+                '                                    <option value="Product">Product</option>\n' +
+                '                                    <option value="Category">Category</option>\n' +
+                '                                    <option value="Customer">Customer</option>\n' +
+                '                                </select>\n' +
+                '                            </div>\n' +
+                '                        </div>\n' +
+                '\n' +
+                '                    </div>\n' +
+                '\n' +
+                '                    <div class="row">\n' +
+                '                        <div class="field-input col-xs-8">\n' +
+                '                        </div>\n' +
+                '                        <div class="field-input col-xs-2">\n' +
+                '                            <div class="form-group">\n' +
+                '                                <button type="button" id="field-count" class="btn btn-default add-new" data-child="2" data-type="field">\n' +
+                '                                    New field\n' +
+                '                                </button>\n' +
+                '                            </div>\n' +
+                '                        </div>\n' +
+                '                    </div>\n' +
+                '\n' +
+                '                    <div class="snippet-fields row">\n' +
+                '                        <div class="field-input col-xs-2">\n' +
+                '                            <div class="form-group">\n' +
+                '                                <label for="column_name-1" class="control-label">field name</label>\n' +
+                '                                <input value="" id="service-1" name="column_name_' + count + '_' + modelCount + '" class="form-control" type="text"\n' +
+                '                                       placeholder="">\n' +
+                '                                <div class="help-block"></div>\n' +
+                '                            </div>\n' +
+                '                        </div>\n' +
+                '                        <div class="field-input col-xs-1">\n' +
+                '                            <div class="form-group">\n' +
+                '                                <label for="column_type-1" class="control-label">Type</label>\n' +
+                '                                <select class="form-control" name="column_type_' + count + '_' + modelCount + '">\n' +
+                '                                    <option title="Un nombre entier de 4 octets. La fourchette des entiers relatifs est de -2 147 483 648 à 2 147 483 647. Pour les entiers positifs, c\\est de 0 à 4 294 967 295">\n' +
+                '                                        INT\n' +
+                '                                    </option>\n' +
+                '                                    <option title="Une chaîne de longueur variable (0-65,535), la longueur effective réelle dépend de la taille maximale d\\une ligne">\n' +
+                '                                        VARCHAR\n' +
+                '                                    </option>\n' +
+                '                                    <option title="Une colonne TEXT d\\une longueur maximale de 65 535 (2^16 - 1) caractères, stockée avec un préfixe de deux octets indiquant la longueur de la valeur en octets">\n' +
+                '                                        TEXT\n' +
+                '                                    </option>\n' +
+                '                                    <optgroup label="Numérique">\n' +
+                '                                        <option title="Un nombre entier de 1 octet. La fourchette des nombres avec signe est de -128 à 127. Pour les nombres sans signe, c\\est de 0 à 255">\n' +
+                '                                            TINYINT\n' +
+                '                                        </option>\n' +
+                '                                        <option title="Un nombre entier de 4 octets. La fourchette des entiers relatifs est de -2 147 483 648 à 2 147 483 647. Pour les entiers positifs, c\\est de 0 à 4 294 967 295">\n' +
+                '                                            INT\n' +
+                '                                        </option>\n' +
+                '                                        <option title="Un nombre en virgule fixe (M, D). Le nombre maximum de chiffres (M) est de 65 (10 par défaut), le nombre maximum de décimales (D) est de 30 (0 par défaut)">\n' +
+                '                                            DECIMAL\n' +
+                '                                        </option>\n' +
+                '                                        <option title="Un synonyme de TINYINT(1), une valeur de zéro signifie faux, une valeur non-zéro signifie vrai">\n' +
+                '                                            BOOLEAN\n' +
+                '                                        </option>\n' +
+                '                                    </optgroup>\n' +
+                '\n' +
+                '                                    <optgroup label="Date et l\\heure">\n' +
+                '                                        <option title="Une date, la fourchette est de «1000-01-01» à «9999-12-31»">\n' +
+                '                                            DATE\n' +
+                '                                        </option>\n' +
+                '                                        <option title="Une combinaison date et heure, la fourchette est de « 1000-01-01 00:00:00 » à « 9999-12-31 23:59:59 »">\n' +
+                '                                            DATETIME\n' +
+                '                                        </option>\n' +
+                '                                    </optgroup>\n' +
+                '                                    <optgroup label="Chaîne de caractères">\n' +
+                '                                        <option title="Une chaîne de longueur variable (0-65,535), la longueur effective réelle dépend de la taille maximale d\\une ligne">\n' +
+                '                                            VARCHAR\n' +
+                '                                        </option>\n' +
+                '\n' +
+                '                                        <option title="Une colonne TEXT d\\une longueur maximale de 65 535 (2^16 - 1) caractères, stockée avec un préfixe de deux octets indiquant la longueur de la valeur en octets">\n' +
+                '                                            TEXT\n' +
+                '                                        </option>\n' +
+                '                                        >\n' +
+                '                                        <option title="Une colonne TEXT d\\une longueur maximale de 4 294 967 295 ou 4 GiB (2^32 - 1) caractères, stockée avec un préfixe de quatre octets indiquant la longueur de la valeur en octets">\n' +
+                '                                            LONGTEXT\n' +
+                '                                        </option>\n' +
+                '                                    </optgroup>\n' +
+                '                                    <optgroup label="Specifique">\n' +
+                '                                        <option>\n' +
+                '                                            EMAIL\n' +
+                '                                        </option>\n' +
+                '                                        <option>\n' +
+                '                                            HTML\n' +
+                '                                        </option>\n' +
+                '                                        <option>\n' +
+                '                                            PERCENT\n' +
+                '                                        </option>\n' +
+                '                                        <option>\n' +
+                '                                            UnsignedInt\n' +
+                '                                        </option>\n' +
+                '                                    </optgroup>\n' +
+                '                                </select>\n' +
+                '                                <div class="help-block"></div>\n' +
+                '                            </div>\n' +
+                '                        </div>\n' +
+                '                        <div class="field-input col-xs-1">\n' +
+                '                            <div class="form-group">\n' +
+                '                                <label for="column_length-1" class="control-label">Length</label>\n' +
+                '                                <input id="service-1" name="column_length_' + count + '_' + modelCount + '" class="form-control" type="text"\n' +
+                '                                       placeholder="">\n' +
+                '                                <div class="help-block"></div>\n' +
+                '                            </div>\n' +
+                '                        </div>\n' +
+                '                        <div class="field-input col-xs-1">\n' +
+                '                            <div class="form-group">\n' +
+                '                                <label for="is_nullable-1" class="control-label">Null</label>\n' +
+                '                                <input value="1" id="service-1" name="is_column_nullable_' + count + '_' + modelCount + '" class="form-control" type="checkbox"\n' +
+                '                                       placeholder="">\n' +
+                '                                <div class="help-block"></div>\n' +
+                '                            </div>\n' +
+                '                        </div>\n' +
+                '\n' +
+                '                        <div class="field-input col-xs-1">\n' +
+                '                            <div class="form-group">\n' +
+                '                                <label for="is_auto_increment-1" class="control-label">Lang?</label>\n' +
+                '                                <input value="1" id="service-1" name="is_column_lang_' + count + '_' + modelCount + '" class="form-control"\n' +
+                '                                       type="checkbox"\n' +
+                '                                       placeholder="">\n' +
+                '                                <div class="help-block"></div>\n' +
+                '                            </div>\n' +
+                '                        </div>\n' +
+                '                        <div class="field-input col-xs-1">\n' +
+                '                            <div class="form-group">\n' +
+                '                                <label for="column-1" class="control-label">Shop?</label>\n' +
+                '                                <input value="1" id="service-1" name="is_column_shop_' + count + '_' + modelCount + '" class="form-control"\n' +
+                '                                       type="checkbox"\n' +
+                '                                       placeholder="">\n' +
+                '                                <div class="help-block"></div>\n' +
+                '                            </div>\n' +
+                '                        </div>\n' +
+                '                        <div class="field-input col-xs-2">\n' +
+                '                            <div class="form-group">\n' +
+                '                                <label for="default_value-1" class="control-label">Default Value</label>\n' +
+                '                                <input value="" id="service-1" name="default_column_value_' + count + '_' + modelCount + '" class="form-control" type="text"\n' +
+                '                                       placeholder="">\n' +
+                '                                <div class="help-block"></div>\n' +
+                '                            </div>\n' +
+                '                        </div>\n' +
+                '                        <div class="field-input col-xs-1">\n' +
+                '                            <div class="form-group">\n' +
+                '                                <button type="button" class="btn btn-danger remove">\n' +
+                '                                    Remove\n' +
+                '                                </button>\n' +
+                '                            </div>\n' +
+                '                        </div>\n' +
+                '                    </div>\n' +
+                '                </div>';
+            $(elm).closest('.modal-body').append(html);
+            $(elm).attr('data-child', parseInt(count) + 1);
+            $(elm).closest('.modal-body').find('.liste-box').attr('data-currentCount', modelCount)
+            $(elm).attr('data-model', parseInt(modelCount) + 1);
+        }
+        if (type == 'custom-field-inputs') {
+            let html = '           <div class="snippet-fields row">\n' +
+                '                    <div class="field-input col-xs-2">\n' +
+                '                        <div class="form-group">\n' +
+                '                            <label for="column_name_' + count + '_' + CurentModelCount + '" class="control-label">field name</label>\n' +
+                '                            <input value="" id="service_' + count + '_' + CurentModelCount + '" name="column_name_' + count + '_' + CurentModelCount + '" class="form-control" type="text"\n' +
+                '                                   placeholder="">\n' +
+                '                            <div class="help-block"></div>\n' +
+                '                        </div>\n' +
+                '                    </div>\n' +
+                '                    <div class="field-input col-xs-1">\n' +
+                '                        <div class="form-group">\n' +
+                '                            <label for="column_type_' + count + '_' + CurentModelCount + '" class="control-label">Type</label>\n' +
+                '                            <select class="form-control" name="column_type_' + count + '_' + CurentModelCount + '">\n' +
+                '                                <option title="Un nombre entier de 4 octets. La fourchette des entiers relatifs est de -2 147 483 648 à 2 147 483 647. Pour les entiers positifs, c\\est de 0 à 4 294 967 295">\n' +
+                '                                    INT\n' +
+                '                                </option>\n' +
+                '                                <option title="Une chaîne de longueur variable (0-65,535), la longueur effective réelle dépend de la taille maximale d\\une ligne">\n' +
+                '                                    VARCHAR\n' +
+                '                                </option>\n' +
+                '                                <option title="Une colonne TEXT d\\une longueur maximale de 65 535 (2^16 - 1) caractères, stockée avec un préfixe de deux octets indiquant la longueur de la valeur en octets">\n' +
+                '                                    TEXT\n' +
+                '                                </option>\n' +
+                '                                <optgroup label="Numérique">\n' +
+                '                                    <option title="Un nombre entier de 1 octet. La fourchette des nombres avec signe est de _' + count + '28 à 127. Pour les nombres sans signe, c\\est de 0 à 255">\n' +
+                '                                        TINYINT\n' +
+                '                                    </option>\n' +
+                '                                    <option title="Un nombre entier de 4 octets. La fourchette des entiers relatifs est de -2 147 483 648 à 2 147 483 647. Pour les entiers positifs, c\\est de 0 à 4 294 967 295">\n' +
+                '                                        INT\n' +
+                '                                    </option>\n' +
+                '                                    <option title="Un nombre en virgule fixe (M, D). Le nombre maximum de chiffres (M) est de 65 (10 par défaut), le nombre maximum de décimales (D) est de 30 (0 par défaut)">\n' +
+                '                                        DECIMAL\n' +
+                '                                    </option>\n' +
+                '                                    <option title="Un synonyme de TINYINT(1), une valeur de zéro signifie faux, une valeur non-zéro signifie vrai">\n' +
+                '                                        BOOLEAN\n' +
+                '                                    </option>\n' +
+                '                                </optgroup>\n' +
+                '                                <optgroup label="Date et l\\heure">\n' +
+                '                                    <option title="Une date, la fourchette est de «1000-01-01» à «9999_' + count + '2-31»">DATE</option>\n' +
+                '                                    <option title="Une combinaison date et heure, la fourchette est de « 1000-01-01 00:00:00 » à « 9999_' + count + '2-31 23:59:59 »">\n' +
+                '                                        DATETIME\n' +
+                '                                    </option>\n' +
+                '                                </optgroup>\n' +
+                '                                <optgroup label="Chaîne de caractères">\n' +
+                '                                    <option title="Une chaîne de longueur variable (0-65,535), la longueur effective réelle dépend de la taille maximale d\\une ligne">\n' +
+                '                                        VARCHAR\n' +
+                '                                    </option>\n' +
+                '\n' +
+                '                                    <option title="Une colonne TEXT d\\une longueur maximale de 65 535 (2^16 - 1) caractères, stockée avec un préfixe de deux octets indiquant la longueur de la valeur en octets">\n' +
+                '                                        TEXT\n' +
+                '                                    </option>>\n' +
+                '                                    <option title="Une colonne TEXT d\\une longueur maximale de 4 294 967 295 ou 4 GiB (2^32 - 1) caractères, stockée avec un préfixe de quatre octets indiquant la longueur de la valeur en octets">\n' +
+                '                                        LONGTEXT\n' +
+                '                                    </option>\n' +
+                '                                </optgroup>\n' +
+                '                                    <optgroup label="Specifique">\n' +
+                '                                        <option>\n' +
+                '                                            EMAIL\n' +
+                '                                        </option>\n' +
+                '                                        <option>\n' +
+                '                                            HTML\n' +
+                '                                        </option>\n' +
+                '                                        <option>\n' +
+                '                                            PERCENT\n' +
+                '                                        </option>                                        \n' +
+                '                                        <option>\n' +
+                '                                            UnsignedInt\n' +
+                '                                        </option>\n' +
+                '                                    </optgroup>\n' +
+                '                            </select>\n' +
+                '                            <div class="help-block"></div>\n' +
+                '                        </div>\n' +
+                '                    </div>\n' +
+                '                    <div class="field-input col-xs-1">\n' +
+                '                        <div class="form-group">\n' +
+                '                            <label for="column_length_' + count + '_' + CurentModelCount + '" class="control-label">Length</label>\n' +
+                '                            <input id="service_' + count + '_' + CurentModelCount + '" name="column_length_' + count + '_' + CurentModelCount + '" class="form-control" type="text"\n' +
+                '                                   placeholder="">\n' +
+                '                            <div class="help-block"></div>\n' +
+                '                        </div>\n' +
+                '                    </div>\n' +
+                '                    <div class="field-input col-xs-1">\n' +
+                '                        <div class="form-group">\n' +
+                '                            <label for="is_nullable_' + count + '_' + CurentModelCount + '" class="control-label">Null</label>\n' +
+                '                            <input value="1" id="service_' + count + '_' + CurentModelCount + '" name="is_column_nullable_' + count + '_' + CurentModelCount + '" class="form-control" type="checkbox"\n' +
+                '                                   placeholder="">\n' +
+                '                            <div class="help-block"></div>\n' +
+                '                        </div>\n' +
+                '                    </div>\n' +
+                '                    <div class="field-input col-xs-1">\n' +
+                '                        <div class="form-group">\n' +
+                '                            <label for="is_lang_' + count + '_' + CurentModelCount + '" class="control-label">Lang?</label>\n' +
+                '                            <input value="1" id="service_' + count + '_' + CurentModelCount + '" name="is_column_lang_' + count + '_' + CurentModelCount + '" class="form-control" type="checkbox"\n' +
+                '                                   placeholder="">\n' +
+                '                            <div class="help-block"></div>\n' +
+                '                        </div>\n' +
+                '                    </div>\n' +
+                '                    <div class="field-input col-xs-1">\n' +
+                '                        <div class="form-group">\n' +
+                '                            <label for="is_shop_' + count + '_' + CurentModelCount + '" class="control-label">Shop?</label>\n' +
+                '                            <input value="1" id="service_' + count + '_' + CurentModelCount + '" name="is_column_shop_' + count + '_' + CurentModelCount + '" class="form-control" type="checkbox"\n' +
+                '                                   placeholder="">\n' +
+                '                            <div class="help-block"></div>\n' +
+                '                        </div>\n' +
+                '                    </div>\n' +
+                '                    <div class="field-input col-xs-2">\n' +
+                '                        <div class="form-group">\n' +
+                '                            <label for="default_value_' + count + '_' + CurentModelCount + '" class="control-label">Default Value</label>\n' +
+                '                            <input value="" id="service_' + count + '_' + CurentModelCount + '" name="default_column_value_' + count + '_' + CurentModelCount + '" class="form-control" type="text"\n' +
+                '                                   placeholder="">\n' +
+                '                            <div class="help-block"></div>\n' +
+                '                        </div>\n' +
+                '                    </div>\n' +
+                '                    <div class="field-input col-xs-1">\n' +
+                '                        <div class="form-group">\n' +
+                '                            <button type="button" class="btn btn-danger remove">\n' +
+                '                                Remove\n' +
+                '                            </button>\n' +
+                '                        </div>\n' +
+                '                    </div>\n' +
+                '                </div>';
+            $(elm).closest('.liste-box').append(html);
+            $(elm).attr('data-child', parseInt(count) + 1);
         }
     }
 });
