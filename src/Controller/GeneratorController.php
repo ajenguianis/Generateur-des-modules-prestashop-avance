@@ -4,6 +4,7 @@ namespace App\Controller;
 
 
 use App\Service\ModuleGenerator;
+use Doctrine\ORM\EntityManagerInterface;
 use HZip;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
@@ -31,10 +32,15 @@ class GeneratorController extends AbstractController
      * @var ModuleGenerator
      */
     private $_codeGen;
+    /**
+     * @var EntityManagerInterface
+     */
+    private $_em;
 
-    public function __construct(UrlGeneratorInterface $urlGenerator)
+    public function __construct(UrlGeneratorInterface $urlGenerator, EntityManagerInterface $entityManager)
     {
         $this->urlGenerator = $urlGenerator;
+        $this->_em=$entityManager;
     }
 
     /**
@@ -116,6 +122,7 @@ class GeneratorController extends AbstractController
         {
             header('Content-Description: File Transfer');
             header('Content-Type: application/octet-stream');
+            header('Content-Type: application/pdf');
             header('Content-Disposition: attachment; filename='.$module_name.'.zip');
             header('Expires: 0');
             header('Cache-Control: must-revalidate');
@@ -230,7 +237,8 @@ class GeneratorController extends AbstractController
         if (!empty($objectModels)) {
             $data = array_merge(['objectModels' => $objectModels], $data);
         }
-        return new ModuleGenerator($base_dir, $module_dir, $data);
+
+        return new ModuleGenerator($base_dir, $module_dir, $data, $this->_em);
     }
 
 

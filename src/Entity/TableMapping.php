@@ -16,7 +16,10 @@ class TableMapping
      * @ORM\Column(type="integer")
      */
     private $id;
-
+    /**
+     * @ORM\Column(type="string", length=255)
+     */
+    private $class;
     /**
      * @ORM\Column(type="string", length=255)
      */
@@ -49,6 +52,16 @@ class TableMapping
         return $this;
     }
 
+    public function getClass(): ?string
+    {
+        return $this->class;
+    }
+
+    public function setClass(string $class): self
+    {
+        $this->class = $class;
+        return $this;
+    }
     public function getHasShopTable(): ?bool
     {
         return $this->hasShopTable;

@@ -2,13 +2,15 @@
 
 namespace App\Service;
 
+use App\Entity\TableMapping;
+use Exception;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Finder\Finder;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Nette\PhpGenerator\ClassType;
 use Nette\PhpGenerator\Printer;
 use Nette\PhpGenerator\PhpNamespace;
-
+use Doctrine\ORM\EntityManagerInterface;
 class ModuleGenerator
 {
     /**
@@ -24,12 +26,21 @@ class ModuleGenerator
     private $base_dir;
     private $module_dir;
     public $module_data;
+    /**
+     * @var Filesystem
+     */
+    private $filesystem;
+    /**
+     * @var EntityManagerInterface
+     */
+    private $em;
 
-    public function __construct($base_dir, $module_dir, $module_data)
+    public function __construct($base_dir, $module_dir, $module_data, EntityManagerInterface $em)
     {
         $this->base_dir = $base_dir;
         $this->module_dir = $module_dir;
         $this->module_data = $module_data;
+        $this->em = $em;
         $this->filesystem = new Filesystem();
     }
 
@@ -569,12 +580,87 @@ class ModuleGenerator
             throw new \RuntimeException(sprintf('Cannot create directory "%s"', $overrideDir));
         }
         $firstModel = 1;
+
         foreach ($this->module_data['objectModels'] as $modelData) {
 
-            if (empty($modelData['objectModels'])) {
+            if (empty($modelData['class'])) {
                 return false;
             }
+            if (empty($modelData['fields'])) {
+                return false;
+            }
+            $sql = '';
+            $sql_shop = '';
+            $sql_lang = '';
+            $tableMapping=$this->em->getRepository(TableMapping::class)->findOneBy(['class'=>$modelData['class']]);
+            $class= new ClassType($modelData['class']);
+
+            foreach ($modelData['fields'] as $item){
+                $nullable='';
+                if(!empty($item['is_column_nullable']) && $item['is_column_nullable']==1){
+                    $nullable=' NULL';
+                }
+                $default_value='';
+                if(!empty($item['default_column_value']) && $item['default_column_value']!==""){
+                    $default_value= ' DEFAULT '.$item['default_column_value'];
+                }
+                $alterLangTable=!empty($item['is_column_lang']) && $tableMapping->getHasLangTable()==true;
+                if(!$alterLangTable){
+                    $sql .= 'ALTER TABLE `/*_DB_PREFIX_*/' . $tableMapping->getTableName() . '` ADD COLUMN IF NOT EXISTS `'.$item['column_name'].'` '. $item['column_type']. '('. $item['column_length'].')' . $nullable. $default_value.';'.  PHP_EOL;
+                }else{
+                    $sql_lang .= 'ALTER TABLE `/*_DB_PREFIX_*/' . $tableMapping->getTableName() . '_lang` ADD COLUMN IF NOT EXISTS `'.$item['column_name'].'` '. $item['column_type']. '('. $item['column_length'].')'. $nullable. $default_value.';'.  PHP_EOL;
+                }
+                $alterShopTable=!empty($item['is_column_shop']) && $tableMapping->getHasShopTable()==true;
+
+                if($alterShopTable){
+                    $sql_shop .= 'ALTER TABLE `/*_DB_PREFIX_*/' . $tableMapping->getTableName() . '_shop` ADD COLUMN IF NOT EXISTS `'.$item['column_name'].'` '. $item['column_type']. '('. $item['column_length'].')'. $nullable. $default_value.';'.  PHP_EOL;
+                }
+
+            }
+            $installContent = file($this->module_dir . DIRECTORY_SEPARATOR . 'sql' . DIRECTORY_SEPARATOR . 'install.php');
+            $key = array_search('foreach ($sql as $query) {'.PHP_EOL, $installContent);
+
+            if (!empty($sql)) {
+                $sql = str_replace(array("/*", "*/"), array("'.", ".'"), $sql);
+                $sql = '$sql[]=' ."'". $sql . "';" . PHP_EOL;
+            }
+            if (!empty($sql_shop)) {
+                $sql_shop = str_replace(array("/*", "*/"), array("'.", ".'"), $sql_shop);
+                $sql_shop = '$sql[]=' ."'". $sql_shop . "';" . PHP_EOL;
+            }
+            if (!empty($sql_lang)) {
+                $sql_lang = str_replace(array("/*", "*/"), array("'.", ".'"), $sql_lang);
+                $sql_lang = '$sql[]=' ."'". $sql_lang . "';" . PHP_EOL;
+            }
+            $alterSql=$sql . $sql_lang . $sql_shop;
+            $installContent=$this->arrayInsertAfter($installContent, (int)$key, $alterSql);
+            file_put_contents($this->module_dir . DIRECTORY_SEPARATOR . 'sql/install.php', implode("", $installContent));
         }
+    }
+
+    /**
+     * @param array $array
+     * @param $index
+     * @param $element
+     * @return array
+     */
+    public function arrayInsertAfter(&$array, $index, $element)
+    {
+        if (!array_key_exists($index, $array)) {
+            throw new Exception("Index not found");
+        }
+        $tmpArray = array();
+        $originalIndex = 0;
+        foreach ($array as $key => $value) {
+            if ($key === $index) {
+                $tmpArray[] = $element;
+                break;
+            }
+            $tmpArray[$key] = $value;
+            $originalIndex++;
+        }
+        array_splice($array, 0, $originalIndex, $tmpArray);
+        return $array;
     }
 
 }

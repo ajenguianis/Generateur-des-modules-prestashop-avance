@@ -4,11 +4,19 @@ namespace App\DataFixtures;
 
 use App\Entity\Hook;
 use App\Entity\TableMapping;
+use App\Entity\User;
 use Doctrine\Bundle\FixturesBundle\Fixture;
 use Doctrine\Persistence\ObjectManager;
+use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
 
 class AppFixtures extends Fixture
 {
+    private $encoder;
+
+    public function __construct(UserPasswordEncoderInterface $encoder)
+    {
+        $this->encoder = $encoder;
+    }
     public function load(ObjectManager $manager)
     {
         $ps_hook = array(
@@ -704,11 +712,19 @@ class AppFixtures extends Fixture
         ];
         foreach ($datas as $class => $data) {
             $tableMapping = new TableMapping();
+            $tableMapping->setClass($class);
             $tableMapping->setTableName($data['table']);
             $tableMapping->setHasShopTable($data['hasShop']);
             $tableMapping->setHasLangTable($data['hasLang']);
             $manager->persist($tableMapping);
         }
+        $user = new User();
+        $user->setEmail('admin@yopmail.com');
+
+        $password = $this->encoder->encodePassword($user, 'password');
+        $user->setPassword($password);
+
+        $manager->persist($user);
 
         $manager->flush();
     }
