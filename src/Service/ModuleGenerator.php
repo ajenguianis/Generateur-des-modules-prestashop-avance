@@ -3,6 +3,7 @@
 namespace App\Service;
 
 use App\Entity\TableMapping;
+use Doctrine\Persistence\ObjectRepository;
 use Exception;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Finder\Finder;
@@ -11,6 +12,7 @@ use Nette\PhpGenerator\ClassType;
 use Nette\PhpGenerator\Printer;
 use Nette\PhpGenerator\PhpNamespace;
 use Doctrine\ORM\EntityManagerInterface;
+
 class ModuleGenerator
 {
     /**
@@ -592,50 +594,130 @@ class ModuleGenerator
             $sql = '';
             $sql_shop = '';
             $sql_lang = '';
-            $tableMapping=$this->em->getRepository(TableMapping::class)->findOneBy(['class'=>$modelData['class']]);
-            $class= new ClassType($modelData['class']);
+            $tableMapping = $this->em->getRepository(TableMapping::class)->findOneBy(['class' => $modelData['class']]);
+            $class = new ClassType($modelData['class']);
+            $class->addExtend(__CLASS__);
+            $method = $class->addMethod('__construct');
+            if ($modelData['class'] === 'Product') {
+                $method->addParameter('id_product', null);
+                $method->addParameter('full', false);
+                $method->addParameter('id_lang', null);
+                $method->addParameter('id_shop', null);
+                $method->addParameter('context', null)->setType('Context');
+            }
+            $constructBody = '';
+            $fieldsDef = [];
+            foreach ($modelData['fields'] as $index => $item) {
+                $property = $class->addProperty($item['column_name']);
+                $nullable = '';
+                if (!empty($item['is_column_nullable']) && $item['is_column_nullable'] == 1) {
+                    $nullable = ' NULL';
+                }
+                $default_value = '';
+                if (!empty($item['default_column_value']) && $item['default_column_value'] !== "") {
+                    $default_value = ' DEFAULT ' . $item['default_column_value'];
+                }
+                $alterLangTable = !empty($item['is_column_lang']) && $tableMapping->getHasLangTable() == true;
+                if (!$alterLangTable) {
+                    $sql .= 'ALTER TABLE `/*_DB_PREFIX_*/' . $tableMapping->getTableName() . '` ADD COLUMN IF NOT EXISTS `' . $item['column_name'] . '` ' . $item['column_type'] . '(' . $item['column_length'] . ')' . $nullable . $default_value . ';' . PHP_EOL;
+                } else {
+                    $sql_lang .= 'ALTER TABLE `/*_DB_PREFIX_*/' . $tableMapping->getTableName() . '_lang` ADD COLUMN IF NOT EXISTS `' . $item['column_name'] . '` ' . $item['column_type'] . '(' . $item['column_length'] . ')' . $nullable . $default_value . ';' . PHP_EOL;
+                }
+                $alterShopTable = !empty($item['is_column_shop']) && $tableMapping->getHasShopTable() == true;
 
-            foreach ($modelData['fields'] as $item){
-                $nullable='';
-                if(!empty($item['is_column_nullable']) && $item['is_column_nullable']==1){
-                    $nullable=' NULL';
+                if ($alterShopTable) {
+                    $sql_shop .= 'ALTER TABLE `/*_DB_PREFIX_*/' . $tableMapping->getTableName() . '_shop` ADD COLUMN IF NOT EXISTS `' . $item['column_name'] . '` ' . $item['column_type'] . '(' . $item['column_length'] . ')' . $nullable . $default_value . ';' . PHP_EOL;
                 }
-                $default_value='';
-                if(!empty($item['default_column_value']) && $item['default_column_value']!==""){
-                    $default_value= ' DEFAULT '.$item['default_column_value'];
+                if (!empty($item['column_length']) && $item['column_length'] !== '') {
+                    $size = (int)$item['column_length'];
                 }
-                $alterLangTable=!empty($item['is_column_lang']) && $tableMapping->getHasLangTable()==true;
-                if(!$alterLangTable){
-                    $sql .= 'ALTER TABLE `/*_DB_PREFIX_*/' . $tableMapping->getTableName() . '` ADD COLUMN IF NOT EXISTS `'.$item['column_name'].'` '. $item['column_type']. '('. $item['column_length'].')' . $nullable. $default_value.';'.  PHP_EOL;
-                }else{
-                    $sql_lang .= 'ALTER TABLE `/*_DB_PREFIX_*/' . $tableMapping->getTableName() . '_lang` ADD COLUMN IF NOT EXISTS `'.$item['column_name'].'` '. $item['column_type']. '('. $item['column_length'].')'. $nullable. $default_value.';'.  PHP_EOL;
-                }
-                $alterShopTable=!empty($item['is_column_shop']) && $tableMapping->getHasShopTable()==true;
+                if ($item['column_type'] === 'INT' || $item['column_type'] === 'UnsignedInt') {
+                    $type = '/*self::TYPE_INT*/';
+                    $fieldsDef[$index] = "['type'=>" . $type;
+                    if ($item['column_type'] === 'UnsignedInt') {
+                        $validate = 'isUnsignedInt';
+                        $fieldsDef[$index] = "['type'=>" . $type . ", 'validate'=>" . $validate;
+                    }
 
-                if($alterShopTable){
-                    $sql_shop .= 'ALTER TABLE `/*_DB_PREFIX_*/' . $tableMapping->getTableName() . '_shop` ADD COLUMN IF NOT EXISTS `'.$item['column_name'].'` '. $item['column_type']. '('. $item['column_length'].')'. $nullable. $default_value.';'.  PHP_EOL;
                 }
+
+                if ($item['column_type'] === 'EMAIL' || $item['column_type'] === 'VARCHAR' || $item['column_type'] === 'HTML' || $item['column_type'] === 'PERCENT') {
+                    $type = '/*self::TYPE_STRING*/';
+                    if ($item['column_type'] === 'EMAIL') {
+                        $validate = 'isEmail';
+                    }
+                    if ($item['column_type'] === 'HTML') {
+                        $type = '/*self::TYPE_HTML*/';
+                        $validate = 'isCleanHtml';
+                    }
+                    if ($item['column_type'] === 'VARCHAR') {
+                        $validate = 'isGenericName';
+                    }
+                    $fieldsDef[$index] = "['type'=>" . $type . ", 'validate'=>" . $validate;
+                }
+                if ($item['column_type'] === 'DECIMAL' || $item['column_type'] === 'FLOAT') {
+                    $type = '/*self::TYPE_FLOAT*/';
+                    $validate = 'isPrice';
+                    $fieldsDef[$index] = "['type'=>" . $type . ", 'validate'=>" . $validate;
+                }
+                if ($item['column_type'] === 'TEXT' || $item['column_type'] === 'LONGTEXT') {
+                    $type = '/*self::TYPE_STRING*/';
+                    $fieldsDef[$index] = "['type'=>" . $type;
+                }
+                if ($item['column_type'] === 'TINYINT' || $item['column_type'] === 'BOOLEAN') {
+                    $type = '/*self::TYPE_BOOL*/';
+                    $validate = 'isBool';
+                    $fieldsDef[$index] = "['type'=>" . $type . ", 'validate'=>" . $validate;
+                }
+
+                if ($item['column_type'] === 'DATE' || $item['column_type'] === 'DATETIME') {
+                    $copyPast = false;
+                    $fieldsDef[$index] = "['type'=>/*self::TYPE_DATE*/, 'validate'=>'isDate', 'copy_post'=>" . $copyPast;
+                }
+                if (!empty($size)) {
+                    $fieldsDef[$index] = $fieldsDef[$index] . ", 'size'=>" . $size;
+                }
+                if (!empty($item['is_column_lang']) && $item['is_column_lang'] == 1) {
+                    $fieldsDef[$index] = $fieldsDef[$index] . ", 'lang'=>true";
+                }
+                if (!empty($item['is_column_shop']) && $item['is_column_shop'] == 1) {
+                    $fieldsDef[$index] = $fieldsDef[$index] . ", 'shop'=>true";
+                }
+                $fieldsDef[$index] .= "];";
+
+                $constructBody .= "self::/+definition['fields']['" . $item['column_name'] . "'] =" . $fieldsDef[$index] . PHP_EOL;
 
             }
+            $constructBody .= "parent::__construct(/+id_product, /+full, /+id_lang,/+id_shop, /+context);" . PHP_EOL;
+
+            $constructBody = str_replace(array("/*", "*/", "/+"), array("", "", "$"), $constructBody);
             $installContent = file($this->module_dir . DIRECTORY_SEPARATOR . 'sql' . DIRECTORY_SEPARATOR . 'install.php');
-            $key = array_search('foreach ($sql as $query) {'.PHP_EOL, $installContent);
+            $key = array_search('foreach ($sql as $query) {' . PHP_EOL, $installContent);
 
             if (!empty($sql)) {
                 $sql = str_replace(array("/*", "*/"), array("'.", ".'"), $sql);
-                $sql = '$sql[]=' ."'". $sql . "';" . PHP_EOL;
+                $sql = '$sql[]=' . "'" . $sql . "';" . PHP_EOL;
             }
             if (!empty($sql_shop)) {
                 $sql_shop = str_replace(array("/*", "*/"), array("'.", ".'"), $sql_shop);
-                $sql_shop = '$sql[]=' ."'". $sql_shop . "';" . PHP_EOL;
+                $sql_shop = '$sql[]=' . "'" . $sql_shop . "';" . PHP_EOL;
             }
             if (!empty($sql_lang)) {
                 $sql_lang = str_replace(array("/*", "*/"), array("'.", ".'"), $sql_lang);
-                $sql_lang = '$sql[]=' ."'". $sql_lang . "';" . PHP_EOL;
+                $sql_lang = '$sql[]=' . "'" . $sql_lang . "';" . PHP_EOL;
             }
-            $alterSql=$sql . $sql_lang . $sql_shop;
-            $installContent=$this->arrayInsertAfter($installContent, (int)$key, $alterSql);
+            $alterSql = $sql . $sql_lang . $sql_shop;
+            $installContent = $this->arrayInsertAfter($installContent, (int)$key, $alterSql);
             file_put_contents($this->module_dir . DIRECTORY_SEPARATOR . 'sql/install.php', implode("", $installContent));
+            $method->setBody($constructBody);
+            $printer = new Printer;
+            $code = $printer->printClass($class);
+            $code = str_replace('App\Service\ModuleGenerator', $modelData['class'] . 'Core', $code);
+            file_put_contents($this->module_dir . '/override/' . $modelData['class'] . '.php', '<?php');
+            file_put_contents($this->module_dir . '/override/' . $modelData['class'] . '.php', PHP_EOL, FILE_APPEND);
+            file_put_contents($this->module_dir . '/override/' . $modelData['class'] . '.php', $code, FILE_APPEND);
         }
+        return true;
     }
 
     /**
