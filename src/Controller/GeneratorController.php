@@ -79,6 +79,7 @@ class GeneratorController extends AbstractController
         $module_dir = $this->dir . '/' . $module_name;
         $filesystem = new Filesystem();
         $filesystem->remove($module_dir);
+        $filesystem->remove($this->dir . '/' . $module_name.'.zip');
         if (!is_dir($module_dir) && !@mkdir($module_dir, 0777, true) && !is_dir($module_dir)) {
             throw new \RuntimeException(sprintf('Cannot create directory "%s"', $module_dir));
         }
