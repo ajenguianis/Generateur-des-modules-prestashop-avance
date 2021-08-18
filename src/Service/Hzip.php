@@ -1,5 +1,9 @@
 <?php
-class HZip
+namespace App\Service;
+
+use ZipArchive;
+
+class Hzip
 {
     /**
      * Add files and sub-directories in a folder to zip file.

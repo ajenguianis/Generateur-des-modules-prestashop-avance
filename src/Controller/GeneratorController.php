@@ -5,7 +5,7 @@ namespace App\Controller;
 
 use App\Service\ModuleGenerator;
 use Doctrine\ORM\EntityManagerInterface;
-use HZip;
+use App\Service\Hzip;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use SplFileInfo;
@@ -119,7 +119,7 @@ class GeneratorController extends AbstractController
             $this->_codeGen->generateModelCustomFields();
         }
         $zip_path = $base_dir.'/downloads/'.$module_name.'.zip';
-        HZip::zipDir($module_dir, $zip_path);
+        Hzip::zipDir($module_dir, $zip_path);
         $response = new Response();
 
         if (file_exists($zip_path))
