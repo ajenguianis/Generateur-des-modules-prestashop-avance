@@ -125,15 +125,19 @@ class ModuleGenerator
     }
 
     /**
+     * @param null $dir
      * @return bool
      */
-    public function generateIndex()
+    public function generateIndex($dir = null)
     {
+        if (empty($dir) || !is_dir($dir)) {
+            $dir = $this->module_dir;
+        }
         $content = file_get_contents($this->base_dir . '/samples/index.php');
         $params = $this->getParams();
         $content = str_replace(array('$moduleName', '$moduleDisplayName', '$moduleDescription', '$company_name'), array($params['lower']['module_name'], $this->module_data['display_name'], $this->module_data['description'], $params['upper']['company_name']), $content);
 
-        file_put_contents($this->module_dir . DIRECTORY_SEPARATOR . 'index.php', $content);
+        file_put_contents($dir . DIRECTORY_SEPARATOR . 'index.php', $content);
         return true;
     }
 
@@ -174,13 +178,30 @@ class ModuleGenerator
         $content = str_replace(array('Moduleclass', 'moduleclass', 'module_author', 'Diplay name', 'module_description', 'MODULECLASS'), array($params['upper']['module_name'], $params['lower']['module_name'], $params['upper']['company_name'], $this->module_data['display_name'], $this->module_data['description'], strtoupper($params['lower']['module_name'])), $content);
 
         if (isset($this->module_data['hooks']) && !empty($hooks = $this->module_data['hooks'])) {
+            $result = array();
+            array_walk_recursive($hooks,function($v) use (&$result){ $result[] = $v; });
             $register_hooks = '';
             $class = new ClassType('demo');
-            foreach ($hooks as $hook) {
+            foreach ($result as $hook) {
                 $register_hooks .= " && method->registerHook('" . $hook . "')\n";
+                $lowerHookName = $hook;
                 $hook = ucfirst($hook);
                 if (strpos($content, 'hook' . $hook) === false) {
-                    $class->addMethod('hook' . $hook)->addParameter('params');
+                    $method = $class->addMethod('hook' . $hook);
+                    $method->addParameter('params');
+                    if (!empty($this->module_data['hooksContents']) && isset($this->module_data['hooksContents'][$lowerHookName]) && !empty($hookContent = $this->module_data['hooksContents'][$lowerHookName])) {
+                        $hookContent = str_replace(array("/*", "*/", "/+"), array("", "", "$"), $hookContent);
+                        $method->setBody($hookContent);
+                    }
+                }
+            }
+            if (!empty($this->module_data['query']) && !empty($query = $this->module_data['query'])) {
+                foreach ($query as $ind=>$qb){
+                    $method = $class->addMethod('update'.$ind.'Data');
+                    $method->addParameter('data')->setType('array');
+                    $method->addParameter('params');
+                    $qb = str_replace(array("/*", "*/", "/+"), array("", "", "$"), $qb);
+                    $method->setBody($qb);
                 }
             }
             $content = str_replace("registerHook('backOfficeHeader')", "registerHook('backOfficeHeader')\n" . $register_hooks, $content);
@@ -199,6 +220,7 @@ class ModuleGenerator
 
             file_put_contents($this->module_dir . '/' . $this->module_data['module_name'] . '.php', implode('', $lines));
             file_put_contents($this->module_dir . '/' . $this->module_data['module_name'] . '.php', $code, FILE_APPEND);
+
             return true;
         }
         file_put_contents($this->module_dir . DIRECTORY_SEPARATOR . $this->module_data['module_name'] . '.php', $content);
@@ -328,7 +350,7 @@ class ModuleGenerator
 
             $content = file_get_contents($this->base_dir . '/samples/src/Service/Service.php');
             $content = $this->replaceStandardStrings($content);
-            $content = str_replace('Service', $service_name, $content);
+            $content = str_replace('ServiceName', $service_name, $content);
             $serviceDir = $this->module_dir . DIRECTORY_SEPARATOR . 'src' . DIRECTORY_SEPARATOR . 'Service';
             if (!is_dir($serviceDir) && !@mkdir($serviceDir, 0777, true) && !is_dir($serviceDir)) {
                 throw new \RuntimeException(sprintf('Cannot create directory "%s"', $serviceDir));
@@ -577,11 +599,21 @@ class ModuleGenerator
 
     public function generateModelCustomFields()
     {
+        if (empty($this->module_data['objectModels'])) {
+            return false;
+        }
         $overrideDir = $this->module_dir . DIRECTORY_SEPARATOR . 'override';
         if (!is_dir($overrideDir) && !@mkdir($overrideDir, 0777, true) && !is_dir($overrideDir)) {
             throw new \RuntimeException(sprintf('Cannot create directory "%s"', $overrideDir));
         }
+        $this->generateIndex($overrideDir);
+        $overrideClassDir = $overrideDir . DIRECTORY_SEPARATOR . 'classes';
+        if (!is_dir($overrideClassDir) && !@mkdir($overrideClassDir, 0777, true) && !is_dir($overrideClassDir)) {
+            throw new \RuntimeException(sprintf('Cannot create directory "%s"', $overrideClassDir));
+        }
+        $this->generateIndex($overrideClassDir);
         $firstModel = 1;
+        $this->module_data['hooksContents'] = [];
 
         foreach ($this->module_data['objectModels'] as $modelData) {
 
@@ -595,6 +627,7 @@ class ModuleGenerator
             $sql_shop = '';
             $sql_lang = '';
             $tableMapping = $this->em->getRepository(TableMapping::class)->findOneBy(['class' => $modelData['class']]);
+
             $class = new ClassType($modelData['class']);
             $class->addExtend(__CLASS__);
             $method = $class->addMethod('__construct');
@@ -605,8 +638,18 @@ class ModuleGenerator
                 $method->addParameter('id_shop', null);
                 $method->addParameter('context', null)->setType('Context');
             }
+            if ($modelData['class'] === 'Category') {
+                $method->addParameter('idCategory', null);
+                $method->addParameter('idLang', null);
+                $method->addParameter('idShop', null);
+            }
+            if ($modelData['class'] === 'Customer') {
+                $method->addParameter('id', null);
+            }
             $constructBody = '';
             $fieldsDef = [];
+
+            $there_is_lang_field = false;
             foreach ($modelData['fields'] as $index => $item) {
                 $property = $class->addProperty($item['column_name']);
                 $nullable = '';
@@ -614,19 +657,29 @@ class ModuleGenerator
                     $nullable = ' NULL';
                 }
                 $default_value = '';
-                if (!empty($item['default_column_value']) && $item['default_column_value'] !== "") {
+
+                if (isset($item['default_column_value']) && $item['default_column_value'] !== "") {
                     $default_value = ' DEFAULT ' . $item['default_column_value'];
                 }
+
                 $alterLangTable = !empty($item['is_column_lang']) && $tableMapping->getHasLangTable() == true;
+                $length='(' . $item['column_length'] . ')';
+                if ($item['column_type'] == 'DATETIME' || $item['column_type'] == 'DATE') {
+                    $length = '';
+                }
                 if (!$alterLangTable) {
-                    $sql .= 'ALTER TABLE `/*_DB_PREFIX_*/' . $tableMapping->getTableName() . '` ADD COLUMN IF NOT EXISTS `' . $item['column_name'] . '` ' . $item['column_type'] . '(' . $item['column_length'] . ')' . $nullable . $default_value . ';' . PHP_EOL;
+                    $sql .= 'ALTER TABLE `/*_DB_PREFIX_*/' . $tableMapping->getTableName() . '` ADD COLUMN IF NOT EXISTS `' . $item['column_name'] . '` ' . $item['column_type'] . $length . $nullable . $default_value . ';' . PHP_EOL;
                 } else {
-                    $sql_lang .= 'ALTER TABLE `/*_DB_PREFIX_*/' . $tableMapping->getTableName() . '_lang` ADD COLUMN IF NOT EXISTS `' . $item['column_name'] . '` ' . $item['column_type'] . '(' . $item['column_length'] . ')' . $nullable . $default_value . ';' . PHP_EOL;
+                    $column_type = $item['column_type'];
+                    if ($item['column_type'] == 'HTML') {
+                        $column_type = 'VARCHAR';
+                    }
+                    $sql_lang .= 'ALTER TABLE `/*_DB_PREFIX_*/' . $tableMapping->getTableName() . '_lang` ADD COLUMN IF NOT EXISTS `' . $item['column_name'] . '` ' . $column_type . $length . $nullable . $default_value . ';' . PHP_EOL;
                 }
                 $alterShopTable = !empty($item['is_column_shop']) && $tableMapping->getHasShopTable() == true;
 
                 if ($alterShopTable) {
-                    $sql_shop .= 'ALTER TABLE `/*_DB_PREFIX_*/' . $tableMapping->getTableName() . '_shop` ADD COLUMN IF NOT EXISTS `' . $item['column_name'] . '` ' . $item['column_type'] . '(' . $item['column_length'] . ')' . $nullable . $default_value . ';' . PHP_EOL;
+                    $sql_shop .= 'ALTER TABLE `/*_DB_PREFIX_*/' . $tableMapping->getTableName() . '_shop` ADD COLUMN IF NOT EXISTS `' . $item['column_name'] . '` ' . $item['column_type'] . $length . $nullable . $default_value . ';' . PHP_EOL;
                 }
                 if (!empty($item['column_length']) && $item['column_length'] !== '') {
                     $size = (int)$item['column_length'];
@@ -635,7 +688,7 @@ class ModuleGenerator
                     $type = '/*self::TYPE_INT*/';
                     $fieldsDef[$index] = "['type'=>" . $type;
                     if ($item['column_type'] === 'UnsignedInt') {
-                        $validate = 'isUnsignedInt';
+                        $validate = "'isUnsignedInt'";
                         $fieldsDef[$index] = "['type'=>" . $type . ", 'validate'=>" . $validate;
                     }
 
@@ -644,20 +697,20 @@ class ModuleGenerator
                 if ($item['column_type'] === 'EMAIL' || $item['column_type'] === 'VARCHAR' || $item['column_type'] === 'HTML' || $item['column_type'] === 'PERCENT') {
                     $type = '/*self::TYPE_STRING*/';
                     if ($item['column_type'] === 'EMAIL') {
-                        $validate = 'isEmail';
+                        $validate = "'isEmail'";
                     }
                     if ($item['column_type'] === 'HTML') {
                         $type = '/*self::TYPE_HTML*/';
-                        $validate = 'isCleanHtml';
+                        $validate = "'isCleanHtml'";
                     }
                     if ($item['column_type'] === 'VARCHAR') {
-                        $validate = 'isGenericName';
+                        $validate = "'isGenericName'";
                     }
                     $fieldsDef[$index] = "['type'=>" . $type . ", 'validate'=>" . $validate;
                 }
                 if ($item['column_type'] === 'DECIMAL' || $item['column_type'] === 'FLOAT') {
                     $type = '/*self::TYPE_FLOAT*/';
-                    $validate = 'isPrice';
+                    $validate = "'isPrice'";
                     $fieldsDef[$index] = "['type'=>" . $type . ", 'validate'=>" . $validate;
                 }
                 if ($item['column_type'] === 'TEXT' || $item['column_type'] === 'LONGTEXT') {
@@ -666,19 +719,20 @@ class ModuleGenerator
                 }
                 if ($item['column_type'] === 'TINYINT' || $item['column_type'] === 'BOOLEAN') {
                     $type = '/*self::TYPE_BOOL*/';
-                    $validate = 'isBool';
+                    $validate = "'isBool'";
                     $fieldsDef[$index] = "['type'=>" . $type . ", 'validate'=>" . $validate;
                 }
 
-                if ($item['column_type'] === 'DATE' || $item['column_type'] === 'DATETIME') {
-                    $copyPast = false;
-                    $fieldsDef[$index] = "['type'=>/*self::TYPE_DATE*/, 'validate'=>'isDate', 'copy_post'=>" . $copyPast;
+                if ($id_date=($item['column_type'] === 'DATE' || $item['column_type'] === 'DATETIME')) {
+                    $fieldsDef[$index] = "['type'=>/*self::TYPE_DATE*/, 'validate'=>'isDate', 'copy_post'=> false";
                 }
-                if (!empty($size)) {
+                $id_date=($item['column_type'] === 'DATE' || $item['column_type'] === 'DATETIME');
+                if (!empty($size) && !$id_date) {
                     $fieldsDef[$index] = $fieldsDef[$index] . ", 'size'=>" . $size;
                 }
                 if (!empty($item['is_column_lang']) && $item['is_column_lang'] == 1) {
                     $fieldsDef[$index] = $fieldsDef[$index] . ", 'lang'=>true";
+                    $there_is_lang_field = true;
                 }
                 if (!empty($item['is_column_shop']) && $item['is_column_shop'] == 1) {
                     $fieldsDef[$index] = $fieldsDef[$index] . ", 'shop'=>true";
@@ -688,11 +742,27 @@ class ModuleGenerator
                 $constructBody .= "self::/+definition['fields']['" . $item['column_name'] . "'] =" . $fieldsDef[$index] . PHP_EOL;
 
             }
-            $constructBody .= "parent::__construct(/+id_product, /+full, /+id_lang,/+id_shop, /+context);" . PHP_EOL;
-
+            $this->setHookContent($modelData['class'], $modelData['fields'], $tableMapping, $there_is_lang_field);
+            if ($modelData['class'] === 'Product') {
+                $constructBody .= "parent::__construct(/+id_product, /+full, /+id_lang,/+id_shop, /+context);" . PHP_EOL;
+            }
+            if ($modelData['class'] === 'Category') {
+                $constructBody .= "parent::__construct(/+idCategory, /+idLang, /+idShop);" . PHP_EOL;
+            }
+            if ($modelData['class'] === 'Customer') {
+                $constructBody .= "parent::__construct(/+id);" . PHP_EOL;
+            }
             $constructBody = str_replace(array("/*", "*/", "/+"), array("", "", "$"), $constructBody);
             $installContent = file($this->module_dir . DIRECTORY_SEPARATOR . 'sql' . DIRECTORY_SEPARATOR . 'install.php');
-            $key = array_search('foreach ($sql as $query) {' . PHP_EOL, $installContent);
+            $key = 28;
+
+            if (is_array($installContent) && !empty($installContent)) {
+                foreach ($installContent as $index => $row) {
+                    if (md5($row) == 'd5bdf236268edd2d11313fc7b7ce4a0b') {
+                        $key = $index;
+                    }
+                }
+            }
 
             if (!empty($sql)) {
                 $sql = str_replace(array("/*", "*/"), array("'.", ".'"), $sql);
@@ -713,9 +783,10 @@ class ModuleGenerator
             $printer = new Printer;
             $code = $printer->printClass($class);
             $code = str_replace('App\Service\ModuleGenerator', $modelData['class'] . 'Core', $code);
-            file_put_contents($this->module_dir . '/override/' . $modelData['class'] . '.php', '<?php');
-            file_put_contents($this->module_dir . '/override/' . $modelData['class'] . '.php', PHP_EOL, FILE_APPEND);
-            file_put_contents($this->module_dir . '/override/' . $modelData['class'] . '.php', $code, FILE_APPEND);
+            file_put_contents($overrideClassDir . DIRECTORY_SEPARATOR . $modelData['class'] . '.php', '<?php');
+            file_put_contents($overrideClassDir . DIRECTORY_SEPARATOR . $modelData['class'] . '.php', PHP_EOL, FILE_APPEND);
+            file_put_contents($overrideClassDir . DIRECTORY_SEPARATOR . $modelData['class'] . '.php', $code, FILE_APPEND);
+
         }
         return true;
     }
@@ -744,5 +815,146 @@ class ModuleGenerator
         array_splice($array, 0, $originalIndex, $tmpArray);
         return $array;
     }
+
+    private function setHookContent($class, $fields, $tableMapping, $there_is_lang_field)
+    {
+        $sql = '';
+        $sql_lang = '';
+        $sql_shop = '';
+        $content = '';
+        /* if ($class == 'Product') {
+             $this->module_data['hooks'][] = 'actionProductSave';
+             $content .= "/+product = new Product(/+params['id_product']);" . PHP_EOL;
+             $content .= "if (Validate::isLoadedObject(/+product)) {" . PHP_EOL;
+             foreach ($fields as $index => $item) {
+                 $alterLangTable = !empty($item['is_column_lang']) && $tableMapping->getHasLangTable() == true;
+                 if (!$alterLangTable) {
+                     $sql .= "Db::getInstance()->update('" . $tableMapping->getTableName() . "', ['" . $item['column_name'] . "' => Tools::getValue('" . $item['column_name'] . "')], 'id_product=' . (int) /+product->id);" . PHP_EOL;
+                 } else {
+                     $sql_lang .= "Db::getInstance()->update('" . $tableMapping->getTableName() . "_lang', ['" . $item['column_name'] . "' => Tools::getValue('" . $item['column_name'] . "')], 'id_product=' . (int) /+product->id);" . PHP_EOL;
+                 }
+                 $alterShopTable = !empty($item['is_column_shop']) && $tableMapping->getHasShopTable() == true;
+
+                 if ($alterShopTable) {
+                     $sql_shop .= "Db::getInstance()->update('" . $tableMapping->getTableName() . "_shop', ['" . $item['column_name'] . "' => Tools::getValue('" . $item['column_name'] . "')], 'id_product=' . (int) /+product->id);" . PHP_EOL;
+                 }
+             }
+             $content .= $sql . $sql_lang . $sql_shop;
+             $content .= "}";
+             $this->module_data['hooksContents']['actionProductSave'] = $content;
+         }*/
+        if ($class == 'Category') {
+            $this->module_data['hooks']['category'] = ['actionCategoryFormBuilderModifier', 'actionAfterCreateCategoryFormHandler', 'actionAfterUpdateCategoryFormHandler'];
+            $content .= "/+formBuilder = /+params['form_builder'];" . PHP_EOL;
+            if ($there_is_lang_field) {
+                $content .= "/+languages = Language::getLanguages();" . PHP_EOL;
+            }
+            $formBuilder = "/+category=new Category((int) /+params['id']);" . PHP_EOL;
+            $codeForUpdate = "/+id_category = /+params['id'];" . PHP_EOL;
+            $codeForUpdate .= "/+languages = Language::getLanguages();" . PHP_EOL;
+            foreach ($fields as $index => $item) {
+                if (!empty($item['is_column_lang'])) {
+                    $type = "PrestaShopBundle\Form\Admin\Type\TranslateType::class";
+                    $content .= "/+formBuilder->add('" . $item['column_name'] . "', " . $type . ", [
+                         'type' => Symfony\Component\Form\Extension\Core\Type\TextType::class,
+                         'label' => /+this->l('" . $item['column_name'] . "'),
+                         'required' => false,
+                         'locales' => /+languages,
+                     ]);" . PHP_EOL;
+                    $formBuilder.="foreach (/+languages as /+lang) {". PHP_EOL;
+                    $formBuilder.="/+id_lang = /+lang['id_lang'];". PHP_EOL;
+                    $formBuilder .= "/+params['data']['" . $item['column_name'] . "'][/+id_lang] = /+category->" . $item['column_name'] . "[/+id_lang];" . PHP_EOL;
+                    $formBuilder.="}". PHP_EOL;
+                } elseif ($item['column_type'] === 'TINYINT') {
+                    $content .= "/+formBuilder->add('" . $item['column_name'] . "', PrestaShopBundle\Form\Admin\Type\SwitchType::class, [
+                         'label' => /+this->l('" . $item['column_name'] . "'),
+                         'choices' => [
+                             'OFF' => false,
+                             'ON' => true,
+                         ],
+                     ]);" . PHP_EOL;
+                } elseif ($item['column_type'] === 'DATETIME' || $item['column_type'] === 'DATE') {
+                    $content .= "/+formBuilder->add('" . $item['column_name'] . "', PrestaShopBundle\Form\Admin\Type\DatePickerType::class, [
+                         'label' => /+this->l('" . $item['column_name'] . "'),
+                         'required' => false,
+                     ]);" . PHP_EOL;
+                } else {
+                    $content .= "/+formBuilder->add('" . $item['column_name'] . "', Symfony\Component\Form\Extension\Core\Type\TextType::class, [
+                         'label' => /+this->l('" . $item['column_name'] . "'),
+                         'required' => false,
+                     ]);" . PHP_EOL;
+                }
+                if (empty($item['is_column_lang'])) {
+                    $formBuilder .= "/+params['data']['" . $item['column_name'] . "'] = /+category->" . $item['column_name'] . ";" . PHP_EOL;
+                }
+                $alterLangTable = !empty($item['is_column_lang']) && $tableMapping->getHasLangTable() == true;
+
+                if (!$alterLangTable) {
+                    $sql .= "Db::getInstance()->update('" . $tableMapping->getTableName() . "', ['" . $item['column_name'] . "' => /+params['form_data']['".$item['column_name']."']], 'id_category=' . (int) /+id_category);" . PHP_EOL;
+                } else {
+                    $sql_lang.="foreach (/+languages as /+lang) {". PHP_EOL;
+                    $sql_lang.="/+id_lang = /+lang['id_lang'];". PHP_EOL;
+                    $sql_lang .= "Db::getInstance()->update('" . $tableMapping->getTableName() . "_lang', ['" . $item['column_name'] . "' => /+params['form_data']['".$item['column_name']."'][/+id_lang]], 'id_category=' . (int) /+id_category);" . PHP_EOL;
+                    $sql_lang.="}". PHP_EOL;
+                }
+                $alterShopTable = !empty($item['is_column_shop']) && $tableMapping->getHasShopTable() == true;
+
+                if ($alterShopTable) {
+                    $sql_shop .= "Db::getInstance()->update('" . $tableMapping->getTableName() . "_shop', ['" . $item['column_name'] . "' => /+params['form_data']['".$item['column_name']."']], 'id_category=' . (int) /+id_category);" . PHP_EOL;
+                }
+            }
+            $content .= $formBuilder . PHP_EOL;
+            $content .= "/+formBuilder->setData(/+params['data']);" . PHP_EOL;
+            $this->module_data['hooksContents']['actionCategoryFormBuilderModifier'] = $content;
+            $this->module_data['hooksContents']['actionAfterCreateCategoryFormHandler'] = "/+this->updateCategoryData(/+params['form_data'], /+params);";
+            $this->module_data['hooksContents']['actionAfterUpdateCategoryFormHandler'] = "/+this->updateCategoryData(/+params['form_data'], /+params);";
+            $this->module_data['query']['Category'] = $codeForUpdate.$sql . PHP_EOL . $sql_lang . PHP_EOL . $sql_shop;
+        }
+        if ($class == 'Customer') {
+            $this->module_data['hooks']['customer'] = ['actionCustomerFormBuilderModifier', 'actionAfterCreateCustomerFormHandler', 'actionAfterUpdateCustomerFormHandler'];
+            $content .= "/+formBuilder = /+params['form_builder'];" . PHP_EOL;
+            $formBuilder = "/+customer=new Customer((int) /+params['id']);" . PHP_EOL;
+            $codeForUpdate = "/+id_customer = /+params['id'];" . PHP_EOL;
+            foreach ($fields as $index => $item) {
+                if ($item['column_type'] === 'TINYINT') {
+                    $content .= "/+formBuilder->add('" . $item['column_name'] . "', PrestaShopBundle\Form\Admin\Type\SwitchType::class, [
+                         'label' => /+this->l('" . $item['column_name'] . "'),
+                         'choices' => [
+                             'OFF' => false,
+                             'ON' => true,
+                         ],
+                     ]);" . PHP_EOL;
+                } elseif ($item['column_type'] === 'DATETIME' || $item['column_type'] === 'DATE') {
+                    $content .= "/+formBuilder->add('" . $item['column_name'] . "', PrestaShopBundle\Form\Admin\Type\DatePickerType::class, [
+                         'label' => /+this->l('" . $item['column_name'] . "'),
+                         'required' => false,
+                     ]);" . PHP_EOL;
+                } else {
+                    $content .= "/+formBuilder->add('" . $item['column_name'] . "', Symfony\Component\Form\Extension\Core\Type\TextType::class, [
+                         'label' => /+this->l('" . $item['column_name'] . "'),
+                         'required' => false,
+                     ]);" . PHP_EOL;
+                }
+                $formBuilder .= "/+params['data']['" . $item['column_name'] . "'] = /+customer->" . $item['column_name'] . ";" . PHP_EOL;
+
+                    $sql .= "Db::getInstance()->update('" . $tableMapping->getTableName() . "', ['" . $item['column_name'] . "' => /+params['form_data']['".$item['column_name']."']], 'id_customer=' . (int) /+id_customer);" . PHP_EOL;
+
+                $alterShopTable = !empty($item['is_column_shop']) && $tableMapping->getHasShopTable() == true;
+
+                if ($alterShopTable) {
+                    $sql_shop .= "Db::getInstance()->update('" . $tableMapping->getTableName() . "_shop', ['" . $item['column_name'] . "' => /+params['form_data']['".$item['column_name']."']], 'id_customer=' . (int) /+id_customer);" . PHP_EOL;
+                }
+            }
+            $content .= $formBuilder . PHP_EOL;
+            $content .= "/+formBuilder->setData(/+params['data']);" . PHP_EOL;
+            $this->module_data['hooksContents']['actionCustomerFormBuilderModifier'] = $content;
+            $this->module_data['hooksContents']['actionAfterCreateCustomerFormHandler'] = "/+this->updateCustomerData(/+params['form_data'], /+params);";
+            $this->module_data['hooksContents']['actionAfterUpdateCustomerFormHandler'] = "/+this->updateCustomerData(/+params['form_data'], /+params);";
+            $this->module_data['query']['Customer'] = $codeForUpdate.$sql . PHP_EOL . $sql_lang . PHP_EOL . $sql_shop;
+        }
+
+        return true;
+    }
+
 
 }

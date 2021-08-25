@@ -9,7 +9,7 @@ use Psr\Log\LoggerInterface;
 /**
  * Class Service
  */
-class Service
+class ServiceName
 {
     /**
      * @var LoggerInterface

@@ -705,7 +705,7 @@ class AppFixtures extends Fixture
                 'hasLang' => true,
             ],
             'Customer' => [
-                'table' => 'category',
+                'table' => 'customer',
                 'hasShop' => false,
                 'hasLang' => false,
             ]

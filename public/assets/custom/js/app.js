@@ -435,7 +435,7 @@ $(document).ready(function () {
                 '                        </div>\n' +
                 '                        <div class="field-input col-xs-2">\n' +
                 '                            <div class="form-group">\n' +
-                '                                <button type="button" id="field-count" class="btn btn-default add-new" data-child="2" data-type="field">\n' +
+                '                                <button type="button" id="field-count" class="btn btn-default add-new" data-child="2" data-type="custom-field-inputs">\n' +
                 '                                    New field\n' +
                 '                                </button>\n' +
                 '                            </div>\n' +
@@ -571,7 +571,7 @@ $(document).ready(function () {
                 '                    </div>\n' +
                 '                </div>';
             $(elm).closest('.modal-body').append(html);
-            $(elm).attr('data-child', parseInt(count) + 1);
+            // $(elm).attr('data-child', parseInt(count) + 1);
             $(elm).closest('.modal-body').find('.liste-box').attr('data-currentCount', modelCount)
             $(elm).attr('data-model', parseInt(modelCount) + 1);
         }
