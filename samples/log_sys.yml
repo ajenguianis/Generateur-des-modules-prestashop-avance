@@ -36,7 +36,7 @@
     factory: ['Module', 'getInstanceByName']
     public: true
     arguments:
-      - 'Moduleclass'
+      - 'module_class'
   module_class.logger:
     class: 'Psr\Log\LoggerInterface'
     public: true
