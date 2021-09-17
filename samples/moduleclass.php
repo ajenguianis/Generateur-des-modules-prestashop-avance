@@ -27,6 +27,7 @@
 if (!defined('_PS_VERSION_')) {
     exit;
 }
+/** add uses */
 
 class Moduleclass extends Module
 {

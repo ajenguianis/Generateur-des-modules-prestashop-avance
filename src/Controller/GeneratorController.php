@@ -226,12 +226,13 @@ class GeneratorController extends AbstractController
                     $objectModels[$objectIteration]['fields'][$fieldIteration]['is_column_lang']=$data['is_column_lang_'.$associationIteration] ?? null;
                     $objectModels[$objectIteration]['fields'][$fieldIteration]['is_column_shop']=$data['is_column_shop_'.$associationIteration] ?? null;
                     $objectModels[$objectIteration]['fields'][$fieldIteration]['default_column_value']=$data['default_column_value_'.$associationIteration] ?? null;
+                    if(!empty($data['add_to_listing_'.$associationIteration])){
+                        $objectModels[$objectIteration]['listing'][$fieldIteration]=$objectModels[$objectIteration]['fields'][$fieldIteration];
+                    }
                 }
             }
         }
-//        dump($objectModels);
-//        dump($request->request->all());
-//        exit;
+
         $data = $request->request->all();
         if (!empty($commands)) {
             $data = array_merge(['commands' => $commands], $data);
