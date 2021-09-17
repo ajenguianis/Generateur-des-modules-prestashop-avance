@@ -48,6 +48,10 @@ class ModuleGenerator
         'is_column_shop' => 'is_shop',
         'default_column_value' => 'default_value',
     ];
+    /**
+     * @var array
+     */
+    private $params;
 
     /**
      * ModuleGenerator constructor.
@@ -63,6 +67,7 @@ class ModuleGenerator
         $this->module_data = $module_data;
         $this->em = $em;
         $this->filesystem = new Filesystem();
+        $this->params = $this->getParams();
     }
 
     /**
@@ -91,8 +96,7 @@ class ModuleGenerator
     public function generateComposer(): bool
     {
         $content = file_get_contents($this->base_dir . '/samples/composer.json');
-        $params = $this->getParams();
-        $content = str_replace(array('$companyNameLower', '$moduleName', '$nameSpace', '$companyName', '$contact_email'), array($params['lower']['company_name'], $params['lower']['module_name'], $params['upper']['module_name'], $params['upper']['company_name'], $this->module_data['email']), $content);
+        $content = str_replace(array('$companyNameLower', '$moduleName', '$nameSpace', '$companyName', '$contact_email'), array($this->params['lower']['company_name'], $this->params['lower']['module_name'], $this->params['upper']['module_name'], $this->params['upper']['company_name'], $this->module_data['email']), $content);
         file_put_contents($this->module_dir . DIRECTORY_SEPARATOR . 'composer.json', $content);
         return true;
     }
@@ -219,8 +223,7 @@ class ModuleGenerator
             if (!empty($this->module_data['query']) && !empty($query = $this->module_data['query'])) {
                 foreach ($query as $ind => $qb) {
                     $method = $class->addMethod('updateExtra' . $ind . 'Field');
-                    $method->addParameter('data')->setType('array');
-                    $method->addParameter('params');
+                    $method->addParameter(strtolower($ind).'Id');
                     $qb = str_replace(array("/*", "*/", "/+"), array("", "", "$"), $qb);
                     $method->setBody($qb);
                 }
@@ -809,7 +812,8 @@ class ModuleGenerator
             $contentForNonTranslatableTemplates="";
             foreach ($this->module_data['hooks'][strtolower($class)] as $hook) {
                 $common_content = '$idProduct = (int)$params[\'id_product\'];' . PHP_EOL;
-                $use['EvoGroup\Module\Egaddextrafields\Model\ExtraProductFields'] = 'EvoGroup\Module\Egaddextrafields\Model\ExtraProductFields';
+                $model=str_replace('Egaddextrafields', $this->params['upper']['module_name'], 'EvoGroup\Module\Egaddextrafields\Model\ExtraProductFields');
+                $use[$model] = $model;
                 $common_content .= '$extraProductFields = ExtraProductFields::getExtraProductFieldsByProductId($idProduct);' . PHP_EOL;
                 $use['PrestaShop\PrestaShop\Adapter\SymfonyContainer'] = 'PrestaShop\PrestaShop\Adapter\SymfonyContainer';
                 $use['Symfony\Component\Form\Extension\Core\Type\FormType'] = 'Symfony\Component\Form\Extension\Core\Type\FormType';
@@ -932,7 +936,7 @@ class ModuleGenerator
                     $this->module_data['hooksContents']['displayAdminProductsMainStepLeftColumnMiddle'] = $extra_translatable_content;
                 }
                 if (in_array($hook, ['actionObjectProductAddAfter', 'actionObjectProductUpdateAfter'])) {
-                    $this->module_data['hooksContents'][$hook] = "/+this->updateExtraProductField(/+params);";
+                    $this->module_data['hooksContents'][$hook] = "/+this->updateExtraProductField((int)/+params['object']->id);";
                 }
             }
             $codeForUpdateProduct='$extraProductFields = ExtraProductFields::getExtraProductFieldsByProductId($productId);'.PHP_EOL;
