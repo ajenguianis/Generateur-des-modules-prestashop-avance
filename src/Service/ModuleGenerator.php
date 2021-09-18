@@ -442,27 +442,27 @@ class ModuleGenerator
                 $method->addParameter('id_lang', null);
                 $method->addParameter('id_shop', null);
                 $method->addParameter('translator', null);
-                $body = 'Shop::addTableAssociation(self::definition[\'table\'], [\'type\'=>\'shop\']);' . PHP_EOL;
-                $body .= 'Parent::__construct($id, $id_lang, $id_shop, $translator)' . PHP_EOL;
+                $body = '\Shop::addTableAssociation(self::definition[\'table\'], [\'type\'=>\'shop\']);' . PHP_EOL;
+                $body .= 'Parent::__construct($id, $id_lang, $id_shop, $translator);' . PHP_EOL;
                 $method->setBody($body);
             }
             if ($withGeneralGetterAndSetter) {
+                $modelObject=$this->module_data['source'];
+                $relatedField = 'id_product';
+
+                if ($modelObject == 'Category') {
+                    $relatedField = 'id_category';
+                }
+                if ($modelObject == 'Customer') {
+                    $relatedField = 'id_customer';
+                }
                 //getter
-                $method = $class->addMethod('getExtra' . $modelData['class'] . 'FieldsBy' . $modelData['class'] . 'Id');
-                $method->addParameter($modelData['primary'], null);
+                $method = $class->addMethod('getExtra' . $modelObject . 'FieldsBy' . $modelObject . 'Id');
+                $method->addParameter($relatedField, null);
                 $getterContent = '$query = new \DbQuery();' . PHP_EOL;
                 $getterContent .= '$query->from(\'' . $modelData['table'] . '\', \'ef\');' . PHP_EOL;
                 $getterContent .= '$query->select(\'' . $modelData['primary'] . '\');' . PHP_EOL;
-                $relatedField = 'id_product';
 
-                $modelData['class']=$this->module_data['source'];
-
-                if ($modelData['class'] == 'Category') {
-                    $relatedField = 'id_category';
-                }
-                if ($modelData['class'] == 'Customer') {
-                    $relatedField = 'id_customer';
-                }
 
                 $getterContent .= '$query->where(\'ef.' . $relatedField . '=\' . (int)$' . $relatedField . ');' . PHP_EOL;
                 $getterContent .= '$result = \Db::getInstance()->getRow($query);' . PHP_EOL;
@@ -472,18 +472,18 @@ class ModuleGenerator
                 $getterContent .= 'return new self();' . PHP_EOL;
                 $method->setBody($getterContent);
                 //setter
-                $method = $class->addMethod('SetExtra' . $modelData['class'] . 'FieldsBy' . $modelData['class'] . 'Id');
-                $method->addParameter($modelData['primary'], null)->setType('int');
+                $method = $class->addMethod('SetExtra' . $modelObject . 'FieldsBy' . $modelObject . 'Id');
+                $method->addParameter($relatedField, null)->setType('int');
                 $method->addParameter('form_data', null)->setType('array');
                 $setterContent = 'if($' . $relatedField . ' > 0){' . PHP_EOL;
-                $setterContent .= '$extra' . $modelData['class'] . 'Fields=self::getExtra' . $modelData['class'] . 'FieldsBy' . $modelData['class'] . 'Id($' . $relatedField . ');'.PHP_EOL;
+                $setterContent .= '$extra' . $modelObject . 'Fields=self::getExtra' . $modelObject . 'FieldsBy' . $modelObject . 'Id($' . $relatedField . ');'.PHP_EOL;
                 foreach ($modelData['fields'] as $field) {
                     if (!empty($field['is_auto_increment']) && $field['is_auto_increment'] == 1) {
                         continue;
                     }
-                    $setterContent .= '$extra' . $modelData['class'] . 'Fields->' . $field['field_name'] . '=$form_data[\'' . $field['field_name'] . '\'];' . PHP_EOL;
+                    $setterContent .= '$extra' . $modelObject . 'Fields->' . $field['field_name'] . '=$form_data[\'' . $field['field_name'] . '\'];' . PHP_EOL;
                 }
-                $setterContent .= '$extra' . $modelData['class'] . 'Fields->save();' . PHP_EOL;
+                $setterContent .= '$extra' . $modelObject. 'Fields->save();' . PHP_EOL;
                 $setterContent .= '}' . PHP_EOL;
                 $method->setBody($setterContent);
             }
@@ -718,7 +718,6 @@ class ModuleGenerator
             return false;
         }
 
-        $firstModel = 1;
         $this->module_data['hooksContents'] = [];
         $extraData = [];
 
@@ -803,6 +802,8 @@ class ModuleGenerator
         $sql_shop = '';
         $content = '';
         $use = [];
+        $this->module_data['hooks']=[];
+        $this->module_data['hooks'][strtolower($class)]=[];
         if ($class == 'Product') {
             $this->module_data['hooks'][strtolower($class)] = array_merge($this->module_data['hooks'][strtolower($class)], ['actionObjectProductAddAfter', 'actionObjectProductUpdateAfter', 'displayAdminProductsMainStepLeftColumnBottom']);
             if ($there_is_a_lang_field) {
