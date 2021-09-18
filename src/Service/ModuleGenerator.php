@@ -223,7 +223,7 @@ class ModuleGenerator
             if (!empty($this->module_data['query']) && !empty($query = $this->module_data['query'])) {
                 foreach ($query as $ind => $qb) {
                     $method = $class->addMethod('updateExtra' . $ind . 'Field');
-                    $method->addParameter(strtolower($ind).'Id');
+                    $method->addParameter(strtolower($ind) . 'Id');
                     $qb = str_replace(array("/*", "*/", "/+"), array("", "", "$"), $qb);
                     $method->setBody($qb);
                 }
@@ -254,12 +254,12 @@ class ModuleGenerator
             file_put_contents($this->module_dir . '/' . $this->module_data['module_name'] . '.php', $code, FILE_APPEND);
         }
         if (!empty($this->module_data['use']) && !empty($query = $this->module_data['use'])) {
-            $useContent='';
-            foreach ($this->module_data['use'] as $use){
-                $useContent.='use '. $use.';'.PHP_EOL;
+            $useContent = '';
+            foreach ($this->module_data['use'] as $use) {
+                $useContent .= 'use ' . $use . ';' . PHP_EOL;
             }
             $content = file_get_contents($this->module_dir . '/' . $this->module_data['module_name'] . '.php');
-            $content=str_replace('/** add uses */', $useContent, $content);
+            $content = str_replace('/** add uses */', $useContent, $content);
             file_put_contents($this->module_dir . '/' . $this->module_data['module_name'] . '.php', $content);
         }
         return true;
@@ -442,12 +442,12 @@ class ModuleGenerator
                 $method->addParameter('id_lang', null);
                 $method->addParameter('id_shop', null);
                 $method->addParameter('translator', null);
-                $body = '\Shop::addTableAssociation(self::definition[\'table\'], [\'type\'=>\'shop\']);' . PHP_EOL;
+                $body = '\Shop::addTableAssociation(self::$definition[\'table\'], [\'type\'=>\'shop\']);' . PHP_EOL;
                 $body .= 'Parent::__construct($id, $id_lang, $id_shop, $translator);' . PHP_EOL;
                 $method->setBody($body);
             }
             if ($withGeneralGetterAndSetter) {
-                $modelObject=$this->module_data['source'];
+                $modelObject = $this->module_data['source'];
                 $relatedField = 'id_product';
 
                 if ($modelObject == 'Category') {
@@ -457,7 +457,7 @@ class ModuleGenerator
                     $relatedField = 'id_customer';
                 }
                 //getter
-                $method = $class->addMethod('getExtra' . $modelObject . 'FieldsBy' . $modelObject . 'Id');
+                $method = $class->addMethod('getExtra' . $modelObject . 'FieldsBy' . $modelObject . 'Id')->setStatic();
                 $method->addParameter($relatedField, null);
                 $getterContent = '$query = new \DbQuery();' . PHP_EOL;
                 $getterContent .= '$query->from(\'' . $modelData['table'] . '\', \'ef\');' . PHP_EOL;
@@ -472,18 +472,18 @@ class ModuleGenerator
                 $getterContent .= 'return new self();' . PHP_EOL;
                 $method->setBody($getterContent);
                 //setter
-                $method = $class->addMethod('SetExtra' . $modelObject . 'FieldsBy' . $modelObject . 'Id');
+                $method = $class->addMethod('SetExtra' . $modelObject . 'FieldsBy' . $modelObject . 'Id')->setStatic();
                 $method->addParameter($relatedField, null)->setType('int');
                 $method->addParameter('form_data', null)->setType('array');
                 $setterContent = 'if($' . $relatedField . ' > 0){' . PHP_EOL;
-                $setterContent .= '$extra' . $modelObject . 'Fields=self::getExtra' . $modelObject . 'FieldsBy' . $modelObject . 'Id($' . $relatedField . ');'.PHP_EOL;
+                $setterContent .= '$extra' . $modelObject . 'Fields=self::getExtra' . $modelObject . 'FieldsBy' . $modelObject . 'Id($' . $relatedField . ');' . PHP_EOL;
                 foreach ($modelData['fields'] as $field) {
                     if (!empty($field['is_auto_increment']) && $field['is_auto_increment'] == 1) {
                         continue;
                     }
                     $setterContent .= '$extra' . $modelObject . 'Fields->' . $field['field_name'] . '=$form_data[\'' . $field['field_name'] . '\'];' . PHP_EOL;
                 }
-                $setterContent .= '$extra' . $modelObject. 'Fields->save();' . PHP_EOL;
+                $setterContent .= '$extra' . $modelObject . 'Fields->save();' . PHP_EOL;
                 $setterContent .= '}' . PHP_EOL;
                 $method->setBody($setterContent);
             }
@@ -568,9 +568,6 @@ class ModuleGenerator
             $property = $class->addProperty($fieldData['field_name']);
             if (!empty($fieldData['is_auto_increment']) && $fieldData['is_auto_increment'] === 1) {
                 $sql .= '`' . $fieldData['field_name'] . '` int(11) NOT NULL AUTO_INCREMENT' . $separator . PHP_EOL;
-                if($withGeneralGetterAndSetter && !empty($this->module_data['source'])){
-                    $sql .= '`id_'.strtolower($this->module_data['source']).'` int(11) UNSIGNED NOT NULL,' . PHP_EOL;
-                }
                 continue;
             }
             if ($fieldData['is_nullable'] === '1') {
@@ -593,7 +590,13 @@ class ModuleGenerator
                     $sql_shop .= '`id_shop` int(11) UNSIGNED NOT NULL,' . PHP_EOL;
                 }
                 if (!empty($fieldData['field_name']) && $fieldData['field_type']) {
-                    $sql_shop .= '`' . $fieldData['field_name'] . '` ' . $fieldData['field_type'] . '(' . $fieldData['field_length'] . ')' . $nullableCondition . $default_value . ',' . PHP_EOL;
+
+                    if ($fieldData['field_type'] === 'BOOLEAN') {
+                        $sql_shop .= '`' . $fieldData['field_name'] . '` TINYINT(' . $fieldData['field_length'] . ')' . $nullableCondition . $default_value . ',' . PHP_EOL;
+                    } else {
+                        $sql_shop .= '`' . $fieldData['field_name'] . '` ' . $fieldData['field_type'] . '(' . $fieldData['field_length'] . ')' . $nullableCondition . $default_value . ',' . PHP_EOL;
+
+                    }
                 }
 
                 $firstShopIteration++;
@@ -607,15 +610,14 @@ class ModuleGenerator
                 if ($firstLangIteration == 1) {
                     $sql_lang .= 'CREATE TABLE IF NOT EXISTS `/*_DB_PREFIX_*/' . $modelData['table'] . '_lang` (' . PHP_EOL;
                     $sql_lang .= '`' . $modelData['primary'] . '` int(11) NOT NULL,' . PHP_EOL;
-                    $sql_lang .= '`id_shop` int(11) UNSIGNED NOT NULL,' . PHP_EOL;
                     $sql_lang .= '`id_lang` int(11) UNSIGNED NOT NULL,' . PHP_EOL;
                 }
-                $type=$fieldData['field_type'] . '(' . $fieldData['field_length'] . ')';
-                if ($fieldData['field_type'] !== 'VARCHAR' &&  $fieldData['field_type'] !== 'TEXT' && $fieldData['field_type'] !== 'LONGTEXT') {
-                  $type='VARCHAR(' . $fieldData['field_length'] . ')';
+                $type = $fieldData['field_type'] . '(' . $fieldData['field_length'] . ')';
+                if ($fieldData['field_type'] !== 'VARCHAR' && $fieldData['field_type'] !== 'TEXT' && $fieldData['field_type'] !== 'LONGTEXT') {
+                    $type = 'VARCHAR(' . $fieldData['field_length'] . ')';
                 }
                 if ($fieldData['field_type'] === 'TEXT' || $fieldData['field_type'] === 'LONGTEXT') {
-                    $type=$fieldData['field_type'];
+                    $type = $fieldData['field_type'];
                 }
                 $sql_lang .= '`' . $fieldData['field_name'] . '` ' . $type . $nullableCondition . $default_value . ',' . PHP_EOL;
                 $firstLangIteration++;
@@ -755,9 +757,19 @@ class ModuleGenerator
                 "default_value" => null,
                 "is_auto_increment" => 1,
             ];
-            $extraModelsData['fields'] = array_merge([$primaryField], $extraData);
+            $unsignedField = [
+                "field_name" => 'id_' . strtolower($modelData['class']),
+                "field_type" => "UnsignedInt",
+                "field_length" => "11",
+                "is_nullable" => null,
+                "is_lang" => null,
+                "is_shop" => null,
+                "default_value" => null,
+                "is_auto_increment" => null,
+            ];
+            $extraModelsData['fields'] = array_merge([$primaryField, $unsignedField], $extraData);
             $this->module_data['models'] = [$extraModelsData];
-            $this->module_data['source']=$modelData['class'];
+            $this->module_data['source'] = $modelData['class'];
             $this->generateModels(true);
 
             if (!empty($modelData['listing'])) {
@@ -802,36 +814,35 @@ class ModuleGenerator
         $sql_shop = '';
         $content = '';
         $use = [];
-        $this->module_data['hooks']=[];
-        $this->module_data['hooks'][strtolower($class)]=[];
+        $this->module_data['hooks'][strtolower($class)] = !empty($this->module_data['hooks'][strtolower($class)]) ? $this->module_data['hooks'][strtolower($class)] :[];
         if ($class == 'Product') {
             $this->module_data['hooks'][strtolower($class)] = array_merge($this->module_data['hooks'][strtolower($class)], ['actionObjectProductAddAfter', 'actionObjectProductUpdateAfter', 'displayAdminProductsMainStepLeftColumnBottom']);
             if ($there_is_a_lang_field) {
                 $this->module_data['hooks'][strtolower($class)][] = 'displayAdminProductsMainStepLeftColumnMiddle';
             }
-            $contentForTranslatableTemplates="";
-            $contentForNonTranslatableTemplates="";
+            $contentForTranslatableTemplates = "";
+            $contentForNonTranslatableTemplates = "";
             foreach ($this->module_data['hooks'][strtolower($class)] as $hook) {
                 $common_content = '$idProduct = (int)$params[\'id_product\'];' . PHP_EOL;
-                $model=str_replace('Egaddextrafields', $this->params['upper']['module_name'], 'EvoGroup\Module\Egaddextrafields\Model\ExtraProductFields');
+                $model = str_replace('Egaddextrafields', $this->params['upper']['module_name'], 'EvoGroup\Module\Egaddextrafields\Model\ExtraProductFields');
                 $use[$model] = $model;
                 $common_content .= '$extraProductFields = ExtraProductFields::getExtraProductFieldsByProductId($idProduct);' . PHP_EOL;
                 $use['PrestaShop\PrestaShop\Adapter\SymfonyContainer'] = 'PrestaShop\PrestaShop\Adapter\SymfonyContainer';
                 $use['Symfony\Component\Form\Extension\Core\Type\FormType'] = 'Symfony\Component\Form\Extension\Core\Type\FormType';
 
                 if ($hook == 'displayAdminProductsMainStepLeftColumnBottom') {
-                    $formData='['. PHP_EOL;
+                    $formData = '[' . PHP_EOL;
                     foreach ($fields as $index => $item) {
                         if (!empty($item['is_column_lang'])) {
                             continue;
                         }
-                        $formData.="'".$item['column_name']."' => /+extraProductFields-> ". $item['column_name']."," .PHP_EOL;
-                        $contentForNonTranslatableTemplates.="<h3>{{ form_label(form.".$item['column_name'].") }}</h3>".PHP_EOL;
-                        $contentForNonTranslatableTemplates.="{{ form_widget(form.".$item['column_name'].") }}".PHP_EOL;
-                        $contentForNonTranslatableTemplates.="{{ form_errors(form.".$item['column_name'].") }}".PHP_EOL;
-                        $contentForNonTranslatableTemplates.="<br>".PHP_EOL;
+                        $formData .= "'" . $item['column_name'] . "' => /+extraProductFields-> " . $item['column_name'] . "," . PHP_EOL;
+                        $contentForNonTranslatableTemplates .= "<h3>{{ form_label(form." . $item['column_name'] . ") }}</h3>" . PHP_EOL;
+                        $contentForNonTranslatableTemplates .= "{{ form_widget(form." . $item['column_name'] . ") }}" . PHP_EOL;
+                        $contentForNonTranslatableTemplates .= "{{ form_errors(form." . $item['column_name'] . ") }}" . PHP_EOL;
+                        $contentForNonTranslatableTemplates .= "<br>" . PHP_EOL;
                     }
-                    $formData.=']'. PHP_EOL;
+                    $formData .= ']' . PHP_EOL;
 
                     $extra_non_translatable_content = $common_content;
                     $extra_non_translatable_content .= '$form = SymfonyContainer::getInstance()->get(\'form.factory\')->createNamedBuilder(\'extra_non_translatable_fields_form\', FormType::class, ' . $formData . ')' . PHP_EOL;
@@ -851,9 +862,11 @@ class ModuleGenerator
                             'label' => /+this->l('" . $item['column_name'] . "'),
                             'required' => false,
                             ])" . PHP_EOL;
-                                                    } else {
+                        } else {
+                            $use['Symfony\Component\Validator\Constraints as Assert'] = 'Symfony\Component\Validator\Constraints as Assert';
                             $use['Symfony\Component\Form\Extension\Core\Type\TextType'] = 'Symfony\Component\Form\Extension\Core\Type\TextType';
-                            $extra_non_translatable_content .= "->add('" . $item['column_name'] . "', TextType::class, [
+                            if(!empty($item['column_length'])){
+                                $extra_non_translatable_content .= "->add('" . $item['column_name'] . "', TextType::class, [
                             'label' => /+this->l('" . $item['column_name'] . "'),
                             'required' => false,
                             'attr' => ['placeholder' => /+this->l('" . $item['column_name'] . "')],
@@ -862,6 +875,17 @@ class ModuleGenerator
                             new Assert\Length(['min' => 1, 'max' => " . $item['column_length'] . "]),
                             ]
                             ])" . PHP_EOL;
+                            }else{
+                                $extra_non_translatable_content .= "->add('" . $item['column_name'] . "', TextType::class, [
+                            'label' => /+this->l('" . $item['column_name'] . "'),
+                            'required' => false,
+                            'attr' => ['placeholder' => /+this->l('" . $item['column_name'] . "')],
+                            'constraints' => [
+                            new Assert\NotBlank(),
+                            ]
+                            ])" . PHP_EOL;
+                            }
+
                         }
                     }
                     $extra_non_translatable_content .= '->getForm();' . PHP_EOL;
@@ -871,19 +895,19 @@ class ModuleGenerator
                     $this->module_data['hooksContents']['displayAdminProductsMainStepLeftColumnBottom'] = $extra_non_translatable_content;
                 }
                 if ($hook == 'displayAdminProductsMainStepLeftColumnMiddle') {
-                    $formData='['. PHP_EOL;
+                    $formData = '[' . PHP_EOL;
                     foreach ($fields as $index => $item) {
                         if (empty($item['is_column_lang'])) {
                             continue;
                         }
 
-                        $formData.="'".$item['column_name']."' => /+extraProductFields-> ". $item['column_name']."," .PHP_EOL;
-                        $contentForTranslatableTemplates.="<h3>{{ form_label(form.".$item['column_name'].") }}</h3>".PHP_EOL;
-                        $contentForTranslatableTemplates.="{{ form_widget(form.".$item['column_name'].") }}".PHP_EOL;
-                        $contentForTranslatableTemplates.="{{ form_errors(form.".$item['column_name'].") }}".PHP_EOL;
-                        $contentForTranslatableTemplates.="<br>".PHP_EOL;
+                        $formData .= "'" . $item['column_name'] . "' => /+extraProductFields-> " . $item['column_name'] . "," . PHP_EOL;
+                        $contentForTranslatableTemplates .= "<h3>{{ form_label(form." . $item['column_name'] . ") }}</h3>" . PHP_EOL;
+                        $contentForTranslatableTemplates .= "{{ form_widget(form." . $item['column_name'] . ") }}" . PHP_EOL;
+                        $contentForTranslatableTemplates .= "{{ form_errors(form." . $item['column_name'] . ") }}" . PHP_EOL;
+                        $contentForTranslatableTemplates .= "<br>" . PHP_EOL;
                     }
-                    $formData.=']'. PHP_EOL;
+                    $formData .= ']' . PHP_EOL;
                     $extra_translatable_content = $common_content;
                     $extra_translatable_content .= '$form = SymfonyContainer::getInstance()->get(\'form.factory\')->createNamedBuilder(\'extra_translatable_fields_form\', FormType::class, ' . $formData . ')' . PHP_EOL;
                     foreach ($fields as $index => $item) {
@@ -910,6 +934,7 @@ class ModuleGenerator
                             }
                             if ($item['column_type'] === 'VARCHAR') {
                                 $use['PrestaShop\PrestaShop\Core\ConstraintValidator\Constraints\CleanHtml'] = 'PrestaShop\PrestaShop\Core\ConstraintValidator\Constraints\CleanHtml';
+                                $use['Symfony\Component\Validator\Constraints as Assert'] = 'Symfony\Component\Validator\Constraints as Assert';
                                 $extra_translatable_content .= '->add(' . PHP_EOL;
                                 $extra_translatable_content .= '\'' . $item['column_name'] . '\',' . PHP_EOL;
                                 $extra_translatable_content .= 'TranslateType::class,' . PHP_EOL;
@@ -940,34 +965,27 @@ class ModuleGenerator
                     $this->module_data['hooksContents'][$hook] = "/+this->updateExtraProductField((int)/+params['object']->id);";
                 }
             }
-            $codeForUpdateProduct='$extraProductFields = ExtraProductFields::getExtraProductFieldsByProductId($productId);'.PHP_EOL;
+            $codeForUpdateProduct = '$formData = [\'id_product\' => $productId];' . PHP_EOL;
 
-            $codeForUpdateProduct.='if (Tools::getIsset(\'extra_non_translatable_fields_form\') && !empty($extra_non_translatable_form = Tools::getValue(\'extra_non_translatable_fields_form\'))) {'.PHP_EOL;
-            $codeForUpdateProduct.='   foreach ($extra_non_translatable_form as $extraFieldKey => $extraFieldValue) {'.PHP_EOL;
-            $codeForUpdateProduct.='       $extraProductFields->$extraFieldKey = $extraFieldValue;'.PHP_EOL;
-            $codeForUpdateProduct.='    }'.PHP_EOL;
-            $codeForUpdateProduct.='    }'.PHP_EOL;
-            $codeForUpdateProduct.='if (Tools::getIsset(\'extra_translatable_fields_form\') && !empty($extra_translatable_form = Tools::getValue(\'extra_translatable_fields_form\'))) {'.PHP_EOL;
-            $codeForUpdateProduct.='   foreach ($extra_non_translatable_form as $extraFieldKey => $extraFieldValue) {'.PHP_EOL;
-            $codeForUpdateProduct.='       $languages = Language::getLanguages();'.PHP_EOL;
-            $codeForUpdateProduct.='          foreach ($languages as $lang) {'.PHP_EOL;
-            $codeForUpdateProduct.='       $extraProductFields->$extraFieldKey[$lang[\'id_lang\']] = !empty($extraFieldValue[$lang[\'id_lang\']]) ? $extraFieldValue[$lang[\'id_lang\']] : null;'.PHP_EOL;
-            $codeForUpdateProduct.='       }'.PHP_EOL;
-            $codeForUpdateProduct.='      }'.PHP_EOL;
-            $codeForUpdateProduct.='    }'.PHP_EOL;
-            $codeForUpdateProduct.='$extraProductFields->save();'.PHP_EOL;
+            $codeForUpdateProduct .= 'if (Tools::getIsset(\'extra_non_translatable_fields_form\') && !empty($extra_non_translatable_form = Tools::getValue(\'extra_non_translatable_fields_form\'))) {' . PHP_EOL;
+            $codeForUpdateProduct .= '   $formData=array_merge($formData, $extra_non_translatable_form);' . PHP_EOL;
+            $codeForUpdateProduct .= '    }' . PHP_EOL;
+            $codeForUpdateProduct .= 'if (Tools::getIsset(\'extra_translatable_fields_form\') && !empty($extra_translatable_form = Tools::getValue(\'extra_translatable_fields_form\'))) {' . PHP_EOL;
+            $codeForUpdateProduct .= '   $formData=array_merge($formData, $extra_translatable_form);' . PHP_EOL;
+            $codeForUpdateProduct .= '    }' . PHP_EOL;
+            $codeForUpdateProduct .= 'ExtraProductFields::SetExtraProductFieldsByProductId($productId, $formData);' . PHP_EOL;
 
             $this->module_data['query'][$class] = $codeForUpdateProduct;
-            $this->module_data['use']=$use;
+            $this->module_data['use'] = $use;
 
             //templates
-            $twigPath=$this->module_dir.'/views/PrestaShop/Products';
+            $twigPath = $this->module_dir . '/views/PrestaShop/Products';
             if (!is_dir($twigPath) && !@mkdir($twigPath, 0777, true) && !is_dir($twigPath)) {
                 throw new \RuntimeException(sprintf('Cannot create directory "%s"', $twigPath));
             }
-            file_put_contents($this->module_dir.'/views/PrestaShop/Products/extra_no_translatable_fields.html.twig', $contentForNonTranslatableTemplates);
+            file_put_contents($this->module_dir . '/views/PrestaShop/Products/extra_no_translatable_fields.html.twig', $contentForNonTranslatableTemplates);
 
-            file_put_contents($this->module_dir.'/views/PrestaShop/Products/extra_translatable_fields.html.twig', $contentForTranslatableTemplates);
+            file_put_contents($this->module_dir . '/views/PrestaShop/Products/extra_translatable_fields.html.twig', $contentForTranslatableTemplates);
 
         }
 //        if ($class == 'Category') {
@@ -1101,6 +1119,7 @@ class ModuleGenerator
             }
 
             $this->module_data['hooks']['product'] = ['displayAdminCatalogTwigProductHeader', 'displayAdminCatalogTwigProductFilter', 'displayAdminCatalogTwigListingProductFields', 'actionAdminProductsListingFieldsModifier'];
+
             $header = "return /+this->display(__FILE__,'views/templates/hook/displayAdminCatalogTwigProductHeader.tpl');" . PHP_EOL;
             $this->module_data['hooksContents']['displayAdminCatalogTwigProductHeader'] = $header;
             $filter = "";
@@ -1113,16 +1132,16 @@ class ModuleGenerator
             $filter .= "return /+this->display(__FILE__,'views/templates/hook/displayAdminCatalogTwigProductFilter.tpl');";
             $this->module_data['hooksContents']['displayAdminCatalogTwigProductFilter'] = $filter;
             $listing = "/+id_product= /+params['product']['id_product'];" . PHP_EOL;
-            $listing .= "/+product= new Product(/+id_product);" . PHP_EOL;
+            $listing .= "/+extraProductFields= ExtraProductFields::getExtraProductFieldsByProductId(/+id_product);" . PHP_EOL;
             $listing .= "/+vars=[";
             foreach ($listingFields as $field) {
                 if (!empty($field['is_column_lang'])) {
-                    $listing .= "'" . $field['column_name'] . "'=>/+product->" . $field['column_name'] . "[Configuration::get('PS_LANG_DEFAULT')]," . PHP_EOL;
+                    $listing .= "'" . $field['column_name'] . "'=>/+extraProductFields->" . $field['column_name'] . "[Configuration::get('PS_LANG_DEFAULT')]," . PHP_EOL;
                 } elseif ($field['column_type'] === 'TINYINT' || $field['column_type'] === 'BOOLEAN') {
                     $this->module_data['presenter']['product'] = ['presentBooleanResponse' => $this->booleanPresenter()];
                     $listing .= "'" . $field['column_name'] . "'=>/+this->presentBooleanResponse(Db::getInstance()->getValue('SELECT " . $field['column_name'] . " FROM '._DB_PREFIX_.'product where id_product='.(int)/+product->id))," . PHP_EOL;
                 } else {
-                    $listing .= "'" . $field['column_name'] . "'=>/+product->" . $field['column_name'] . "," . PHP_EOL;
+                    $listing .= "'" . $field['column_name'] . "'=>/+extraProductFields->" . $field['column_name'] . "," . PHP_EOL;
                 }
             }
             $listing .= "];";
@@ -1135,9 +1154,9 @@ class ModuleGenerator
             $custom_value = "";
             $params = $this->getParams();
             $id_default_lang = "Configuration::get('PS_LANG_DEFAULT')";
-            $transCount=0;
-            $count=0;
-            $where="";
+            $transCount = 0;
+            $count = 0;
+            $where = "";
             foreach ($listingFields as $field) {
                 $customHead .= "<th>{l s='" . $field['column_name'] . "' mod='" . $params['lower']['module_name'] . "'}</th>" . PHP_EOL;
                 $customFilter .= "<th><input type=\"text\" class=\"form-control\"  placeholder=\"{l s='Search " . $field['column_name'] . "' mod='egaddcustomfieldtoproduct'}\" name=\"filter_column_name_" . $field['column_name'] . "\" value=\"{/+" . $field['column_name'] . "}\"></th>" . PHP_EOL;
@@ -1149,31 +1168,32 @@ class ModuleGenerator
                     $sql .= "'field' => '" . $field['column_name'] . "'," . PHP_EOL;
                     $sql .= "'filtering' => \PrestaShop\PrestaShop\Adapter\Admin\AbstractAdminQueryBuilder::FILTERING_LIKE_BOTH" . PHP_EOL;
                     $sql .= "];" . PHP_EOL;
-                    $where.='if (Tools::getIsset(\'filter_column_name_'.$field['column_name'].'\') && !empty(Tools::getValue(\'filter_column_name_'.$field['column_name'].'\'))) {'.PHP_EOL;
-                    $where.='$params[\'sql_where\'][] .= "extra_lang.extra_reference =" . Tools::getValue(\'filter_column_name_'.$field['column_name'].'\');'.PHP_EOL;
-                    $where.='}'.PHP_EOL;
+                    $where .= 'if (Tools::getIsset(\'filter_column_name_' . $field['column_name'] . '\') && !empty(Tools::getValue(\'filter_column_name_' . $field['column_name'] . '\'))) {' . PHP_EOL;
+                    $where .= '$params[\'sql_where\'][] .= "extra_lang.' . $field['column_name'] . ' like \'%" . Tools::getValue(\'filter_column_name_' . $field['column_name'] . '\')."%\'";' . PHP_EOL;
+                    $where .= '}' . PHP_EOL;
+                    $transCount++;
                 } else {
                     $sql .= "/+params['sql_select']['" . $field['column_name'] . "'] = [" . PHP_EOL;
                     $sql .= "'table' => 'extra'," . PHP_EOL;
                     $sql .= "'field' => '" . $field['column_name'] . "'," . PHP_EOL;
                     $sql .= "'filtering' => \PrestaShop\PrestaShop\Adapter\Admin\AbstractAdminQueryBuilder::FILTERING_LIKE_BOTH" . PHP_EOL;
                     $sql .= "];" . PHP_EOL;
-                    $where.='if (Tools::getIsset(\'filter_column_name_'.$field['column_name'].'\') && !empty(Tools::getValue(\'filter_column_name_'.$field['column_name'].'\'))) {'.PHP_EOL;
-                    $where.='$params[\'sql_where\'][] .= "extra.extra_reference =" . Tools::getValue(\'filter_column_name_'.$field['column_name'].'\');'.PHP_EOL;
-                    $where.='}'.PHP_EOL;
+                    $where .= 'if (Tools::getIsset(\'filter_column_name_' . $field['column_name'] . '\') && !empty(Tools::getValue(\'filter_column_name_' . $field['column_name'] . '\'))) {' . PHP_EOL;
+                    $where .= '$params[\'sql_where\'][] .= "extra.' . $field['column_name'] . ' =" . Tools::getValue(\'filter_column_name_' . $field['column_name'] . '\');' . PHP_EOL;
+                    $where .= '}' . PHP_EOL;
                     $count++;
                 }
-                if($count==1){
+                if ($count == 1) {
                     $sql .= "/+params['sql_table']['extra'] = [" . PHP_EOL;
                     $sql .= "'table' => 'extraproductfields'," . PHP_EOL;
-                    $sql .= "'join' => 'INNER JOIN'," . PHP_EOL;
+                    $sql .= "'join' => 'LEFT JOIN'," . PHP_EOL;
                     $sql .= "'on' => 'p.`id_product` = extra.`id_product`'," . PHP_EOL;
                     $sql .= "];" . PHP_EOL;
                 }
-                if($transCount==1){
+                if ($transCount == 1) {
                     $sql .= "/+params['sql_table']['extra_lang'] = [" . PHP_EOL;
                     $sql .= "'table' => 'extraproductfields_lang'," . PHP_EOL;
-                    $sql .= "'join' => 'INNER JOIN'," . PHP_EOL;
+                    $sql .= "'join' => 'LEFT JOIN'," . PHP_EOL;
                     $sql .= "'on' => 'extra_lang.`id_extraproductfields` = extra.`id_extraproductfields`'," . PHP_EOL;
                     $sql .= "];" . PHP_EOL;
                 }
