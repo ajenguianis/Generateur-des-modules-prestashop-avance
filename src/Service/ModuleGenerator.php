@@ -52,6 +52,10 @@ class ModuleGenerator
      * @var array
      */
     private $params;
+    /**
+     * @var mixed
+     */
+    private $lastField;
 
     /**
      * ModuleGenerator constructor.
@@ -773,7 +777,7 @@ class ModuleGenerator
             $this->generateModels(true);
 
             if (!empty($modelData['listing'])) {
-                $this->addToListing($modelData['class'], $modelData['listing']);
+                $this->addToListing($modelData['class'], $modelData['listing'], $there_is_a_lang_field);
             }
 
             $this->setHookContent($modelData['class'], $modelData['fields'], $there_is_a_lang_field);
@@ -814,7 +818,7 @@ class ModuleGenerator
         $sql_shop = '';
         $content = '';
         $use = [];
-        $this->module_data['hooks'][strtolower($class)] = !empty($this->module_data['hooks'][strtolower($class)]) ? $this->module_data['hooks'][strtolower($class)] :[];
+        $this->module_data['hooks'][strtolower($class)] = !empty($this->module_data['hooks'][strtolower($class)]) ? $this->module_data['hooks'][strtolower($class)] : [];
         if ($class == 'Product') {
             $this->module_data['hooks'][strtolower($class)] = array_merge($this->module_data['hooks'][strtolower($class)], ['actionObjectProductAddAfter', 'actionObjectProductUpdateAfter', 'displayAdminProductsMainStepLeftColumnBottom']);
             if ($there_is_a_lang_field) {
@@ -865,7 +869,7 @@ class ModuleGenerator
                         } else {
                             $use['Symfony\Component\Validator\Constraints as Assert'] = 'Symfony\Component\Validator\Constraints as Assert';
                             $use['Symfony\Component\Form\Extension\Core\Type\TextType'] = 'Symfony\Component\Form\Extension\Core\Type\TextType';
-                            if(!empty($item['column_length'])){
+                            if (!empty($item['column_length'])) {
                                 $extra_non_translatable_content .= "->add('" . $item['column_name'] . "', TextType::class, [
                             'label' => /+this->l('" . $item['column_name'] . "'),
                             'required' => false,
@@ -875,7 +879,7 @@ class ModuleGenerator
                             new Assert\Length(['min' => 1, 'max' => " . $item['column_length'] . "]),
                             ]
                             ])" . PHP_EOL;
-                            }else{
+                            } else {
                                 $extra_non_translatable_content .= "->add('" . $item['column_name'] . "', TextType::class, [
                             'label' => /+this->l('" . $item['column_name'] . "'),
                             'required' => false,
@@ -900,7 +904,6 @@ class ModuleGenerator
                         if (empty($item['is_column_lang'])) {
                             continue;
                         }
-
                         $formData .= "'" . $item['column_name'] . "' => /+extraProductFields-> " . $item['column_name'] . "," . PHP_EOL;
                         $contentForTranslatableTemplates .= "<h3>{{ form_label(form." . $item['column_name'] . ") }}</h3>" . PHP_EOL;
                         $contentForTranslatableTemplates .= "{{ form_widget(form." . $item['column_name'] . ") }}" . PHP_EOL;
@@ -988,120 +991,113 @@ class ModuleGenerator
             file_put_contents($this->module_dir . '/views/PrestaShop/Products/extra_translatable_fields.html.twig', $contentForTranslatableTemplates);
 
         }
-//        if ($class == 'Category') {
-//            $this->module_data['hooks']['category'] = ['actionCategoryFormBuilderModifier', 'actionAfterCreateCategoryFormHandler', 'actionAfterUpdateCategoryFormHandler'];
-//            $content .= "/+formBuilder = /+params['form_builder'];" . PHP_EOL;
-//            if ($there_is_a_lang_field) {
-//                $content .= "/+languages = Language::getLanguages();" . PHP_EOL;
-//            }
-//            $formBuilder = "/+category=new Category((int) /+params['id']);" . PHP_EOL;
-//            $codeForUpdate = "/+id_category = /+params['id'];" . PHP_EOL;
-//            $codeForUpdate .= "/+languages = Language::getLanguages();" . PHP_EOL;
-//            foreach ($fields as $index => $item) {
-//                if (!empty($item['is_column_lang'])) {
-//                    $type = "PrestaShopBundle\Form\Admin\Type\TranslateType::class";
-//                    $content .= "/+formBuilder->add('" . $item['column_name'] . "', " . $type . ", [
-//                         'type' => Symfony\Component\Form\Extension\Core\Type\TextType::class,
-//                         'label' => /+this->l('" . $item['column_name'] . "'),
-//                         'required' => false,
-//                         'locales' => /+languages,
-//                     ]);" . PHP_EOL;
-//                    $formBuilder .= "foreach (/+languages as /+lang) {" . PHP_EOL;
-//                    $formBuilder .= "/+id_lang = /+lang['id_lang'];" . PHP_EOL;
-//                    $formBuilder .= "/+params['data']['" . $item['column_name'] . "'][/+id_lang] = /+category->" . $item['column_name'] . "[/+id_lang];" . PHP_EOL;
-//                    $formBuilder .= "}" . PHP_EOL;
-//                } elseif ($item['column_type'] === 'TINYINT') {
-//                    $content .= "/+formBuilder->add('" . $item['column_name'] . "', PrestaShopBundle\Form\Admin\Type\SwitchType::class, [
-//                         'label' => /+this->l('" . $item['column_name'] . "'),
-//                         'choices' => [
-//                             'OFF' => false,
-//                             'ON' => true,
-//                         ],
-//                     ]);" . PHP_EOL;
-//                } elseif ($item['column_type'] === 'DATETIME' || $item['column_type'] === 'DATE') {
-//                    $content .= "/+formBuilder->add('" . $item['column_name'] . "', PrestaShopBundle\Form\Admin\Type\DatePickerType::class, [
-//                         'label' => /+this->l('" . $item['column_name'] . "'),
-//                         'required' => false,
-//                     ]);" . PHP_EOL;
-//                } else {
-//                    $content .= "/+formBuilder->add('" . $item['column_name'] . "', Symfony\Component\Form\Extension\Core\Type\TextType::class, [
-//                         'label' => /+this->l('" . $item['column_name'] . "'),
-//                         'required' => false,
-//                     ]);" . PHP_EOL;
-//                }
-//                if (empty($item['is_column_lang'])) {
-//                    $formBuilder .= "/+params['data']['" . $item['column_name'] . "'] = /+category->" . $item['column_name'] . ";" . PHP_EOL;
-//                }
-//                $alterLangTable = !empty($item['is_column_lang']) && $tableMapping->getHasLangTable() == true;
-//
-//                if (!$alterLangTable) {
-//                    $sql .= "Db::getInstance()->update('" . $tableMapping->getTableName() . "', ['" . $item['column_name'] . "' => /+params['form_data']['" . $item['column_name'] . "']], 'id_category=' . (int) /+id_category);" . PHP_EOL;
-//                } else {
-//                    $sql_lang .= "foreach (/+languages as /+lang) {" . PHP_EOL;
-//                    $sql_lang .= "/+id_lang = /+lang['id_lang'];" . PHP_EOL;
-//                    $sql_lang .= "Db::getInstance()->update('" . $tableMapping->getTableName() . "_lang', ['" . $item['column_name'] . "' => /+params['form_data']['" . $item['column_name'] . "'][/+id_lang]], 'id_category=' . (int) /+id_category);" . PHP_EOL;
-//                    $sql_lang .= "}" . PHP_EOL;
-//                }
-//                $alterShopTable = !empty($item['is_column_shop']) && $tableMapping->getHasShopTable() == true;
-//
-//                if ($alterShopTable) {
-//                    $sql_shop .= "Db::getInstance()->update('" . $tableMapping->getTableName() . "_shop', ['" . $item['column_name'] . "' => /+params['form_data']['" . $item['column_name'] . "']], 'id_category=' . (int) /+id_category);" . PHP_EOL;
-//                }
-//            }
-//            $content .= $formBuilder . PHP_EOL;
-//            $content .= "/+formBuilder->setData(/+params['data']);" . PHP_EOL;
-//            $this->module_data['hooksContents']['actionCategoryFormBuilderModifier'] = $content;
-//            $this->module_data['hooksContents']['actionAfterCreateCategoryFormHandler'] = "/+this->updateCategoryData(/+params['form_data'], /+params);";
-//            $this->module_data['hooksContents']['actionAfterUpdateCategoryFormHandler'] = "/+this->updateCategoryData(/+params['form_data'], /+params);";
-//            $this->module_data['query']['Category'] = $codeForUpdate . $sql . PHP_EOL . $sql_lang . PHP_EOL . $sql_shop;
-//        }
-//        if ($class == 'Customer') {
-//            $this->module_data['hooks']['customer'] = ['actionCustomerFormBuilderModifier', 'actionAfterCreateCustomerFormHandler', 'actionAfterUpdateCustomerFormHandler'];
-//            $content .= "/+formBuilder = /+params['form_builder'];" . PHP_EOL;
-//            $formBuilder = "/+customer=new Customer((int) /+params['id']);" . PHP_EOL;
-//            $codeForUpdate = "/+id_customer = /+params['id'];" . PHP_EOL;
-//            foreach ($fields as $index => $item) {
-//                if ($item['column_type'] === 'TINYINT') {
-//                    $content .= "/+formBuilder->add('" . $item['column_name'] . "', PrestaShopBundle\Form\Admin\Type\SwitchType::class, [
-//                         'label' => /+this->l('" . $item['column_name'] . "'),
-//                         'choices' => [
-//                             'OFF' => false,
-//                             'ON' => true,
-//                         ],
-//                     ]);" . PHP_EOL;
-//                } elseif ($item['column_type'] === 'DATETIME' || $item['column_type'] === 'DATE') {
-//                    $content .= "/+formBuilder->add('" . $item['column_name'] . "', PrestaShopBundle\Form\Admin\Type\DatePickerType::class, [
-//                         'label' => /+this->l('" . $item['column_name'] . "'),
-//                         'required' => false,
-//                     ]);" . PHP_EOL;
-//                } else {
-//                    $content .= "/+formBuilder->add('" . $item['column_name'] . "', Symfony\Component\Form\Extension\Core\Type\TextType::class, [
-//                         'label' => /+this->l('" . $item['column_name'] . "'),
-//                         'required' => false,
-//                     ]);" . PHP_EOL;
-//                }
-//                $formBuilder .= "/+params['data']['" . $item['column_name'] . "'] = /+customer->" . $item['column_name'] . ";" . PHP_EOL;
-//
-//                $sql .= "Db::getInstance()->update('" . $tableMapping->getTableName() . "', ['" . $item['column_name'] . "' => /+params['form_data']['" . $item['column_name'] . "']], 'id_customer=' . (int) /+id_customer);" . PHP_EOL;
-//
-//                $alterShopTable = !empty($item['is_column_shop']) && $tableMapping->getHasShopTable() == true;
-//
-//                if ($alterShopTable) {
-//                    $sql_shop .= "Db::getInstance()->update('" . $tableMapping->getTableName() . "_shop', ['" . $item['column_name'] . "' => /+params['form_data']['" . $item['column_name'] . "']], 'id_customer=' . (int) /+id_customer);" . PHP_EOL;
-//                }
-//            }
-//            $content .= $formBuilder . PHP_EOL;
-//            $content .= "/+formBuilder->setData(/+params['data']);" . PHP_EOL;
-//            $this->module_data['hooksContents']['actionCustomerFormBuilderModifier'] = $content;
-//            $this->module_data['hooksContents']['actionAfterCreateCustomerFormHandler'] = "/+this->updateCustomerData(/+params['form_data'], /+params);";
-//            $this->module_data['hooksContents']['actionAfterUpdateCustomerFormHandler'] = "/+this->updateCustomerData(/+params['form_data'], /+params);";
-//            $this->module_data['query']['Customer'] = $codeForUpdate . $sql . PHP_EOL . $sql_lang . PHP_EOL . $sql_shop;
-//        }
+        if ($class == 'Category') {
+            $this->module_data['hooks'][strtolower($class)]=array_merge($this->module_data['hooks'][strtolower($class)], ['actionCategoryFormBuilderModifier', 'actionAfterCreateCategoryFormHandler', 'actionAfterUpdateCategoryFormHandler']);
+            $gridDir = $this->module_dir . DIRECTORY_SEPARATOR . 'src' . DIRECTORY_SEPARATOR . 'Grid';
+            if (!is_dir($gridDir) && !@mkdir($gridDir, 0777, true) && !is_dir($gridDir)) {
+                throw new \RuntimeException(sprintf('Cannot create directory "%s"', $gridDir));
+            }
+
+
+            $namespace = new PhpNamespace($this->params['upper']['company_name'] . DIRECTORY_SEPARATOR . 'Module' . DIRECTORY_SEPARATOR . $this->params['upper']['module_name'] . DIRECTORY_SEPARATOR . 'Grid');
+            $namespace->addUse('Module');
+            $namespace->addUse('Symfony\Component\Form\FormBuilderInterface');
+            $namespace->addUse($this->params['upper']['company_name'] . DIRECTORY_SEPARATOR . 'Module' . DIRECTORY_SEPARATOR . $this->params['upper']['module_name'] . DIRECTORY_SEPARATOR . 'Model' . DIRECTORY_SEPARATOR . 'ExtraCategoryFields');
+
+            $class = $namespace->addClass('CategoryFormBuilderModifier');
+            $class->addProperty('module')
+                ->setProtected();
+            $class->addProperty('idCategory')
+                ->setProtected();
+            $class->addProperty('formBuilder')
+                ->setProtected();
+            $class->addProperty('formData')
+                ->setProtected();
+            $construct = $class->addMethod('__construct');
+            $construct->addParameter('module')->setType('Module');
+            $construct->addParameter('idCategory')->setType('Int');
+            $construct->addParameter('formBuilder')->setType('FormBuilderInterface');
+            $construct->addParameter('formData')->setType('Array');
+            $constructBody = '$this->module=$module;' . PHP_EOL;
+            $constructBody .= '$this->idCategory=$idCategory;' . PHP_EOL;
+            $constructBody .= '$this->formBuilder=$formBuilder;' . PHP_EOL;
+            $constructBody .= '$this->formData=$formData;' . PHP_EOL;
+            $construct->setBody($constructBody);
+            $addFields = $class->addMethod('addFields');
+            $i = 0;
+            $addFieldsBody = '$this->>formBuilder' . PHP_EOL;
+            foreach ($fields as $index => $item) {
+                if ($item['column_type'] === 'TINYINT' || $item['column_type'] === 'BOOLEAN') {
+                    $addFieldsBody .= '->add(' . PHP_EOL;
+                    $addFieldsBody .= "'" . $item['column_name'] . "'," . PHP_EOL;
+                    $namespace->addUse('PrestaShopBundle\Form\Admin\Type\SwitchType');
+                    $addFieldsBody .= "SwitchType::class," . PHP_EOL;
+                    $addFieldsBody .= "[" . PHP_EOL;
+                    $addFieldsBody .= '\'label\'=>$this->module->l(\'' . $item['column_name'] . '\'),' . PHP_EOL;
+                    $addFieldsBody .= '\'required\'=>false,' . PHP_EOL;
+                    $addFieldsBody .= "]" . PHP_EOL;
+                    $addFieldsBody .= ')' . PHP_EOL;
+                }
+                if (!empty($item['is_column_lang'])) {
+                    $addFieldsBody .= '->add(' . PHP_EOL;
+                    $addFieldsBody .= "'" . $item['column_name'] . "'," . PHP_EOL;
+                    $namespace->addUse('PrestaShopBundle\Form\Admin\Type\TranslatableType');
+                    $namespace->addUse('Symfony\Component\Form\Extension\Core\Type\TextType');
+                    $namespace->addUse('PrestaShop\PrestaShop\Core\ConstraintValidator\Constraints\DefaultLanguage');
+                    $addFieldsBody .= "TranslatableType::class," . PHP_EOL;
+                    $addFieldsBody .= "[" . PHP_EOL;
+                    $addFieldsBody .= '\'label\'=>$this->module->l(\'' . $item['column_name'] . '\'),' . PHP_EOL;
+                    $addFieldsBody .= '\'type\'=>TextType::class,' . PHP_EOL;
+                    $addFieldsBody .= '\'constraints\'=>[new DefaultLanguage()],' . PHP_EOL;
+                    $addFieldsBody .= '\'options\'=>[' . PHP_EOL;
+                    $addFieldsBody .= '\'constraints\'=>[' . PHP_EOL;
+                    $addFieldsBody .= 'new Regex([' . PHP_EOL;
+                    $addFieldsBody .= '\'pattern\'=>\'/^[^<>;=#{}]*$/u\'' . PHP_EOL;
+                    $addFieldsBody .= '\'message\'=>$this->module->l(\'%s id invalid\')' . PHP_EOL;
+                    $addFieldsBody .= ']),' . PHP_EOL;
+                    $addFieldsBody .= '],' . PHP_EOL;
+                    $addFieldsBody .= '],' . PHP_EOL;
+                    $addFieldsBody .= "]" . PHP_EOL;
+                    $addFieldsBody .= ')' . PHP_EOL;
+                }
+                if ($i == 0) {
+                    $addFieldsBody .= '$extraCategory=ExtraCategoryFields::getExtraCategoryFieldsByCategoryId($this->idCategory);' . PHP_EOL;
+                    $addFieldsBody .= '$this->>formData[\'' . $item['column_name'] . '\']=$extraCategory->' . $item['column_name'] . ';' . PHP_EOL;
+                }
+                $i++;
+            }
+            $addFieldsBody .= '$this->formBuilder->setData($this->formData);' . PHP_EOL;
+
+            $addFields->setBody($addFieldsBody);
+            $printer = new Printer;
+            $printer->setTypeResolving(false);
+            $code = $printer->printNamespace($namespace);
+
+            file_put_contents($this->module_dir . '/src/Grid/CategoryFormBuilderModifier.php', '<?php declare(strict_types=1);');
+            file_put_contents($this->module_dir . '/src/Grid/CategoryFormBuilderModifier.php', PHP_EOL, FILE_APPEND);
+            file_put_contents($this->module_dir . '/src/Grid/CategoryFormBuilderModifier.php', $code, FILE_APPEND);
+            $this->module_data['hooks']['category'] = ['actionCategoryFormBuilderModifier', 'actionAfterCreateCategoryFormHandler', 'actionAfterUpdateCategoryFormHandler'];
+            $this->module_data['use'][] = $this->params['upper']['company_name'] . DIRECTORY_SEPARATOR . 'Module' . DIRECTORY_SEPARATOR . $this->params['upper']['module_name'] . DIRECTORY_SEPARATOR . 'Grid' . DIRECTORY_SEPARATOR . 'CategoryFormBuilderModifier';
+            $formBuilderContent = '$categoryFormBuilderModifier= new CategoryFormBuilderModifier(' . PHP_EOL;
+            $formBuilderContent .= '$this,' . PHP_EOL;
+            $formBuilderContent .= '(int)$params[\'id\'],' . PHP_EOL;
+            $formBuilderContent .= '$params[\'form_builder\'],' . PHP_EOL;
+            $formBuilderContent .= '$params[\'data\']' . PHP_EOL;
+            $formBuilderContent .= ');' . PHP_EOL;
+            $formBuilderContent .= '$categoryFormBuilderModifier->addFields();' . PHP_EOL;
+            $this->module_data['hooksContents']['actionCategoryFormBuilderModifier'] = $formBuilderContent;
+            $formHandlerContent = 'ExtraCategoryFields::setExtraCategoryFieldsByCategoryId(' . PHP_EOL;
+            $formHandlerContent .= '(int)$params[\'id\'],' . PHP_EOL;
+            $formHandlerContent .= '$params[\'form_data\']' . PHP_EOL;
+            $formHandlerContent .= ');' . PHP_EOL;
+            $this->module_data['hooksContents']['actionAfterCreateCategoryFormHandler'] = $formHandlerContent;
+            $this->module_data['hooksContents']['actionAfterUpdateCategoryFormHandler'] = $formHandlerContent;
+        }
 
         return true;
     }
 
-    private function addToListing($class, $listingFields)
+    private function addToListing($class, $listingFields, $there_is_a_lang_field)
     {
         if ($class === 'Product') {
             $fileSystem = new Filesystem();
@@ -1139,7 +1135,7 @@ class ModuleGenerator
                     $listing .= "'" . $field['column_name'] . "'=>/+extraProductFields->" . $field['column_name'] . "[Configuration::get('PS_LANG_DEFAULT')]," . PHP_EOL;
                 } elseif ($field['column_type'] === 'TINYINT' || $field['column_type'] === 'BOOLEAN') {
                     $this->module_data['presenter']['product'] = ['presentBooleanResponse' => $this->booleanPresenter()];
-                    $listing .= "'" . $field['column_name'] . "'=>/+this->presentBooleanResponse(Db::getInstance()->getValue('SELECT " . $field['column_name'] . " FROM '._DB_PREFIX_.'product where id_product='.(int)/+product->id))," . PHP_EOL;
+                    $listing .= "'" . $field['column_name'] . "'=>/+this->presentBooleanResponse(/+extraProductFields->" . $field['column_name'] . ")," . PHP_EOL;
                 } else {
                     $listing .= "'" . $field['column_name'] . "'=>/+extraProductFields->" . $field['column_name'] . "," . PHP_EOL;
                 }
@@ -1157,9 +1153,24 @@ class ModuleGenerator
             $transCount = 0;
             $count = 0;
             $where = "";
+
             foreach ($listingFields as $field) {
                 $customHead .= "<th>{l s='" . $field['column_name'] . "' mod='" . $params['lower']['module_name'] . "'}</th>" . PHP_EOL;
-                $customFilter .= "<th><input type=\"text\" class=\"form-control\"  placeholder=\"{l s='Search " . $field['column_name'] . "' mod='egaddcustomfieldtoproduct'}\" name=\"filter_column_name_" . $field['column_name'] . "\" value=\"{/+" . $field['column_name'] . "}\"></th>" . PHP_EOL;
+
+                if ($field['column_type'] == 'TINYINT') {
+                    $customFilter .= "<th id=\"product_filter_column_" . $field['column_name'] . "\" class=\"text-center\">
+                    <div class=\"form-select\">
+                        <select class=\"custom-select\" name=\"filter_column_name_" . $field['column_name'] . "\">
+                            <option value=\"\"></option>
+                            <option value=\"1\" {if /+" . $field['column_name'] . "==1} selected {/if}>Oui</option>
+                            <option value=\"0\" {if /+" . $field['column_name'] . "==='0'} selected {/if}>Non</option>
+                        </select>
+                    </div>
+                </th>" . PHP_EOL;
+                } else {
+                    $customFilter .= "<th><input type=\"text\" class=\"form-control\"  placeholder=\"{l s='Search " . $field['column_name'] . "' mod='egaddcustomfieldtoproduct'}\" name=\"filter_column_name_" . $field['column_name'] . "\" value=\"{/+" . $field['column_name'] . "}\"></th>" . PHP_EOL;
+                }
+
                 $custom_value .= "<td>{/+" . $field['column_name'] . "}</td>" . PHP_EOL;
 
                 if (!empty($field['is_column_lang'])) {
@@ -1171,14 +1182,18 @@ class ModuleGenerator
                     $where .= 'if (Tools::getIsset(\'filter_column_name_' . $field['column_name'] . '\') && !empty(Tools::getValue(\'filter_column_name_' . $field['column_name'] . '\'))) {' . PHP_EOL;
                     $where .= '$params[\'sql_where\'][] .= "extra_lang.' . $field['column_name'] . ' like \'%" . Tools::getValue(\'filter_column_name_' . $field['column_name'] . '\')."%\'";' . PHP_EOL;
                     $where .= '}' . PHP_EOL;
-                    $transCount++;
+
                 } else {
                     $sql .= "/+params['sql_select']['" . $field['column_name'] . "'] = [" . PHP_EOL;
                     $sql .= "'table' => 'extra'," . PHP_EOL;
                     $sql .= "'field' => '" . $field['column_name'] . "'," . PHP_EOL;
                     $sql .= "'filtering' => \PrestaShop\PrestaShop\Adapter\Admin\AbstractAdminQueryBuilder::FILTERING_LIKE_BOTH" . PHP_EOL;
                     $sql .= "];" . PHP_EOL;
-                    $where .= 'if (Tools::getIsset(\'filter_column_name_' . $field['column_name'] . '\') && !empty(Tools::getValue(\'filter_column_name_' . $field['column_name'] . '\'))) {' . PHP_EOL;
+                    if ($field['column_type'] == 'TINYINT') {
+                        $where .= 'if (Tools::getIsset(\'filter_column_name_' . $field['column_name'] . '\') && (!empty(Tools::getValue(\'filter_column_name_' . $field['column_name'] . '\')) || Tools::getValue(\'filter_column_name_' . $field['column_name'] . '\') ==="0")) {' . PHP_EOL;
+                    } else {
+                        $where .= 'if (Tools::getIsset(\'filter_column_name_' . $field['column_name'] . '\') && !empty(Tools::getValue(\'filter_column_name_' . $field['column_name'] . '\'))) {' . PHP_EOL;
+                    }
                     $where .= '$params[\'sql_where\'][] .= "extra.' . $field['column_name'] . ' =" . Tools::getValue(\'filter_column_name_' . $field['column_name'] . '\');' . PHP_EOL;
                     $where .= '}' . PHP_EOL;
                     $count++;
@@ -1189,6 +1204,7 @@ class ModuleGenerator
                     $sql .= "'join' => 'LEFT JOIN'," . PHP_EOL;
                     $sql .= "'on' => 'p.`id_product` = extra.`id_product`'," . PHP_EOL;
                     $sql .= "];" . PHP_EOL;
+                    $transCount++;
                 }
                 if ($transCount == 1) {
                     $sql .= "/+params['sql_table']['extra_lang'] = [" . PHP_EOL;
@@ -1225,6 +1241,158 @@ class ModuleGenerator
 
         }
         if ($class === 'Category') {
+            $this->module_data['hooks'][strtolower($class)]=array_merge($this->module_data['hooks'][strtolower($class)], ['actionCategoryGridDefinitionModifier', 'actionCategoryGridQueryBuilderModifier']);
+            $namespace = new PhpNamespace($this->params['upper']['company_name'] . DIRECTORY_SEPARATOR . 'Module' . DIRECTORY_SEPARATOR . $this->params['upper']['module_name'] . DIRECTORY_SEPARATOR . 'Grid');
+            $namespace->addUse('Module');
+            $namespace->addUse('PrestaShop\PrestaShop\Core\Definition\GridDefinitionInterface');
+            $namespace->addUse('PrestaShop\PrestaShop\Core\Grid\Filter\Filter');
+            $namespace->addUse('PrestaShop\PrestaShop\Core\Grid\Column\Type\DataColumn');
+            $namespace->addUse('PrestaShop\PrestaShop\Core\Grid\Column\Type\ColumnCollection');
+
+            $class = $namespace->addClass('CategoryGridDefinitionModifier');
+            $class->addProperty('module')
+                ->setProtected();
+            $class->addProperty('gridDefinition')
+                ->setProtected();
+            $construct = $class->addMethod('__construct');
+            $construct->addParameter('module')->setType('Module');
+            $construct->addParameter('gridDefinition')->setType('GridDefinitionInterface');
+            $constructBody = '$this->module=$module;' . PHP_EOL;
+            $constructBody .= '$this->gridDefinition=$gridDefinition;' . PHP_EOL;
+            $construct->setBody($constructBody);
+            $addColumns = $class->addMethod('addColumns');
+            $addColumnsBody = '/** @var ColumnCollection */' . PHP_EOL;
+            $addColumnsBody .= '$columns=$this->gridDefinition->getColumns();' . PHP_EOL;
+            $i = 1;
+            foreach ($listingFields as $index => $item) {
+                if ($i == 1) {
+                    $addColumnsBody .= '$columns->AddAfter(' . PHP_EOL;
+                    $addColumnsBody .= '\'active\',' . PHP_EOL;
+                    $addColumnsBody .= '(new DataColumn(\'' . $item['column_name'] . '\'))' . PHP_EOL;
+                    $addColumnsBody .= '->setName($this->module->l(\'' . $item['column_name'] . '\')' . PHP_EOL;
+                    $addColumnsBody .= '->setOptions([\'field\'=>\'' . $item['column_name'] . '\'])' . PHP_EOL;
+                    $addColumnsBody .= ');' . PHP_EOL;
+                } else {
+                    $addColumnsBody .= '$columns->AddAfter(' . PHP_EOL;
+                    $addColumnsBody .= '\'' . $this->lastField . '\',' . PHP_EOL;
+                    $addColumnsBody .= '(new DataColumn(\'' . $item['column_name'] . '\'))' . PHP_EOL;
+                    $addColumnsBody .= '->setName($this->module->l(\'' . $item['column_name'] . '\')' . PHP_EOL;
+                    $addColumnsBody .= '->setOptions([\'field\'=>\'' . $item['column_name'] . '\'])' . PHP_EOL;
+                    $addColumnsBody .= ');' . PHP_EOL;
+
+                }
+                $this->lastField = $item['column_name'];
+                $i++;
+            }
+            $addColumns->setBody($addColumnsBody);
+            $addFilters = $class->addMethod('addFilters');
+            $addFiltersBody = '/** @var FilterCollection $filters*/' . PHP_EOL;
+            $addFiltersBody .= '$filters=$this->gridDefinition->getFilters();' . PHP_EOL;
+
+            foreach ($listingFields as $index => $item) {
+                if ($item['column_type'] === 'TINYINT' || $item['column_type'] === 'BOOLEAN') {
+                    $namespace->addUse('PrestaShopBundle\Form\Admin\Type\YesAndNoChoiceType');
+                    $addFiltersBody .= '$filters->add(' . PHP_EOL;
+                    $addFiltersBody .= '(new Filter(\'' . $item['column_name'] . '\', YesAndNoChoiceType::class))' . PHP_EOL;
+                    $addFiltersBody .= '->setTypeOptions([\'required\'=>false])' . PHP_EOL;
+                    $addFiltersBody .= '->setAssociatedColumn(\'' . $item['column_name'] . '\')' . PHP_EOL;
+                    $addFiltersBody .= ');' . PHP_EOL;
+                } else {
+                    $namespace->addUse('Symfony\Component\Form\Extension\Core\Type\TextType');
+                    $addFiltersBody .= '$filters->add(' . PHP_EOL;
+                    $addFiltersBody .= '(new Filter(\'' . $item['column_name'] . '\', TextType::class))' . PHP_EOL;
+                    $addFiltersBody .= '->setTypeOptions([\'required\'=>false])' . PHP_EOL;
+                    $addFiltersBody .= '->setAssociatedColumn(\'' . $item['column_name'] . '\')' . PHP_EOL;
+                    $addFiltersBody .= ');' . PHP_EOL;
+                }
+            }
+            $addFilters->setBody($addFiltersBody);
+            $printer = new Printer;
+            $printer->setTypeResolving(false);
+            $code = $printer->printNamespace($namespace);
+
+            file_put_contents($this->module_dir . '/src/Grid/CategoryGridDefinitionModifier.php', '<?php declare(strict_types=1);');
+            file_put_contents($this->module_dir . '/src/Grid/CategoryGridDefinitionModifier.php', PHP_EOL, FILE_APPEND);
+            file_put_contents($this->module_dir . '/src/Grid/CategoryGridDefinitionModifier.php', $code, FILE_APPEND);
+            $namespace = new PhpNamespace($this->params['upper']['company_name'] . DIRECTORY_SEPARATOR . 'Module' . DIRECTORY_SEPARATOR . $this->params['upper']['module_name'] . DIRECTORY_SEPARATOR . 'Grid');
+            $namespace->addUse('Module');
+            $namespace->addUse('Doctrine\DBAL\Query\QueryBuilder');
+            $class = $namespace->addClass('CategoryGridQueryBuilderModifier');
+            $class->addProperty('module')
+                ->setProtected();
+            $class->addProperty('filters')
+                ->setProtected()->setType('array');
+            $class->addProperty('idLang')
+                ->setProtected()->setType('int');
+            $construct = $class->addMethod('__construct');
+            $construct->addParameter('module')->setType('Module');
+            $construct->addParameter('filters')->setType('Array');
+            $construct->addParameter('idLang')->setType('Int');
+            $constructBody = '$this->module=$module;' . PHP_EOL;
+            $constructBody .= '$this->filters=$filters;' . PHP_EOL;
+            $constructBody .= '$this->idLang=$idLang;' . PHP_EOL;
+            $construct->setBody($constructBody);
+            $updateQueryBuilder = $class->addMethod('updateQueryBuilder');
+            $updateQueryBuilder->addParameter('queryQuilder')->setType('QueryBuilder');
+            $updateQueryBuilderBody = '$queryBuilder->leftJoin(' . PHP_EOL;
+            $updateQueryBuilderBody .= 'c,' . PHP_EOL;
+            $updateQueryBuilderBody .= '_DB_PREFIX_.\'extracategoryfields\',' . PHP_EOL;
+            $updateQueryBuilderBody .= 'extra,' . PHP_EOL;
+            $updateQueryBuilderBody .= 'extra.id_category=c.id_category' . PHP_EOL;
+            $updateQueryBuilderBody .= ');' . PHP_EOL;
+            if ($there_is_a_lang_field) {
+                $updateQueryBuilderBody .= '$queryBuilder->leftJoin(' . PHP_EOL;
+                $updateQueryBuilderBody .= 'extra,' . PHP_EOL;
+                $updateQueryBuilderBody .= '_DB_PREFIX_.\'extracategoryfields_lang\',' . PHP_EOL;
+                $updateQueryBuilderBody .= 'extral,' . PHP_EOL;
+                $updateQueryBuilderBody .= 'extra.id_extracategoryfields=extral.id_extracategoryfields AND extral.id_lang=:context_lang_id' . PHP_EOL;
+                $updateQueryBuilderBody .= ');' . PHP_EOL;
+                $updateQueryBuilderBody .= '$queryBuilder->setParameter(\'context_lang_id\', $this->idLang);' . PHP_EOL;
+            }
+            foreach ($listingFields as $index => $item) {
+                if (!empty($item['is_column_lang'])) {
+                    $updateQueryBuilderBody .= '$queryBuilder->addSelect(\'extral' . $item['column_name'] . '\');';
+                } else {
+                    $updateQueryBuilderBody .= '$queryBuilder->addSelect(\'extra' . $item['column_name'] . '\');';
+                }
+
+                $updateQueryBuilderBody .= 'if(isset($this->filters[\'' . $item['column_name'] . '\'])){' . PHP_EOL;
+                if (!empty($item['is_column_lang'])) {
+                    $updateQueryBuilderBody .= '$queryBuilder->where(\'extral' . $item['column_name'] . '\' LIKE :p_estral_' . $item['column_name'] . ');' . PHP_EOL;
+                    $updateQueryBuilderBody .= '$queryBuilder->setParameter(\'p_estral_' . $item['column_name'] . '\', \'%\'.$this->filters[\'' . $item['column_name'] . '\'].\'%\');' . PHP_EOL;
+                } elseif ($item['column_type'] === 'TINYINT' || $item['column_type'] === 'BOOLEAN') {
+                    $updateQueryBuilderBody .= 'if((bool)$this->filters[\'' . $item['column_name'] . '\']){' . PHP_EOL;
+                    $updateQueryBuilderBody .= '$queryBuilder->where(\'extra' . $item['column_name'] . '\' = 1);' . PHP_EOL;
+                    $updateQueryBuilderBody .= '}else{' . PHP_EOL;
+                    $updateQueryBuilderBody .= '$queryBuilder->where(\'extra' . $item['column_name'] . '\' = 0 OR ISNULL(\'extra' . $item['column_name'] . '\'));';
+                    $updateQueryBuilderBody .= '}' . PHP_EOL;
+                }
+                $updateQueryBuilderBody .= '}' . PHP_EOL;
+            }
+            $updateQueryBuilder->setBody($updateQueryBuilderBody);
+            $printer = new Printer;
+            $printer->setTypeResolving(false);
+            $code = $printer->printNamespace($namespace);
+
+            file_put_contents($this->module_dir . '/src/Grid/CategoryGridQueryBuilderModifier.php', '<?php declare(strict_types=1);');
+            file_put_contents($this->module_dir . '/src/Grid/CategoryGridQueryBuilderModifier.php', PHP_EOL, FILE_APPEND);
+            file_put_contents($this->module_dir . '/src/Grid/CategoryGridQueryBuilderModifier.php', $code, FILE_APPEND);
+            $this->module_data['use'][] = $this->params['upper']['company_name'] . DIRECTORY_SEPARATOR . 'Module' . DIRECTORY_SEPARATOR . $this->params['upper']['module_name'] . DIRECTORY_SEPARATOR . 'Grid' . DIRECTORY_SEPARATOR . 'CategoryGridDefinitionModifier';
+            $gridDefinitionModifierContent = '$categoryGridDefinitionModifier= new CategoryGridDefinitionModifier(' . PHP_EOL;
+            $gridDefinitionModifierContent .= '$this,' . PHP_EOL;
+            $gridDefinitionModifierContent .= '$params[\'definition\']' . PHP_EOL;
+            $gridDefinitionModifierContent .= ');' . PHP_EOL;
+            $gridDefinitionModifierContent .= '$categoryGridDefinitionModifier->addColumns();'.PHP_EOL;
+            $gridDefinitionModifierContent .= '$categoryGridDefinitionModifier->addFilters();'.PHP_EOL;
+            $this->module_data['hooksContents']['actionCategoryGridDefinitionModifier'] = $gridDefinitionModifierContent;
+            $gridQueryBuilderModifierContent='$categoryQueryBuilderModifier= new CategoryGridQueryBuilderModifier('.PHP_EOL;
+            $gridQueryBuilderModifierContent.='$this,'.PHP_EOL;
+            $gridQueryBuilderModifierContent.='$params[\'search_criteria\']->getFilters(),'.PHP_EOL;
+            $gridQueryBuilderModifierContent.='Context::getContext()->language->id'.PHP_EOL;
+            $gridQueryBuilderModifierContent.=');'.PHP_EOL;
+            $gridQueryBuilderModifierContent.='$categoryQueryBuilderModifier->updateQueryBuilder($params[\'count_query_builder\']);'.PHP_EOL;
+            $gridQueryBuilderModifierContent.='$categoryQueryBuilderModifier->updateQueryBuilder($params[\'search_query_builder\']);'.PHP_EOL;
+            $this->module_data['hooksContents']['actionCategoryGridQueryBuilderModifier'] = $gridQueryBuilderModifierContent;
         }
         return true;
     }
@@ -1235,9 +1403,9 @@ class ModuleGenerator
     public function booleanPresenter()
     {
         $bool = '';
-        $bool .= 'if ((bool)/+value == false) {' . PHP_EOL;
+        $bool .= 'if (!is_null(/+value) && /+value == 0) {' . PHP_EOL;
         $bool .= ' return \'<a href="#"><i class="material-icons action-disabled">clear</i></a>\';' . PHP_EOL;
-        $bool .= '} else {' . PHP_EOL;
+        $bool .= '} elseif(/+value == 1) {' . PHP_EOL;
         $bool .= 'return \'<a href="#"><i class="material-icons enabled">check</i></a>\';' . PHP_EOL;
         $bool .= '}' . PHP_EOL;
         return $bool;
