@@ -556,7 +556,7 @@ $(document).ready(function () {
                 '                        <div class="field-input">\n' +
                 '                            <div class="form-group">\n' +
                 '                                <label for="add_to_listing-1" class="control-label">Add to listing?</label>\n' +
-                '                                <input value="1" id="service-1" name="add_to_listing_1_1" class="form-control"\n' +
+                '                                <input value="1" id="service-1" name="add_to_listing_' + count + '_' + modelCount + '" class="form-control"\n' +
                 '                                       type="checkbox"\n' +
                 '                                       placeholder="">\n' +
                 '                                <div class="help-block"></div>\n' +
