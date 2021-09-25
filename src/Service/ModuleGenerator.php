@@ -262,7 +262,7 @@ class ModuleGenerator
 
             foreach ($this->module_data['use'] as $objectName => $useData) {
                 foreach ($useData as $use) {
-                    $use=str_replace('/', "\'", $use);
+       
                     $useContent .= 'use ' . $use . ';' . PHP_EOL;
                 }
             }
