@@ -109,7 +109,7 @@ $(document).ready(function () {
 
         if (type == 'field') {
             let html = '           <div class="snippet-fields row">\n' +
-                '                    <div class="field-input col-xs-2">\n' +
+                '                    <div class="field-input">\n' +
                 '                        <div class="form-group">\n' +
                 '                            <label for="field_name_' + count + '_' + CurentModelCount + '" class="control-label">field name</label>\n' +
                 '                            <input value="" id="service_' + count + '_' + CurentModelCount + '" name="field_name_' + count + '_' + CurentModelCount + '" class="form-control" type="text"\n' +
@@ -117,7 +117,7 @@ $(document).ready(function () {
                 '                            <div class="help-block"></div>\n' +
                 '                        </div>\n' +
                 '                    </div>\n' +
-                '                    <div class="field-input col-xs-1">\n' +
+                '                    <div class="field-input">\n' +
                 '                        <div class="form-group">\n' +
                 '                            <label for="field_type_' + count + '_' + CurentModelCount + '" class="control-label">Type</label>\n' +
                 '                            <select class="form-control" name="field_type_' + count + '_' + CurentModelCount + '">\n' +
@@ -180,7 +180,7 @@ $(document).ready(function () {
                 '                            <div class="help-block"></div>\n' +
                 '                        </div>\n' +
                 '                    </div>\n' +
-                '                    <div class="field-input col-xs-1">\n' +
+                '                    <div class="field-input">\n' +
                 '                        <div class="form-group">\n' +
                 '                            <label for="field_length_' + count + '_' + CurentModelCount + '" class="control-label">Length</label>\n' +
                 '                            <input id="service_' + count + '_' + CurentModelCount + '" name="field_length_' + count + '_' + CurentModelCount + '" class="form-control" type="text"\n' +
@@ -188,7 +188,7 @@ $(document).ready(function () {
                 '                            <div class="help-block"></div>\n' +
                 '                        </div>\n' +
                 '                    </div>\n' +
-                '                    <div class="field-input col-xs-1">\n' +
+                '                    <div class="field-input">\n' +
                 '                        <div class="form-group">\n' +
                 '                            <label for="is_nullable_' + count + '_' + CurentModelCount + '" class="control-label">Null</label>\n' +
                 '                            <input value="1" id="service_' + count + '_' + CurentModelCount + '" name="is_nullable_' + count + '_' + CurentModelCount + '" class="form-control" type="checkbox"\n' +
@@ -196,7 +196,7 @@ $(document).ready(function () {
                 '                            <div class="help-block"></div>\n' +
                 '                        </div>\n' +
                 '                    </div>\n' +
-                '                    <div class="field-input col-xs-1">\n' +
+                '                    <div class="field-input">\n' +
                 '                        <div class="form-group">\n' +
                 '                            <label for="is_auto_increment_' + count + '_' + CurentModelCount + '" class="control-label">A.I</label>\n' +
                 '                            <input value="1" id="service_' + count + '_' + CurentModelCount + '" name="is_auto_increment_' + count + '_' + CurentModelCount + '" class="form-control" type="checkbox"\n' +
@@ -204,7 +204,7 @@ $(document).ready(function () {
                 '                            <div class="help-block"></div>\n' +
                 '                        </div>\n' +
                 '                    </div>\n' +
-                '                    <div class="field-input col-xs-1">\n' +
+                '                    <div class="field-input">\n' +
                 '                        <div class="form-group">\n' +
                 '                            <label for="is_lang_' + count + '_' + CurentModelCount + '" class="control-label">Lang?</label>\n' +
                 '                            <input value="1" id="service_' + count + '_' + CurentModelCount + '" name="is_lang_' + count + '_' + CurentModelCount + '" class="form-control" type="checkbox"\n' +
@@ -212,7 +212,7 @@ $(document).ready(function () {
                 '                            <div class="help-block"></div>\n' +
                 '                        </div>\n' +
                 '                    </div>\n' +
-                '                    <div class="field-input col-xs-1">\n' +
+                '                    <div class="field-input">\n' +
                 '                        <div class="form-group">\n' +
                 '                            <label for="is_shop_' + count + '_' + CurentModelCount + '" class="control-label">Shop?</label>\n' +
                 '                            <input value="1" id="service_' + count + '_' + CurentModelCount + '" name="is_shop_' + count + '_' + CurentModelCount + '" class="form-control" type="checkbox"\n' +
@@ -220,7 +220,7 @@ $(document).ready(function () {
                 '                            <div class="help-block"></div>\n' +
                 '                        </div>\n' +
                 '                    </div>\n' +
-                '                    <div class="field-input col-xs-2">\n' +
+                '                    <div class="field-input">\n' +
                 '                        <div class="form-group">\n' +
                 '                            <label for="default_value_' + count + '_' + CurentModelCount + '" class="control-label">Default Value</label>\n' +
                 '                            <input value="" id="service_' + count + '_' + CurentModelCount + '" name="default_value_' + count + '_' + CurentModelCount + '" class="form-control" type="text"\n' +
@@ -228,7 +228,7 @@ $(document).ready(function () {
                 '                            <div class="help-block"></div>\n' +
                 '                        </div>\n' +
                 '                    </div>\n' +
-                '                    <div class="field-input col-xs-1">\n' +
+                '                    <div class="field-input">\n' +
                 '                        <div class="form-group">\n' +
                 '                            <button type="button" class="btn btn-danger remove">\n' +
                 '                                Remove\n' +
@@ -274,7 +274,7 @@ $(document).ready(function () {
                 '                    </div>\n' +
                 '\n' +
                 '                    <div class="snippet-fields row">\n' +
-                '                        <div class="field-input col-xs-2">\n' +
+                '                        <div class="field-input">\n' +
                 '                            <div class="form-group">\n' +
                 '                                <label for="field_name" class="control-label">field name</label>\n' +
                 '                                <input value="" id="service-1" name="field_name_' + count + '_' + modelCount + '" class="form-control" type="text"\n' +
@@ -282,7 +282,7 @@ $(document).ready(function () {
                 '                                <div class="help-block"></div>\n' +
                 '                            </div>\n' +
                 '                        </div>\n' +
-                '                        <div class="field-input col-xs-1">\n' +
+                '                        <div class="field-input">\n' +
                 '                            <div class="form-group">\n' +
                 '                                <label for="field_type-1" class="control-label">Type</label>\n' +
                 '                                <select class="form-control" name="field_type_' + count + '_' + modelCount + '">\n' +
@@ -349,7 +349,7 @@ $(document).ready(function () {
                 '                                <div class="help-block"></div>\n' +
                 '                            </div>\n' +
                 '                        </div>\n' +
-                '                        <div class="field-input col-xs-1">\n' +
+                '                        <div class="field-input">\n' +
                 '                            <div class="form-group">\n' +
                 '                                <label for="field_length-1" class="control-label">Length</label>\n' +
                 '                                <input value="" id="service-1" name="field_length_' + count + '_' + modelCount + '" class="form-control" type="text"\n' +
@@ -357,7 +357,7 @@ $(document).ready(function () {
                 '                                <div class="help-block"></div>\n' +
                 '                            </div>\n' +
                 '                        </div>\n' +
-                '                        <div class="field-input col-xs-1">\n' +
+                '                        <div class="field-input">\n' +
                 '                            <div class="form-group">\n' +
                 '                                <label for="is_nullable-1" class="control-label">Null</label>\n' +
                 '                                <input value="1" id="service-1" name="is_nullable_' + count + '_' + modelCount + '" class="form-control" type="checkbox"\n' +
@@ -365,7 +365,7 @@ $(document).ready(function () {
                 '                                <div class="help-block"></div>\n' +
                 '                            </div>\n' +
                 '                        </div>\n' +
-                '                        <div class="field-input col-xs-1">\n' +
+                '                        <div class="field-input">\n' +
                 '                            <div class="form-group">\n' +
                 '                                <label for="is_auto_increment-1" class="control-label">A.I</label>\n' +
                 '                                <input value="1" id="service-1" name="is_auto_increment_' + count + '_' + modelCount + '" class="form-control"\n' +
@@ -374,7 +374,7 @@ $(document).ready(function () {
                 '                                <div class="help-block"></div>\n' +
                 '                            </div>\n' +
                 '                        </div>\n' +
-                '                        <div class="field-input col-xs-1">\n' +
+                '                        <div class="field-input">\n' +
                 '                            <div class="form-group">\n' +
                 '                                <label for="is_lang-1" class="control-label">Lang?</label>\n' +
                 '                                <input value="1" id="service-1" name="is_lang_' + count + '_' + modelCount + '" class="form-control"\n' +
@@ -383,7 +383,7 @@ $(document).ready(function () {
                 '                                <div class="help-block"></div>\n' +
                 '                            </div>\n' +
                 '                        </div>\n' +
-                '                        <div class="field-input col-xs-1">\n' +
+                '                        <div class="field-input">\n' +
                 '                            <div class="form-group">\n' +
                 '                                <label for="is_shop-1" class="control-label">Shop?</label>\n' +
                 '                                <input value="1" id="service-1" name="is_shop_' + count + '_' + modelCount + '" class="form-control"\n' +
@@ -392,7 +392,7 @@ $(document).ready(function () {
                 '                                <div class="help-block"></div>\n' +
                 '                            </div>\n' +
                 '                        </div>\n' +
-                '                        <div class="field-input col-xs-2">\n' +
+                '                        <div class="field-input">\n' +
                 '                            <div class="form-group">\n' +
                 '                                <label for="default_value-1" class="control-label">Default Value</label>\n' +
                 '                                <input value="1" id="service-1" name="default_value_' + count + '_' + modelCount + '" class="form-control" type="text"\n' +
@@ -400,7 +400,7 @@ $(document).ready(function () {
                 '                                <div class="help-block"></div>\n' +
                 '                            </div>\n' +
                 '                        </div>\n' +
-                '                        <div class="field-input col-xs-1">\n' +
+                '                        <div class="field-input">\n' +
                 '                            <div class="form-group">\n' +
                 '                                <button type="button" class="btn btn-danger remove">\n' +
                 '                                    Remove\n' +
@@ -435,7 +435,7 @@ $(document).ready(function () {
                 '                        </div>\n' +
                 '                        <div class="field-input col-xs-2">\n' +
                 '                            <div class="form-group">\n' +
-                '                                <button type="button" id="field-count" class="btn btn-default add-new" data-child="2" data-type="field">\n' +
+                '                                <button type="button" id="field-count" class="btn btn-default add-new" data-child="2" data-type="custom-field-inputs">\n' +
                 '                                    New field\n' +
                 '                                </button>\n' +
                 '                            </div>\n' +
@@ -443,7 +443,7 @@ $(document).ready(function () {
                 '                    </div>\n' +
                 '\n' +
                 '                    <div class="snippet-fields row">\n' +
-                '                        <div class="field-input col-xs-2">\n' +
+                '                        <div class="field-input">\n' +
                 '                            <div class="form-group">\n' +
                 '                                <label for="column_name-1" class="control-label">field name</label>\n' +
                 '                                <input value="" id="service-1" name="column_name_' + count + '_' + modelCount + '" class="form-control" type="text"\n' +
@@ -451,7 +451,7 @@ $(document).ready(function () {
                 '                                <div class="help-block"></div>\n' +
                 '                            </div>\n' +
                 '                        </div>\n' +
-                '                        <div class="field-input col-xs-1">\n' +
+                '                        <div class="field-input">\n' +
                 '                            <div class="form-group">\n' +
                 '                                <label for="column_type-1" class="control-label">Type</label>\n' +
                 '                                <select class="form-control" name="column_type_' + count + '_' + modelCount + '">\n' +
@@ -518,7 +518,7 @@ $(document).ready(function () {
                 '                                <div class="help-block"></div>\n' +
                 '                            </div>\n' +
                 '                        </div>\n' +
-                '                        <div class="field-input col-xs-1">\n' +
+                '                        <div class="field-input">\n' +
                 '                            <div class="form-group">\n' +
                 '                                <label for="column_length-1" class="control-label">Length</label>\n' +
                 '                                <input id="service-1" name="column_length_' + count + '_' + modelCount + '" class="form-control" type="text"\n' +
@@ -526,7 +526,7 @@ $(document).ready(function () {
                 '                                <div class="help-block"></div>\n' +
                 '                            </div>\n' +
                 '                        </div>\n' +
-                '                        <div class="field-input col-xs-1">\n' +
+                '                        <div class="field-input">\n' +
                 '                            <div class="form-group">\n' +
                 '                                <label for="is_nullable-1" class="control-label">Null</label>\n' +
                 '                                <input value="1" id="service-1" name="is_column_nullable_' + count + '_' + modelCount + '" class="form-control" type="checkbox"\n' +
@@ -535,7 +535,7 @@ $(document).ready(function () {
                 '                            </div>\n' +
                 '                        </div>\n' +
                 '\n' +
-                '                        <div class="field-input col-xs-1">\n' +
+                '                        <div class="field-input">\n' +
                 '                            <div class="form-group">\n' +
                 '                                <label for="is_auto_increment-1" class="control-label">Lang?</label>\n' +
                 '                                <input value="1" id="service-1" name="is_column_lang_' + count + '_' + modelCount + '" class="form-control"\n' +
@@ -544,7 +544,7 @@ $(document).ready(function () {
                 '                                <div class="help-block"></div>\n' +
                 '                            </div>\n' +
                 '                        </div>\n' +
-                '                        <div class="field-input col-xs-1">\n' +
+                '                        <div class="field-input">\n' +
                 '                            <div class="form-group">\n' +
                 '                                <label for="column-1" class="control-label">Shop?</label>\n' +
                 '                                <input value="1" id="service-1" name="is_column_shop_' + count + '_' + modelCount + '" class="form-control"\n' +
@@ -553,7 +553,16 @@ $(document).ready(function () {
                 '                                <div class="help-block"></div>\n' +
                 '                            </div>\n' +
                 '                        </div>\n' +
-                '                        <div class="field-input col-xs-2">\n' +
+                '                        <div class="field-input">\n' +
+                '                            <div class="form-group">\n' +
+                '                                <label for="add_to_listing-1" class="control-label">Add to listing?</label>\n' +
+                '                                <input value="1" id="service-1" name="add_to_listing_' + count + '_' + modelCount + '" class="form-control"\n' +
+                '                                       type="checkbox"\n' +
+                '                                       placeholder="">\n' +
+                '                                <div class="help-block"></div>\n' +
+                '                            </div>\n' +
+                '                        </div>\n' +
+                '                        <div class="field-input">\n' +
                 '                            <div class="form-group">\n' +
                 '                                <label for="default_value-1" class="control-label">Default Value</label>\n' +
                 '                                <input value="" id="service-1" name="default_column_value_' + count + '_' + modelCount + '" class="form-control" type="text"\n' +
@@ -561,7 +570,7 @@ $(document).ready(function () {
                 '                                <div class="help-block"></div>\n' +
                 '                            </div>\n' +
                 '                        </div>\n' +
-                '                        <div class="field-input col-xs-1">\n' +
+                '                        <div class="field-input">\n' +
                 '                            <div class="form-group">\n' +
                 '                                <button type="button" class="btn btn-danger remove">\n' +
                 '                                    Remove\n' +
@@ -571,13 +580,13 @@ $(document).ready(function () {
                 '                    </div>\n' +
                 '                </div>';
             $(elm).closest('.modal-body').append(html);
-            $(elm).attr('data-child', parseInt(count) + 1);
+            // $(elm).attr('data-child', parseInt(count) + 1);
             $(elm).closest('.modal-body').find('.liste-box').attr('data-currentCount', modelCount)
             $(elm).attr('data-model', parseInt(modelCount) + 1);
         }
         if (type == 'custom-field-inputs') {
             let html = '           <div class="snippet-fields row">\n' +
-                '                    <div class="field-input col-xs-2">\n' +
+                '                    <div class="field-input">\n' +
                 '                        <div class="form-group">\n' +
                 '                            <label for="column_name_' + count + '_' + CurentModelCount + '" class="control-label">field name</label>\n' +
                 '                            <input value="" id="service_' + count + '_' + CurentModelCount + '" name="column_name_' + count + '_' + CurentModelCount + '" class="form-control" type="text"\n' +
@@ -585,7 +594,7 @@ $(document).ready(function () {
                 '                            <div class="help-block"></div>\n' +
                 '                        </div>\n' +
                 '                    </div>\n' +
-                '                    <div class="field-input col-xs-1">\n' +
+                '                    <div class="field-input">\n' +
                 '                        <div class="form-group">\n' +
                 '                            <label for="column_type_' + count + '_' + CurentModelCount + '" class="control-label">Type</label>\n' +
                 '                            <select class="form-control" name="column_type_' + count + '_' + CurentModelCount + '">\n' +
@@ -648,7 +657,7 @@ $(document).ready(function () {
                 '                            <div class="help-block"></div>\n' +
                 '                        </div>\n' +
                 '                    </div>\n' +
-                '                    <div class="field-input col-xs-1">\n' +
+                '                    <div class="field-input">\n' +
                 '                        <div class="form-group">\n' +
                 '                            <label for="column_length_' + count + '_' + CurentModelCount + '" class="control-label">Length</label>\n' +
                 '                            <input id="service_' + count + '_' + CurentModelCount + '" name="column_length_' + count + '_' + CurentModelCount + '" class="form-control" type="text"\n' +
@@ -656,7 +665,7 @@ $(document).ready(function () {
                 '                            <div class="help-block"></div>\n' +
                 '                        </div>\n' +
                 '                    </div>\n' +
-                '                    <div class="field-input col-xs-1">\n' +
+                '                    <div class="field-input">\n' +
                 '                        <div class="form-group">\n' +
                 '                            <label for="is_nullable_' + count + '_' + CurentModelCount + '" class="control-label">Null</label>\n' +
                 '                            <input value="1" id="service_' + count + '_' + CurentModelCount + '" name="is_column_nullable_' + count + '_' + CurentModelCount + '" class="form-control" type="checkbox"\n' +
@@ -664,7 +673,7 @@ $(document).ready(function () {
                 '                            <div class="help-block"></div>\n' +
                 '                        </div>\n' +
                 '                    </div>\n' +
-                '                    <div class="field-input col-xs-1">\n' +
+                '                    <div class="field-input">\n' +
                 '                        <div class="form-group">\n' +
                 '                            <label for="is_lang_' + count + '_' + CurentModelCount + '" class="control-label">Lang?</label>\n' +
                 '                            <input value="1" id="service_' + count + '_' + CurentModelCount + '" name="is_column_lang_' + count + '_' + CurentModelCount + '" class="form-control" type="checkbox"\n' +
@@ -672,7 +681,7 @@ $(document).ready(function () {
                 '                            <div class="help-block"></div>\n' +
                 '                        </div>\n' +
                 '                    </div>\n' +
-                '                    <div class="field-input col-xs-1">\n' +
+                '                    <div class="field-input">\n' +
                 '                        <div class="form-group">\n' +
                 '                            <label for="is_shop_' + count + '_' + CurentModelCount + '" class="control-label">Shop?</label>\n' +
                 '                            <input value="1" id="service_' + count + '_' + CurentModelCount + '" name="is_column_shop_' + count + '_' + CurentModelCount + '" class="form-control" type="checkbox"\n' +
@@ -680,7 +689,15 @@ $(document).ready(function () {
                 '                            <div class="help-block"></div>\n' +
                 '                        </div>\n' +
                 '                    </div>\n' +
-                '                    <div class="field-input col-xs-2">\n' +
+                '                    <div class="field-input">\n' +
+                '                        <div class="form-group">\n' +
+                '                            <label for="add_to_listing_' + count + '_' + CurentModelCount + '" class="control-label">Add to listing?</label>\n' +
+                '                            <input value="1" id="service_' + count + '_' + CurentModelCount + '" name="add_to_listing_' + count + '_' + CurentModelCount + '" class="form-control" type="checkbox"\n' +
+                '                                   placeholder="">\n' +
+                '                            <div class="help-block"></div>\n' +
+                '                        </div>\n' +
+                '                    </div>\n' +
+                '                    <div class="field-input">\n' +
                 '                        <div class="form-group">\n' +
                 '                            <label for="default_value_' + count + '_' + CurentModelCount + '" class="control-label">Default Value</label>\n' +
                 '                            <input value="" id="service_' + count + '_' + CurentModelCount + '" name="default_column_value_' + count + '_' + CurentModelCount + '" class="form-control" type="text"\n' +
@@ -688,7 +705,7 @@ $(document).ready(function () {
                 '                            <div class="help-block"></div>\n' +
                 '                        </div>\n' +
                 '                    </div>\n' +
-                '                    <div class="field-input col-xs-1">\n' +
+                '                    <div class="field-input">\n' +
                 '                        <div class="form-group">\n' +
                 '                            <button type="button" class="btn btn-danger remove">\n' +
                 '                                Remove\n' +

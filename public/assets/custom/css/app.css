@@ -152,6 +152,14 @@ a{
     text-decoration:none;
     color:#2c7715;
 }
+.snippet-fields {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.snippet-fields input[type="checkbox"] {
+    width: 20px;
+}
     
     
     
