@@ -262,6 +262,7 @@ class ModuleGenerator
 
             foreach ($this->module_data['use'] as $objectName => $useData) {
                 foreach ($useData as $use) {
+       
                     $useContent .= 'use ' . $use . ';' . PHP_EOL;
                 }
             }
@@ -428,7 +429,7 @@ class ModuleGenerator
             }
 
             $params = $this->getParams();
-            $namespace = new PhpNamespace($params['upper']['company_name'] . DIRECTORY_SEPARATOR . 'Module' . DIRECTORY_SEPARATOR . $params['upper']['module_name'] . DIRECTORY_SEPARATOR . 'Model');
+            $namespace = new PhpNamespace($params['upper']['company_name'] . '\\' . 'Module' . '\\' . $params['upper']['module_name'] . '\\' . 'Model');
             $namespace->addUse('ObjectModel');
             $class = $namespace->addClass($modelData['class']);
             $class->addExtend('ObjectModel');
@@ -450,13 +451,13 @@ class ModuleGenerator
             if (!empty($fieldsDataSql_shop)) {
                 $fieldsDataSql_shop .= ') ENGINE=/*_MYSQL_ENGINE_*/ DEFAULT CHARSET=utf8;' . PHP_EOL;
                 $fieldsDataSql_shop .= 'ALTER TABLE `/*_DB_PREFIX_*/' . $modelData['table'] . '_shop` DROP PRIMARY KEY, ADD PRIMARY KEY (`' . $modelData['primary'] . '`, `id_shop`) USING BTREE;' . PHP_EOL;
-                $fieldsDataSql_shop = str_replace(array("/*", "*/"), array("'.", ".'"), $fieldsDataSql_shop);
+                $fieldsDataSql_shop = str_replace(array("/*", "*/", 'NUL)'), array("'.", ".'", 'NULL)'), $fieldsDataSql_shop);
                 $sql_shop .= '$sql[]=' . $fieldsDataSql_shop . "';" . PHP_EOL;
             }
             if (!empty($fieldsDataSql_lang)) {
                 $fieldsDataSql_lang .= ') ENGINE=/*_MYSQL_ENGINE_*/ DEFAULT CHARSET=utf8;' . PHP_EOL;
-                $fieldsDataSql_lang .= 'ALTER TABLE `/*_DB_PREFIX_*/' . $modelData['table'] . '_lang` DROP PRIMARY KEY, ADD PRIMARY KEY (`' . $modelData['primary'] . '`, `id_shop`, `id_lang`) USING BTREE;' . PHP_EOL;
-                $fieldsDataSql_lang = str_replace(array("/*", "*/"), array("'.", ".'"), $fieldsDataSql_lang);
+                $fieldsDataSql_lang .= 'ALTER TABLE `/*_DB_PREFIX_*/' . $modelData['table'] . '_lang` DROP PRIMARY KEY, ADD PRIMARY KEY (`' . $modelData['primary'] . '`, `id_lang`) USING BTREE;' . PHP_EOL;
+                $fieldsDataSql_lang = str_replace(array("/*", "*/", 'NUL)'), array("'.", ".'", 'NULL)'), $fieldsDataSql_lang);
                 $sql_lang .= '$sql[]=' . $fieldsDataSql_lang . "';" . PHP_EOL;
             }
 
@@ -594,7 +595,7 @@ class ModuleGenerator
                 $nullableCondition = ' NOT NULL';
             }
             $default_value = '';
-            if ($fieldData['default_value'] != "") {
+            if ($fieldData['default_value'] != "" && !empty($fieldData['default_value'])) {
                 $default_value = ' DEFAULT ' . $fieldData['default_value'];
             }
             $is_shop_fields = !empty($fieldData['is_shop']) && $fieldData['is_shop'] !== '' && $fieldData['is_shop'] !== null;
@@ -1017,10 +1018,10 @@ class ModuleGenerator
             }
 
             $use = [];
-            $namespace = new PhpNamespace($this->params['upper']['company_name'] . DIRECTORY_SEPARATOR . 'Module' . DIRECTORY_SEPARATOR . $this->params['upper']['module_name'] . DIRECTORY_SEPARATOR . 'Grid');
+            $namespace = new PhpNamespace($this->params['upper']['company_name'] . '\\' . 'Module' . '\\' . $this->params['upper']['module_name'] . '\\' . 'Grid');
             $namespace->addUse('Module');
             $namespace->addUse('Symfony\Component\Form\FormBuilderInterface');
-            $namespace->addUse($this->params['upper']['company_name'] . DIRECTORY_SEPARATOR . 'Module' . DIRECTORY_SEPARATOR . $this->params['upper']['module_name'] . DIRECTORY_SEPARATOR . 'Model' . DIRECTORY_SEPARATOR . 'Extra'.$classModel.'Fields');
+            $namespace->addUse($this->params['upper']['company_name'] . '\\' . 'Module' . '\\' . $this->params['upper']['module_name'] . '\\' . 'Model' . '\\' . 'Extra'.$classModel.'Fields');
 
             $class = $namespace->addClass($classModel.'FormBuilderModifier');
             $class->addProperty('module')
@@ -1124,10 +1125,10 @@ class ModuleGenerator
             file_put_contents($this->module_dir . '/src/Grid/'.$classModel.'FormBuilderModifier.php', '<?php declare(strict_types=1);');
             file_put_contents($this->module_dir . '/src/Grid/'.$classModel.'FormBuilderModifier.php', PHP_EOL, FILE_APPEND);
             file_put_contents($this->module_dir . '/src/Grid/'.$classModel.'FormBuilderModifier.php', $code, FILE_APPEND);
-            $use[$this->params['upper']['company_name'] . DIRECTORY_SEPARATOR . 'Module' . DIRECTORY_SEPARATOR . $this->params['upper']['module_name'] . DIRECTORY_SEPARATOR . 'Grid' . DIRECTORY_SEPARATOR .$classModel. 'FormBuilderModifier'] = $this->params['upper']['company_name'] . DIRECTORY_SEPARATOR . 'Module' . DIRECTORY_SEPARATOR . $this->params['upper']['module_name'] . DIRECTORY_SEPARATOR . 'Grid' . DIRECTORY_SEPARATOR . $classModel.'FormBuilderModifier';
+            $use[$this->params['upper']['company_name'] . '\\' . 'Module' . '\\' . $this->params['upper']['module_name'] . '\\' . 'Grid' . '\\' .$classModel. 'FormBuilderModifier'] = $this->params['upper']['company_name'] . '\\' . 'Module' . '\\' . $this->params['upper']['module_name'] . '\\' . 'Grid' . '\\' . $classModel.'FormBuilderModifier';
 
             $formBuilderContent = '$'.strtolower($classModel).'FormBuilderModifier= new '.$classModel.'FormBuilderModifier(' . PHP_EOL;
-            $classModelFormBuilderModifierNameSpace = str_replace('Egaddextrafields', $this->params['upper']['module_name'], $this->params['upper']['company_name']."\Module\Egaddextrafields\Grid". DIRECTORY_SEPARATOR .$classModel."FormBuilderModifier");
+            $classModelFormBuilderModifierNameSpace = str_replace('Egaddextrafields', $this->params['upper']['module_name'], $this->params['upper']['company_name']."\Module\Egaddextrafields\Grid". '\\' .$classModel."FormBuilderModifier");
 
             $use[$classModelFormBuilderModifierNameSpace] = $classModelFormBuilderModifierNameSpace;
             $formBuilderContent .= '$this,' . PHP_EOL;
@@ -1300,7 +1301,7 @@ class ModuleGenerator
                 throw new \RuntimeException(sprintf('Cannot create directory "%s"', $gridDir));
             }
             $this->module_data['hooks'][strtolower($classModel)] = array_merge($this->module_data['hooks'][strtolower($classModel)], ['action'.$classModel.'GridDefinitionModifier', 'action'.$classModel.'GridQueryBuilderModifier']);
-            $namespace = new PhpNamespace($this->params['upper']['company_name'] . DIRECTORY_SEPARATOR . 'Module' . DIRECTORY_SEPARATOR . $this->params['upper']['module_name'] . DIRECTORY_SEPARATOR . 'Grid');
+            $namespace = new PhpNamespace($this->params['upper']['company_name'] . '\\' . 'Module' . '\\' . $this->params['upper']['module_name'] . '\\' . 'Grid');
             $namespace->addUse('Module');
             $namespace->addUse('PrestaShop\PrestaShop\Core\Grid\Definition\GridDefinitionInterface');
             $namespace->addUse('PrestaShop\PrestaShop\Core\Grid\Filter\Filter');
@@ -1373,7 +1374,7 @@ class ModuleGenerator
             file_put_contents($this->module_dir . '/src/Grid/'.$classModel.'GridDefinitionModifier.php', '<?php declare(strict_types=1);');
             file_put_contents($this->module_dir . '/src/Grid/'.$classModel.'GridDefinitionModifier.php', PHP_EOL, FILE_APPEND);
             file_put_contents($this->module_dir . '/src/Grid/'.$classModel.'GridDefinitionModifier.php', $code, FILE_APPEND);
-            $namespace = new PhpNamespace($this->params['upper']['company_name'] . DIRECTORY_SEPARATOR . 'Module' . DIRECTORY_SEPARATOR . $this->params['upper']['module_name'] . DIRECTORY_SEPARATOR . 'Grid');
+            $namespace = new PhpNamespace($this->params['upper']['company_name'] . '\\' . 'Module' . '\\' . $this->params['upper']['module_name'] . '\\' . 'Grid');
             $namespace->addUse('Module');
             $namespace->addUse('Doctrine\DBAL\Query\QueryBuilder');
             $class = $namespace->addClass($classModel.'GridQueryBuilderModifier');
@@ -1440,8 +1441,8 @@ class ModuleGenerator
             file_put_contents($this->module_dir . '/src/Grid/'.$classModel.'GridQueryBuilderModifier.php', '<?php declare(strict_types=1);');
             file_put_contents($this->module_dir . '/src/Grid/'.$classModel.'GridQueryBuilderModifier.php', PHP_EOL, FILE_APPEND);
             file_put_contents($this->module_dir . '/src/Grid/'.$classModel.'GridQueryBuilderModifier.php', $code, FILE_APPEND);
-            $this->module_data['use'][strtolower($classModel)][$this->params['upper']['company_name'] . DIRECTORY_SEPARATOR . 'Module' . DIRECTORY_SEPARATOR . $this->params['upper']['module_name'] . DIRECTORY_SEPARATOR . 'Grid' . DIRECTORY_SEPARATOR . $classModel.'GridQueryBuilderModifier'] = $this->params['upper']['company_name'] . DIRECTORY_SEPARATOR . 'Module' . DIRECTORY_SEPARATOR . $this->params['upper']['module_name'] . DIRECTORY_SEPARATOR . 'Grid' . DIRECTORY_SEPARATOR . $classModel.'GridQueryBuilderModifier';
-            $this->module_data['use'][strtolower($classModel)][$this->params['upper']['company_name'] . DIRECTORY_SEPARATOR . 'Module' . DIRECTORY_SEPARATOR . $this->params['upper']['module_name'] . DIRECTORY_SEPARATOR . 'Grid' . DIRECTORY_SEPARATOR . $classModel.'GridDefinitionModifier'] = $this->params['upper']['company_name'] . DIRECTORY_SEPARATOR . 'Module' . DIRECTORY_SEPARATOR . $this->params['upper']['module_name'] . DIRECTORY_SEPARATOR . 'Grid' . DIRECTORY_SEPARATOR . $classModel.'GridDefinitionModifier';
+            $this->module_data['use'][strtolower($classModel)][$this->params['upper']['company_name'] . '\\' . 'Module' . '\\' . $this->params['upper']['module_name'] . '\\' . 'Grid' . '\\' . $classModel.'GridQueryBuilderModifier'] = $this->params['upper']['company_name'] . '\\' . 'Module' . '\\' . $this->params['upper']['module_name'] . '\\' . 'Grid' . '\\' . $classModel.'GridQueryBuilderModifier';
+            $this->module_data['use'][strtolower($classModel)][$this->params['upper']['company_name'] . '\\' . 'Module' . '\\' . $this->params['upper']['module_name'] . '\\' . 'Grid' . '\\' . $classModel.'GridDefinitionModifier'] = $this->params['upper']['company_name'] . '\\' . 'Module' . '\\' . $this->params['upper']['module_name'] . '\\' . 'Grid' . '\\' . $classModel.'GridDefinitionModifier';
             $gridDefinitionModifierContent = '$'.strtolower($classModel).'GridDefinitionModifier= new '.$classModel.'GridDefinitionModifier(' . PHP_EOL;
             $gridDefinitionModifierContent .= '$this,' . PHP_EOL;
             $gridDefinitionModifierContent .= '$params[\'definition\']' . PHP_EOL;
