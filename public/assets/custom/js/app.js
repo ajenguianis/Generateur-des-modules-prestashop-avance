@@ -1,7 +1,15 @@
 $(document).ready(function () {
     $('.login-info-box').fadeOut();
     $('.login-show').addClass('show-log-panel');
-    $("#backend-tab .choice").each(function () {
+    $("#backend-tab-gen .choice").each(function () {
+        $(this).click(function () {
+            let modal = $(this).data('show');
+            if ($(this).hasClass('active')) {
+                $('#' + modal).modal('show');
+            }
+        });
+    });
+    $("#backend-tab-adv .choice").each(function () {
         $(this).click(function () {
             let modal = $(this).data('show');
             if ($(this).hasClass('active')) {
@@ -14,9 +22,12 @@ $(document).ready(function () {
     //         displayForm();
     //     });
     // });
-    $(document).on("click", '#backend-tab .remove', function () {
+    $(document).on("click", '#backend-tab-gen .remove', function () {
         $(this).closest('.snippet-fields').remove();
     });
+    $(document).on("click", '#backend-tab-adv .remove', function () {
+        $(this).closest('.snippet-fields').remove();
+    })
     $(document).on("click", '.add-new', function () {
         let type = $(this).attr('data-type');
         displayForm(this, type);
@@ -714,6 +725,62 @@ $(document).ready(function () {
                 '                    </div>\n' +
                 '                </div>';
             $(elm).closest('.liste-box').append(html);
+            $(elm).attr('data-child', parseInt(count) + 1);
+        }
+        if (type == 'bo-settings') {
+            let html = '                    <div class="snippet-fields row">\n' +
+                '                    <div class="field-input">\n' +
+                '                        <div class="form-group">\n' +
+                '                            <label for="setting_type-' + count + '" class="control-label">Setting type</label>\n' +
+                '\n' +
+                '                            <select name="setting_type_' + count + '" class="form-control" required>\n' +
+                '                                <option value="" disabled selected>Choose Setting type</option>\n' +
+                '                                <option value="switch">Switch</option>\n' +
+                '                                <option value="text">Text</option>\n' +
+                '                                <option value="select">Select</option>\n' +
+                '                                <option value="textarea">Textarea</option>\n' +
+                '                                <option value="category-tree">Category tree</option>\n' +
+                '                                <option value="carrier-select">Carrier select</option>\n' +
+                '                                <option value="product-select">Product select</option>\n' +
+                '                            </select>\n' +
+                '\n' +
+                '                            <div class="help-block"></div>\n' +
+                '                        </div>\n' +
+                '                    </div>\n' +
+                '                    <div class="field-input">\n' +
+                '                        <div class="form-group">\n' +
+                '                            <label for="setting_name-' + count + '" class="control-label">Setting name</label>\n' +
+                '                            <input value="" id="setting_name-' + count + '" name="setting_name_' + count + '" class="form-control" type="text"\n' +
+                '                                   placeholder="">\n' +
+                '                            <div class="help-block"></div>\n' +
+                '                        </div>\n' +
+                '                    </div>\n' +
+                '                    <div class="field-input">\n' +
+                '                        <div class="form-group">\n' +
+                '                            <label for="setting_label-' + count + '" class="control-label">Setting label</label>\n' +
+                '                            <input value="" id="setting_label-' + count + '" name="setting_label_' + count + '" class="form-control" type="text"\n' +
+                '                                   placeholder="">\n' +
+                '                            <div class="help-block"></div>\n' +
+                '                        </div>\n' +
+                '                    </div>\n' +
+                '                    <div class="field-input">\n' +
+                '                        <div class="form-group">\n' +
+                '                            <label for="setting_description-' + count + '" class="control-label">Setting Description</label>\n' +
+                '                            <input value="" id="setting_description-' + count + '" name="setting_description_' + count + '" class="form-control"\n' +
+                '                                   type="text"\n' +
+                '                                   placeholder="">\n' +
+                '                            <div class="help-block"></div>\n' +
+                '                        </div>\n' +
+                '                    </div>\n' +
+                '                    <div class="field-input">\n' +
+                '                        <div class="form-group">\n' +
+                '                            <button type="button" class="btn btn-danger remove">\n' +
+                '                                Remove\n' +
+                '                            </button>\n' +
+                '                        </div>\n' +
+                '                        </div>\n' +
+                '                    </div>';
+            $(elm).closest('.modal-body').append(html);
             $(elm).attr('data-child', parseInt(count) + 1);
         }
     }

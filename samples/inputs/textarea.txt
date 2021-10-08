@@ -1,0 +1,7 @@
+array(
+                        'col' => 3,
+                        'type' => 'textarea',
+                        'desc' => $this->l('setting_description'),
+                        'name' => 'setting_name',
+                        'label' => $this->l('setting_label'),
+                    ),

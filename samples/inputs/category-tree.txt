@@ -1,0 +1,8 @@
+array(
+'type'  => 'categories_select',
+'label' => $this->l('setting_label'),
+'desc' => $this->l('setting_description'),
+'name'  => 'setting_name',
+'category_tree'  => $this->getCategoryChoices('setting_name'), //This is the category_tree called in form.tpl
+'required' => true
+),

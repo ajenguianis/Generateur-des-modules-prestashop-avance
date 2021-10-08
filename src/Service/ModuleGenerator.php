@@ -262,7 +262,7 @@ class ModuleGenerator
 
             foreach ($this->module_data['use'] as $objectName => $useData) {
                 foreach ($useData as $use) {
-       
+
                     $useContent .= 'use ' . $use . ';' . PHP_EOL;
                 }
             }
@@ -609,13 +609,37 @@ class ModuleGenerator
                     $sql_shop .= '`id_shop` int(11) UNSIGNED NOT NULL,' . PHP_EOL;
                 }
                 if (!empty($fieldData['field_name']) && $fieldData['field_type']) {
+                    if (($fieldData['field_type'] === 'INT' || $fieldData['field_type'] === 'UnsignedInt')) {
+                        if ($fieldData['field_type'] === 'UnsignedInt') {
+                            $sql_shop .= '`' . $fieldData['field_name'] . '` INT(11) UNSIGNED ' . $nullableCondition . $default_value . $separator . PHP_EOL;
+                        }
+                        if ($fieldData['field_type'] === 'INT') {
+                            $sql_shop .= '`' . $fieldData['field_name'] . '` INT(11) ' . $nullableCondition . $default_value . $separator . PHP_EOL;
+                        }
+                    }elseif (($fieldData['field_type'] === 'EMAIL' || $fieldData['field_type'] === 'VARCHAR' || $fieldData['field_type'] === 'HTML' || $fieldData['field_type'] === 'PERCENT')) {
+                        $size = $fieldsDef[$index]['size'] ?? 255;
+                        $sql_shop .= '`' . $fieldData['field_name'] . '` VARCHAR(' . $size . ')  ' . $nullableCondition . $default_value . $separator . PHP_EOL;
+                    }elseif (($fieldData['field_type'] === 'DECIMAL' || $fieldData['field_type'] === 'FLOAT')) {
+                        if (!empty($fieldData['field_length']) && $fieldData['field_length'] !== '') {
+                            $size = ($fieldData['field_length'] ?? 20.6);
+                        }
+                        $size = $size ?? 20.6;
+                        $size=str_replace('.', ',', $size);
+                        $sql_shop .= '`' . $fieldData['field_name'] . '` DECIMAL(' . $size . ')  ' . $nullableCondition . $default_value . $separator . PHP_EOL;
+                    }elseif (($fieldData['field_type'] === 'TEXT' || $fieldData['field_type'] === 'LONGTEXT')) {
+                            $sql_shop .= '`' . $fieldData['field_name'] . '` ' . $fieldData['field_type'] . $nullableCondition . $default_value . $separator . PHP_EOL;
 
-                    if ($fieldData['field_type'] === 'BOOLEAN') {
-                        $sql_shop .= '`' . $fieldData['field_name'] . '` TINYINT(' . $fieldData['field_length'] . ')' . $nullableCondition . $default_value . ',' . PHP_EOL;
+                    }elseif (($fieldData['field_type'] === 'TINYINT' || $fieldData['field_type'] === 'BOOLEAN')) {
+                        if (!empty($fieldData['field_length']) && $fieldData['field_length'] !== '') {
+                            $size = ($fieldData['field_length'] ?? 1);
+                        }
+                        $size = $size ?? 1;
+                        $sql_shop .= '`' . $fieldData['field_name'] . '` TINYINT(' . $size . ')  ' . $nullableCondition . $default_value . $separator . PHP_EOL;
+                    }elseif (($fieldData['field_type'] === 'DATE' || $fieldData['field_type'] === 'DATETIME')) {
+                        $sql_shop .= '`' . $fieldData['field_name'] . '` ' . $fieldData['field_type'] . '  ' . $separator . PHP_EOL;
                     } else {
                         $fieldData['field_length']=str_replace('.', ',', $fieldData['field_length']);
                         $sql_shop .= '`' . $fieldData['field_name'] . '` ' . $fieldData['field_type'] . '(' . $fieldData['field_length'] . ')' . $nullableCondition . $default_value . ',' . PHP_EOL;
-
                     }
                 }
 
@@ -744,15 +768,16 @@ class ModuleGenerator
 
         $this->module_data['hooksContents'] = [];
 
-
+        $this->module_data['hooks']=[];
         foreach ($this->module_data['objectModels'] as $modelData) {
-            $this->module_data['hooks'][strtolower($modelData['class'])] = [];
+
             if (empty($modelData['class'])) {
                 return false;
             }
             if (empty($modelData['fields'])) {
                 return false;
             }
+            $this->module_data['hooks'][strtolower($modelData['class'])] = [];
             $extraModelsData['class'] = 'Extra' . $modelData['class'] . 'Fields';
             $extraModelsData['table'] = strtolower('Extra' . $modelData['class'] . 'Fields');
             $extraModelsData['primary'] = 'id_' . strtolower('Extra' . $modelData['class'] . 'Fields');
@@ -1237,7 +1262,8 @@ class ModuleGenerator
                     $where .= 'if (Tools::getIsset(\'filter_column_name_' . $field['column_name'] . '\') && !empty(Tools::getValue(\'filter_column_name_' . $field['column_name'] . '\'))) {' . PHP_EOL;
                     $where .= '$params[\'sql_where\'][] .= "extra_lang.' . $field['column_name'] . ' like \'%" . trim(Tools::getValue(\'filter_column_name_' . $field['column_name'] . '\'))."%\'";' . PHP_EOL;
                     $where .= '}' . PHP_EOL;
-                    $lang=true;
+                    $transCount++;
+
                 } else {
                     $sql .= "/+params['sql_select']['" . $field['column_name'] . "'] = [" . PHP_EOL;
                     $sql .= "'table' => 'extra'," . PHP_EOL;
@@ -1259,15 +1285,15 @@ class ModuleGenerator
                     $sql .= "'join' => 'LEFT JOIN'," . PHP_EOL;
                     $sql .= "'on' => 'p.`id_product` = extra.`id_product`'," . PHP_EOL;
                     $sql .= "];" . PHP_EOL;
-                    $transCount++;
                 }
-                if ($transCount == 1 && $lang) {
+                if ($transCount == 1) {
                     $sql .= "/+params['sql_table']['extra_lang'] = [" . PHP_EOL;
                     $sql .= "'table' => 'extraproductfields_lang'," . PHP_EOL;
                     $sql .= "'join' => 'LEFT JOIN'," . PHP_EOL;
                     $sql .= "'on' => 'extra_lang.`id_extraproductfields` = extra.`id_extraproductfields`'," . PHP_EOL;
                     $sql .= "];" . PHP_EOL;
                 }
+
                 $sql .= $where . PHP_EOL;
             }
             $this->module_data['hooksContents']['actionAdminProductsListingFieldsModifier'] = $sql;
@@ -1475,5 +1501,49 @@ class ModuleGenerator
         $bool .= '}' . PHP_EOL;
         return $bool;
     }
+
+    public function generateSettings()
+    {
+        $content = file_get_contents($this->base_dir . '/samples/settings.php');
+        $content = $this->replaceStandardStrings($content);
+        $inputs='';
+        $there_is_carrier=false;
+        $there_is_category=false;
+        foreach ($this->module_data['settings']  as $settingData){
+            if(empty($settingData['name'])){
+                continue;
+            }
+            $setting_name=explode(' ', $settingData['name']);
+            if(!empty($setting_name)){
+                foreach ($setting_name as $index=>$part){
+                    $setting_name[$index]=strtoupper($part);
+                }
+            }
+            $settingData['name']=strtoupper($this->params['upper']['module_name']).'_'.implode('_', $setting_name);
+
+            $inputContent = file_get_contents($this->base_dir . '/samples/inputs/'.strtolower($settingData['type']).'.txt');
+            $inputContent= str_replace(array('setting_name', 'setting_label', 'setting_description'), array($settingData['name'], $settingData['label'], $settingData['description']), $inputContent);
+            $inputs.=$inputContent.PHP_EOL;
+            if(strtolower($settingData['type'])=='carrier-select'){
+                $there_is_carrier=true;
+            }
+            if(strtolower($settingData['type'])=='category-tree'){
+                $there_is_category=true;
+            }
+        }
+        $content=str_replace("'form_inputs'", $inputs, $content);
+        if($there_is_carrier){
+            $carrierSelect = file_get_contents($this->base_dir . '/samples/conditionalCodeParts/carrier.php');
+            $content.=$carrierSelect.PHP_EOL;
+        }
+        if($there_is_category){
+            $categorySelect = file_get_contents($this->base_dir . '/samples/conditionalCodeParts/category.php');
+            $content.=$categorySelect.PHP_EOL;
+        }
+
+        dump($content);
+        exit;
+    }
+
 
 }

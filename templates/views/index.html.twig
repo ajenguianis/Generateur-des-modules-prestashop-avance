@@ -21,7 +21,8 @@
                                  <div class="wizard-navigation">
                                      <ul>
                                          <li><a href="#about" data-toggle="tab">General</a></li>
-                                         <li><a href="#backend-tab" data-toggle="tab">Settings</a></li>
+                                         <li><a href="#backend-tab-gen" data-toggle="tab">General Settings</a></li>
+                                         <li><a href="#backend-tab-adv" data-toggle="tab">Advanced Settings</a></li>
                                          <li><a href="#hooks-tab" data-toggle="tab">Hooks</a></li>
                                      </ul>
                                  </div>
@@ -119,12 +120,12 @@
                                              </div>
                                          </div>
                                      </div>
-                                     <div class="tab-pane" id="backend-tab">
+                                     <div class="tab-pane" id="backend-tab-gen">
                                          {{ include('./_partials/models/commandModel.html.twig') }}
                                          {{ include('./_partials/models/helperModel.html.twig') }}
                                          {{ include('./_partials/models/serviceModel.html.twig') }}
                                          {{ include('./_partials/models/objectModel.html.twig') }}
-                                         {{ include('./_partials/models/customFieldModel.html.twig') }}
+                                         {{ include('./_partials/models/settingsModel.html.twig') }}
                                          <h4 class="info-text"> What are you doing? (checkboxes) </h4>
                                          <div class="row">
                                              <div class="col-sm-10 col-sm-offset-1">
@@ -170,12 +171,12 @@
                                                      </div>
                                                  </div>
                                                  <div class="col-sm-4">
-                                                     <div class="choice" data-toggle="wizard-checkbox" data-show="custom-field">
-                                                         <input type="checkbox" name="sym_entity" value="1">
+                                                     <div class="choice" data-toggle="wizard-checkbox" data-show="bo-settings">
+                                                         <input type="checkbox" name="setting_vars" value="1">
                                                          <div class="icon">
                                                              <i class="fa fa-terminal"></i>
                                                          </div>
-                                                         <h6>Custom model fields</h6>
+                                                         <h6>Bo Setting Vars</h6>
                                                      </div>
                                                  </div>
                                                  <div class="col-sm-4">
@@ -191,7 +192,44 @@
                                          </div>
 
                                      </div>
+                                     <div class="tab-pane" id="backend-tab-adv">
+                                         {{ include('./_partials/models/customFieldModel.html.twig') }}
+                                         <h4 class="info-text"> If ever you need anything special </h4>
 
+                                         <div class="row">
+                                             <div class="col-sm-10 col-sm-offset-1">
+
+                                                 <div class="col-sm-4">
+                                                     <div class="choice" data-toggle="wizard-checkbox" data-show="custom-field">
+                                                         <input type="checkbox" name="sym_entity" value="1">
+                                                         <div class="icon">
+                                                             <i class="fa fa-terminal"></i>
+                                                         </div>
+                                                         <h6>Custom model fields</h6>
+                                                     </div>
+                                                 </div>
+                                                 <div class="col-sm-4">
+                                                     <div class="choice" data-toggle="wizard-checkbox" data-show="grid">
+                                                         <input type="checkbox" name="grid" value="1">
+                                                         <div class="icon">
+                                                             <i class="fa fa-terminal"></i>
+                                                         </div>
+                                                         <h6>New Grid</h6>
+                                                     </div>
+                                                 </div>
+                                                 <div class="col-sm-4">
+                                                     <div class="choice" data-toggle="wizard-checkbox">
+                                                         <input type="checkbox" name="account_custom_field" value="1">
+                                                         <div class="icon">
+                                                             <i class="fa fa-terminal" aria-hidden="true"></i>
+                                                         </div>
+                                                         <h6>Add custom field to front forms</h6>
+                                                     </div>
+                                                 </div>
+                                             </div>
+                                         </div>
+
+                                     </div>
                                      <div class="tab-pane" id="hooks-tab">
                                          <div class="row">
                                              <div class="form-group col-sm-2">
