@@ -1,0 +1,84 @@
+<div class="modal fade" id="bo-settings" role="dialog">
+    <div class="modal-dialog modal-lg">
+
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">Bo setting vars</h4>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="field-input col-xs-8">
+                    </div>
+                    <div class="field-input col-xs-2">
+                        <div class="form-group">
+                            <button type="button" class="btn btn-default add-new" data-child="2"
+                                    data-type="bo-settings">
+                                New
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="snippet-fields row">
+                    <div class="field-input">
+                        <div class="form-group">
+                            <label for="setting_type-1" class="control-label">Setting type</label>
+
+                            <select name="setting_type_1" class="form-control" required>
+                                <option value="" disabled selected>Choose Setting type</option>
+                                <option value="switch">Switch</option>
+                                <option value="text">Text</option>
+                                <option value="select">Select</option>
+                                <option value="textarea">Textarea</option>
+                                <option value="category-tree">Category tree</option>
+                                <option value="carrier-select">Carrier select</option>
+                                <option value="product-select">Product select</option>
+                                <option value="feature-select">Feature select</option>
+                            </select>
+
+                            <div class="help-block"></div>
+                        </div>
+                    </div>
+                    <div class="field-input">
+                        <div class="form-group">
+                            <label for="setting_name-1" class="control-label">Setting name</label>
+                            <input value="" id="setting_name-1" name="setting_name_1" class="form-control" type="text"
+                                   placeholder="">
+                            <div class="help-block"></div>
+                        </div>
+                    </div>
+                    <div class="field-input">
+                        <div class="form-group">
+                            <label for="setting_label-1" class="control-label">Setting label</label>
+                            <input value="" id="setting_label-1" name="setting_label_1" class="form-control" type="text"
+                                   placeholder="">
+                            <div class="help-block"></div>
+                        </div>
+                    </div>
+                    <div class="field-input">
+                        <div class="form-group">
+                            <label for="setting_description-1" class="control-label">Setting Description</label>
+                            <input value="" id="etting_description-1" name="setting_description_1" class="form-control"
+                                   type="text"
+                                   placeholder="">
+                            <div class="help-block"></div>
+                        </div>
+                    </div>
+                    <div class="field-input">
+                        <div class="form-group">
+                            <button type="button" class="btn btn-danger remove">
+                                Remove
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-success" data-dismiss="modal">Save changes</button>
+            </div>
+        </div>
+
+    </div>
+</div>

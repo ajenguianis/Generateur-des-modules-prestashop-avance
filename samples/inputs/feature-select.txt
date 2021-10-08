@@ -1,0 +1,13 @@
+array(
+                        'type' => 'select',
+                        'class' => 'fixed-width-x2 chosen',
+                        'multiple' => true,
+                        'desc' => $this->l('setting_description'),
+                        'label' => $this->l('setting_label'),
+                        'name' => 'setting_name[]',
+                        'options' => array(
+                            'query' => Feature::getFeatures(Context::getContext()->language->id),
+                            'id' => 'id_feature',
+                            'name' => 'name'
+                        )
+                    ),

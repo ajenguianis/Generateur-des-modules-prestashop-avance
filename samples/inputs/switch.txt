@@ -1,0 +1,19 @@
+array(
+                        'type' => 'switch',
+                        'label' => $this->l('setting_label'),
+                        'name' => 'setting_name',
+                        'is_bool' => true,
+                        'desc' => $this->l('setting_description'),
+                        'values' => array(
+                            array(
+                                'id' => 'active_on',
+                                'value' => true,
+                                'label' => $this->l('Enabled')
+                            ),
+                            array(
+                                'id' => 'active_off',
+                                'value' => false,
+                                'label' => $this->l('Disabled')
+                            )
+                        ),
+                    ),

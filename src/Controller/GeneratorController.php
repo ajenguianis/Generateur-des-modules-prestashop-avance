@@ -111,6 +111,7 @@ class GeneratorController extends AbstractController
             }
             $this->_codeGen->generateServices();
         }
+
         if (isset($this->_codeGen->module_data['models']) && !empty($this->_codeGen->module_data['models'])) {
             $this->_codeGen->generateModels();
         }
@@ -118,7 +119,9 @@ class GeneratorController extends AbstractController
             $this->_codeGen->generateModelCustomFields();
         }
         $this->_codeGen->generateModuleClass();
-
+        if (isset($this->_codeGen->module_data['settings']) && !empty($this->_codeGen->module_data['settings'])) {
+            $this->_codeGen->generateSettings();
+        }
         $zip_path = $base_dir . '/downloads/' . $module_name . '.zip';
         Hzip::zipDir($module_dir, $zip_path);
         $response = new Response();
@@ -155,7 +158,7 @@ class GeneratorController extends AbstractController
         $objectModels = [];
 
         if (!empty($data = $request->request->all())) {
-
+            $i=0;
             foreach ($request->request->all() as $key => $item) {
 
                 if (!empty($item) && strpos($key, 'command_name') !== false) {
@@ -164,6 +167,22 @@ class GeneratorController extends AbstractController
                     if (isset($data[$callKey])) {
                         $commands[$key]['call'] = $data[$callKey];
                     }
+                }
+                if (!empty($item) && strpos($key, 'setting_name') !== false) {
+                    $settings[$i]['name'] = $item;
+                    $labelKey = str_replace('setting_name', 'setting_label', $key);
+                    if (isset($data[$labelKey])) {
+                        $settings[$i]['label'] = $data[$labelKey];
+                    }
+                    $typeKey = str_replace('setting_name', 'setting_type', $key);
+                    if (isset($data[$typeKey])) {
+                        $settings[$i]['type'] = $data[$typeKey];
+                    }
+                    $descriptionKey = str_replace('setting_name', 'setting_description', $key);
+                    if (isset($data[$descriptionKey])) {
+                        $settings[$i]['description'] = $data[$descriptionKey];
+                    }
+                    $i++;
                 }
                 if (!empty($item) && strpos($key, 'helper_name') !== false) {
                     $helpers[] = $item;
@@ -247,6 +266,9 @@ class GeneratorController extends AbstractController
         }
         if (!empty($objectModels)) {
             $data = array_merge(['objectModels' => $objectModels], $data);
+        }
+        if (!empty($settings)) {
+            $data = array_merge(['settings' => $settings], $data);
         }
         return new ModuleGenerator($base_dir, $module_dir, $data, $this->_em);
     }

@@ -1,0 +1,12 @@
+array(
+                        'col' => 3,
+                        'type' => 'select',
+                        'desc' => $this->l('setting_description'),
+                        'name' => 'setting_name',
+                        'label' => $this->l('setting_label'),
+                        'options' => [
+                            'query' => $this->getCarrierChoices(),
+                            'id' => 'id_reference',
+                            'name' => 'name',
+                        ],
+                    },
