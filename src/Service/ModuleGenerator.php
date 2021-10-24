@@ -1514,6 +1514,8 @@ class ModuleGenerator
         $there_is_carrier = false;
         $there_is_category = false;
         $there_is_product = false;
+        $config_form_value='';
+        $categoryTreeName=null;
         foreach ($this->module_data['settings'] as $settingData) {
             if (empty($settingData['name'])) {
                 continue;
@@ -1525,7 +1527,7 @@ class ModuleGenerator
                 }
             }
             $settingData['name'] = strtoupper($this->params['upper']['module_name']) . '_' . implode('_', $setting_name);
-
+            $config_form_value.="'".$settingData['name']."' => Configuration::get('".$settingData['name']."', null),".PHP_EOL;
             $inputContent = file_get_contents($this->base_dir . '/samples/inputs/' . strtolower($settingData['type']) . '.txt');
 
             $inputContent = str_replace(array('setting_name', 'setting_label', 'setting_description'), array($settingData['name'], $settingData['label'], $settingData['description']), $inputContent);
@@ -1537,15 +1539,16 @@ class ModuleGenerator
             }
             if (strtolower($settingData['type']) == 'category-tree') {
                 $there_is_category = true;
+                $categoryTreeName=$settingData['name'];
             }
             if (strtolower($settingData['type']) == 'product-select') {
                 $there_is_product = true;
             }
-            dump($inputContent);
+
         }
 
         $content = str_replace("'form_inputs'", $inputs, $content);
-
+        $content= str_replace("'config_form_value'", $config_form_value, $content);
         if ($there_is_carrier) {
             $carrierSelect = file_get_contents($this->base_dir . '/samples/conditionalCodeParts/carrier.php');
             $content .= $carrierSelect . PHP_EOL;
@@ -1553,11 +1556,14 @@ class ModuleGenerator
         if ($there_is_category) {
             $categorySelect = file_get_contents($this->base_dir . '/samples/conditionalCodeParts/category.php');
             $content .= $categorySelect . PHP_EOL;
+            $content = str_replace('setting_name', $categoryTreeName, $content);
         }
         if ($there_is_product) {
             $productSelect = file_get_contents($this->base_dir . '/samples/conditionalCodeParts/product.php');
             $content .= $productSelect . PHP_EOL;
         }
+
+
         $moduleContent=file_get_contents($this->module_dir . '/' . $this->module_data['module_name'] . '.php');
 
         $moduleContent=str_replace('/** settings */', $content, $moduleContent);

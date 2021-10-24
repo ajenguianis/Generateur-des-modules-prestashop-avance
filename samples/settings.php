@@ -70,7 +70,9 @@ protected function getConfigForm()
  */
 protected function getConfigFormValues()
 {
-    return 'config_form_value';
+    return array(
+        'config_form_value'
+        );
 }
 
 /**
