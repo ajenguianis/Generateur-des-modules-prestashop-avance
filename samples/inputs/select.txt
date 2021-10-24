@@ -1,6 +1,7 @@
 array(
                         'col' => 3,
                         'type' => 'select',
+                        'class' => 'fixed-width-x2 chosen',
                         'desc' => $this->l('setting_description'),
                         'name' => 'setting_name',
                         'label' => $this->l('setting_label'),
@@ -9,4 +10,4 @@ array(
                             'id' => 'id_option',
                             'name' => 'name',
                         ],
-                    },
+                    ),
