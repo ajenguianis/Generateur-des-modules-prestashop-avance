@@ -5,8 +5,8 @@ array(
                         'name' => 'setting_name',
                         'label' => $this->l('setting_label'),
                         'options' => [
-                            'query' => $this->getCarrierChoices(),
-                            'id' => 'id_reference',
+                            'query' => $this->getProductChoices(),
+                            'id' => 'id_product',
                             'name' => 'name',
                         ],
                     ),
