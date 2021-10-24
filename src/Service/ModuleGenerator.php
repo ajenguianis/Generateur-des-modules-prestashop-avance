@@ -202,8 +202,10 @@ class ModuleGenerator
         $fileSystem->copy($this->base_dir . '/samples/moduleclass.php', $this->module_dir . '/' . $this->module_data['module_name'] . '.php');
         $content = file_get_contents($this->module_dir . '/' . $this->module_data['module_name'] . '.php');
         $params = $this->getParams();
-        $content = str_replace(array('Moduleclass', 'moduleclass', 'module_author', 'Diplay name', 'module_description', 'MODULECLASS'), array($params['upper']['module_name'], $params['lower']['module_name'], $params['upper']['company_name'], $this->module_data['display_name'], $this->module_data['description'], strtoupper($params['lower']['module_name'])), $content);
+        $content = $this->replaceStandardStrings($content);
 
+        $content = str_replace(array('Moduleclass', 'moduleclass', 'module_author', 'Diplay name', 'module_description', 'MODULECLASS'), array($params['upper']['module_name'], $params['lower']['module_name'], $params['upper']['company_name'], $this->module_data['display_name'], $this->module_data['description'], strtoupper($params['lower']['module_name'])), $content);
+        file_put_contents($this->module_dir . '/' . $this->module_data['module_name'] . '.php', $content);
         if (isset($this->module_data['hooks']) && !empty($hooks = $this->module_data['hooks'])) {
             $result = array();
             array_walk_recursive($hooks, function ($v) use (&$result) {
@@ -257,6 +259,7 @@ class ModuleGenerator
             file_put_contents($this->module_dir . '/' . $this->module_data['module_name'] . '.php', implode('', $lines));
             file_put_contents($this->module_dir . '/' . $this->module_data['module_name'] . '.php', $code, FILE_APPEND);
         }
+
         if (!empty($this->module_data['use']) && !empty($query = $this->module_data['use'])) {
             $useContent = '';
 
@@ -270,6 +273,7 @@ class ModuleGenerator
             $content = str_replace('/** add uses */', $useContent, $content);
             file_put_contents($this->module_dir . '/' . $this->module_data['module_name'] . '.php', $content);
         }
+
         return true;
     }
 
@@ -616,29 +620,29 @@ class ModuleGenerator
                         if ($fieldData['field_type'] === 'INT') {
                             $sql_shop .= '`' . $fieldData['field_name'] . '` INT(11) ' . $nullableCondition . $default_value . $separator . PHP_EOL;
                         }
-                    }elseif (($fieldData['field_type'] === 'EMAIL' || $fieldData['field_type'] === 'VARCHAR' || $fieldData['field_type'] === 'HTML' || $fieldData['field_type'] === 'PERCENT')) {
+                    } elseif (($fieldData['field_type'] === 'EMAIL' || $fieldData['field_type'] === 'VARCHAR' || $fieldData['field_type'] === 'HTML' || $fieldData['field_type'] === 'PERCENT')) {
                         $size = $fieldsDef[$index]['size'] ?? 255;
                         $sql_shop .= '`' . $fieldData['field_name'] . '` VARCHAR(' . $size . ')  ' . $nullableCondition . $default_value . $separator . PHP_EOL;
-                    }elseif (($fieldData['field_type'] === 'DECIMAL' || $fieldData['field_type'] === 'FLOAT')) {
+                    } elseif (($fieldData['field_type'] === 'DECIMAL' || $fieldData['field_type'] === 'FLOAT')) {
                         if (!empty($fieldData['field_length']) && $fieldData['field_length'] !== '') {
                             $size = ($fieldData['field_length'] ?? 20.6);
                         }
                         $size = $size ?? 20.6;
-                        $size=str_replace('.', ',', $size);
+                        $size = str_replace('.', ',', $size);
                         $sql_shop .= '`' . $fieldData['field_name'] . '` DECIMAL(' . $size . ')  ' . $nullableCondition . $default_value . $separator . PHP_EOL;
-                    }elseif (($fieldData['field_type'] === 'TEXT' || $fieldData['field_type'] === 'LONGTEXT')) {
-                            $sql_shop .= '`' . $fieldData['field_name'] . '` ' . $fieldData['field_type'] . $nullableCondition . $default_value . $separator . PHP_EOL;
+                    } elseif (($fieldData['field_type'] === 'TEXT' || $fieldData['field_type'] === 'LONGTEXT')) {
+                        $sql_shop .= '`' . $fieldData['field_name'] . '` ' . $fieldData['field_type'] . $nullableCondition . $default_value . $separator . PHP_EOL;
 
-                    }elseif (($fieldData['field_type'] === 'TINYINT' || $fieldData['field_type'] === 'BOOLEAN')) {
+                    } elseif (($fieldData['field_type'] === 'TINYINT' || $fieldData['field_type'] === 'BOOLEAN')) {
                         if (!empty($fieldData['field_length']) && $fieldData['field_length'] !== '') {
                             $size = ($fieldData['field_length'] ?? 1);
                         }
                         $size = $size ?? 1;
                         $sql_shop .= '`' . $fieldData['field_name'] . '` TINYINT(' . $size . ')  ' . $nullableCondition . $default_value . $separator . PHP_EOL;
-                    }elseif (($fieldData['field_type'] === 'DATE' || $fieldData['field_type'] === 'DATETIME')) {
+                    } elseif (($fieldData['field_type'] === 'DATE' || $fieldData['field_type'] === 'DATETIME')) {
                         $sql_shop .= '`' . $fieldData['field_name'] . '` ' . $fieldData['field_type'] . '  ' . $separator . PHP_EOL;
                     } else {
-                        $fieldData['field_length']=str_replace('.', ',', $fieldData['field_length']);
+                        $fieldData['field_length'] = str_replace('.', ',', $fieldData['field_length']);
                         $sql_shop .= '`' . $fieldData['field_name'] . '` ' . $fieldData['field_type'] . '(' . $fieldData['field_length'] . ')' . $nullableCondition . $default_value . ',' . PHP_EOL;
                     }
                 }
@@ -714,7 +718,7 @@ class ModuleGenerator
                     $size = ($fieldData['field_length'] ?? 20.6);
                 }
                 $size = $size ?? 20.6;
-                $size=str_replace('.', ',', $size);
+                $size = str_replace('.', ',', $size);
                 $sql .= '`' . $fieldData['field_name'] . '` DECIMAL(' . $size . ')  ' . $nullableCondition . $default_value . $separator . PHP_EOL;
             }
             if (($fieldData['field_type'] === 'TEXT' || $fieldData['field_type'] === 'LONGTEXT')) {
@@ -757,7 +761,7 @@ class ModuleGenerator
             $sql_lang = "'" . $sql_lang;
         }
 
-        return ['fields' => $fields, 'sql' => $sql, 'sql_shop' => $sql_shop, 'sql_lang' => $sql_lang, 'sql_uninstall'=>$sql_uninstall];
+        return ['fields' => $fields, 'sql' => $sql, 'sql_shop' => $sql_shop, 'sql_lang' => $sql_lang, 'sql_uninstall' => $sql_uninstall];
     }
 
     public function generateModelCustomFields()
@@ -768,7 +772,7 @@ class ModuleGenerator
 
         $this->module_data['hooksContents'] = [];
 
-        $this->module_data['hooks']=[];
+        $this->module_data['hooks'] = [];
         foreach ($this->module_data['objectModels'] as $modelData) {
 
             if (empty($modelData['class'])) {
@@ -874,7 +878,7 @@ class ModuleGenerator
             $contentForNonTranslatableTemplates = "";
             foreach ($this->module_data['hooks'][strtolower($classModel)] as $hook) {
                 $common_content = '$idProduct = (int)$params[\'id_product\'];' . PHP_EOL;
-                $model = str_replace('Egaddextrafields', $this->params['upper']['module_name'], $this->params['upper']['company_name'].'\Module\Egaddextrafields\Model\ExtraProductFields');
+                $model = str_replace('Egaddextrafields', $this->params['upper']['module_name'], $this->params['upper']['company_name'] . '\Module\Egaddextrafields\Model\ExtraProductFields');
                 $this->module_data['use'][strtolower($classModel)][$model] = $model;
                 $common_content .= '$extraProductFields = ExtraProductFields::getExtraProductFieldsByProductId($idProduct);' . PHP_EOL;
                 $this->module_data['use'][strtolower($classModel)]['PrestaShop\PrestaShop\Adapter\SymfonyContainer'] = 'PrestaShop\PrestaShop\Adapter\SymfonyContainer';
@@ -1036,7 +1040,7 @@ class ModuleGenerator
             file_put_contents($this->module_dir . '/views/PrestaShop/Products/extra_translatable_fields.html.twig', $contentForTranslatableTemplates);
         }
         if ($classModel === 'Category' || $classModel === 'Customer') {
-            $this->module_data['hooks'][strtolower($classModel)] = array_merge($this->module_data['hooks'][strtolower($classModel)], ['action'.$classModel.'FormBuilderModifier', 'actionAfterCreate'.$classModel.'FormHandler', 'actionAfterUpdate'.$classModel.'FormHandler']);
+            $this->module_data['hooks'][strtolower($classModel)] = array_merge($this->module_data['hooks'][strtolower($classModel)], ['action' . $classModel . 'FormBuilderModifier', 'actionAfterCreate' . $classModel . 'FormHandler', 'actionAfterUpdate' . $classModel . 'FormHandler']);
             $gridDir = $this->module_dir . DIRECTORY_SEPARATOR . 'src' . DIRECTORY_SEPARATOR . 'Grid';
             if (!is_dir($gridDir) && !@mkdir($gridDir, 0777, true) && !is_dir($gridDir)) {
                 throw new \RuntimeException(sprintf('Cannot create directory "%s"', $gridDir));
@@ -1046,12 +1050,12 @@ class ModuleGenerator
             $namespace = new PhpNamespace($this->params['upper']['company_name'] . '\\' . 'Module' . '\\' . $this->params['upper']['module_name'] . '\\' . 'Grid');
             $namespace->addUse('Module');
             $namespace->addUse('Symfony\Component\Form\FormBuilderInterface');
-            $namespace->addUse($this->params['upper']['company_name'] . '\\' . 'Module' . '\\' . $this->params['upper']['module_name'] . '\\' . 'Model' . '\\' . 'Extra'.$classModel.'Fields');
+            $namespace->addUse($this->params['upper']['company_name'] . '\\' . 'Module' . '\\' . $this->params['upper']['module_name'] . '\\' . 'Model' . '\\' . 'Extra' . $classModel . 'Fields');
 
-            $class = $namespace->addClass($classModel.'FormBuilderModifier');
+            $class = $namespace->addClass($classModel . 'FormBuilderModifier');
             $class->addProperty('module')
                 ->setProtected();
-            $class->addProperty('id'.$classModel)
+            $class->addProperty('id' . $classModel)
                 ->setProtected();
             $class->addProperty('formBuilder')
                 ->setProtected();
@@ -1059,11 +1063,11 @@ class ModuleGenerator
                 ->setProtected();
             $construct = $class->addMethod('__construct');
             $construct->addParameter('module')->setType('Module');
-            $construct->addParameter('id'.$classModel)->setType('Int');
+            $construct->addParameter('id' . $classModel)->setType('Int');
             $construct->addParameter('formBuilder')->setType('FormBuilderInterface');
             $construct->addParameter('formData')->setType('Array');
             $constructBody = '$this->module=$module;' . PHP_EOL;
-            $constructBody .= '$this->id'.$classModel.'=$id'.$classModel.';' . PHP_EOL;
+            $constructBody .= '$this->id' . $classModel . '=$id' . $classModel . ';' . PHP_EOL;
             $constructBody .= '$this->formBuilder=$formBuilder;' . PHP_EOL;
             $constructBody .= '$this->formData=$formData;' . PHP_EOL;
             $construct->setBody($constructBody);
@@ -1105,7 +1109,7 @@ class ModuleGenerator
                     $addFieldsBody .= '],' . PHP_EOL;
                     $addFieldsBody .= "]" . PHP_EOL;
                     $addFieldsBody .= ')' . PHP_EOL;
-                }elseif ($item['column_type'] === 'DATETIME' || $item['column_type'] === 'DATE') {
+                } elseif ($item['column_type'] === 'DATETIME' || $item['column_type'] === 'DATE') {
                     $namespace->addUse('PrestaShopBundle\Form\Admin\Type\DatePickerType');
                     $addFieldsBody .= '->add(' . PHP_EOL;
                     $addFieldsBody .= "'" . $item['column_name'] . "'," . PHP_EOL;
@@ -1130,12 +1134,12 @@ class ModuleGenerator
             }
 
             $addFieldsBody .= ';' . PHP_EOL;
-            $addFieldsBody .= '$extra'.$classModel.'=Extra'.$classModel.'Fields::getExtra'.$classModel.'FieldsBy'.$classModel.'Id($this->id'.$classModel.');' . PHP_EOL;
-            $use[str_replace('Egaddextrafields', $this->params['upper']['module_name'], $this->params['upper']['company_name'].'\Module\Egaddextrafields\Model\Extra'.$classModel.'Fields')] = str_replace('Egaddextrafields', $this->params['upper']['module_name'], $this->params['upper']['company_name'].'\Module\Egaddextrafields\Model\Extra'.$classModel.'Fields');
+            $addFieldsBody .= '$extra' . $classModel . '=Extra' . $classModel . 'Fields::getExtra' . $classModel . 'FieldsBy' . $classModel . 'Id($this->id' . $classModel . ');' . PHP_EOL;
+            $use[str_replace('Egaddextrafields', $this->params['upper']['module_name'], $this->params['upper']['company_name'] . '\Module\Egaddextrafields\Model\Extra' . $classModel . 'Fields')] = str_replace('Egaddextrafields', $this->params['upper']['module_name'], $this->params['upper']['company_name'] . '\Module\Egaddextrafields\Model\Extra' . $classModel . 'Fields');
 
             foreach ($fields as $index => $item) {
 
-                $addFieldsBody .= '$this->formData[\'' . $item['column_name'] . '\']=$extra'.$classModel.'->' . $item['column_name'] . ';' . PHP_EOL;
+                $addFieldsBody .= '$this->formData[\'' . $item['column_name'] . '\']=$extra' . $classModel . '->' . $item['column_name'] . ';' . PHP_EOL;
 
 
             }
@@ -1147,13 +1151,13 @@ class ModuleGenerator
             $code = $printer->printNamespace($namespace);
 
 
-            file_put_contents($this->module_dir . '/src/Grid/'.$classModel.'FormBuilderModifier.php', '<?php declare(strict_types=1);');
-            file_put_contents($this->module_dir . '/src/Grid/'.$classModel.'FormBuilderModifier.php', PHP_EOL, FILE_APPEND);
-            file_put_contents($this->module_dir . '/src/Grid/'.$classModel.'FormBuilderModifier.php', $code, FILE_APPEND);
-            $use[$this->params['upper']['company_name'] . '\\' . 'Module' . '\\' . $this->params['upper']['module_name'] . '\\' . 'Grid' . '\\' .$classModel. 'FormBuilderModifier'] = $this->params['upper']['company_name'] . '\\' . 'Module' . '\\' . $this->params['upper']['module_name'] . '\\' . 'Grid' . '\\' . $classModel.'FormBuilderModifier';
+            file_put_contents($this->module_dir . '/src/Grid/' . $classModel . 'FormBuilderModifier.php', '<?php declare(strict_types=1);');
+            file_put_contents($this->module_dir . '/src/Grid/' . $classModel . 'FormBuilderModifier.php', PHP_EOL, FILE_APPEND);
+            file_put_contents($this->module_dir . '/src/Grid/' . $classModel . 'FormBuilderModifier.php', $code, FILE_APPEND);
+            $use[$this->params['upper']['company_name'] . '\\' . 'Module' . '\\' . $this->params['upper']['module_name'] . '\\' . 'Grid' . '\\' . $classModel . 'FormBuilderModifier'] = $this->params['upper']['company_name'] . '\\' . 'Module' . '\\' . $this->params['upper']['module_name'] . '\\' . 'Grid' . '\\' . $classModel . 'FormBuilderModifier';
 
-            $formBuilderContent = '$'.strtolower($classModel).'FormBuilderModifier= new '.$classModel.'FormBuilderModifier(' . PHP_EOL;
-            $classModelFormBuilderModifierNameSpace = str_replace('Egaddextrafields', $this->params['upper']['module_name'], $this->params['upper']['company_name']."\Module\Egaddextrafields\Grid". '\\' .$classModel."FormBuilderModifier");
+            $formBuilderContent = '$' . strtolower($classModel) . 'FormBuilderModifier= new ' . $classModel . 'FormBuilderModifier(' . PHP_EOL;
+            $classModelFormBuilderModifierNameSpace = str_replace('Egaddextrafields', $this->params['upper']['module_name'], $this->params['upper']['company_name'] . "\Module\Egaddextrafields\Grid" . '\\' . $classModel . "FormBuilderModifier");
 
             $use[$classModelFormBuilderModifierNameSpace] = $classModelFormBuilderModifierNameSpace;
             $formBuilderContent .= '$this,' . PHP_EOL;
@@ -1161,14 +1165,14 @@ class ModuleGenerator
             $formBuilderContent .= '$params[\'form_builder\'],' . PHP_EOL;
             $formBuilderContent .= '$params[\'data\']' . PHP_EOL;
             $formBuilderContent .= ');' . PHP_EOL;
-            $formBuilderContent .= '$'.strtolower($classModel).'FormBuilderModifier->addFields();' . PHP_EOL;
-            $this->module_data['hooksContents']['action'.$classModel.'FormBuilderModifier'] = $formBuilderContent;
-            $formHandlerContent = 'Extra'.$classModel.'Fields::setExtra'.$classModel.'FieldsBy'.$classModel.'Id(' . PHP_EOL;
+            $formBuilderContent .= '$' . strtolower($classModel) . 'FormBuilderModifier->addFields();' . PHP_EOL;
+            $this->module_data['hooksContents']['action' . $classModel . 'FormBuilderModifier'] = $formBuilderContent;
+            $formHandlerContent = 'Extra' . $classModel . 'Fields::setExtra' . $classModel . 'FieldsBy' . $classModel . 'Id(' . PHP_EOL;
             $formHandlerContent .= '(int)$params[\'id\'],' . PHP_EOL;
             $formHandlerContent .= '$params[\'form_data\']' . PHP_EOL;
             $formHandlerContent .= ');' . PHP_EOL;
-            $this->module_data['hooksContents']['actionAfterCreate'.$classModel.'FormHandler'] = $formHandlerContent;
-            $this->module_data['hooksContents']['actionAfterUpdate'.$classModel.'FormHandler'] = $formHandlerContent;
+            $this->module_data['hooksContents']['actionAfterCreate' . $classModel . 'FormHandler'] = $formHandlerContent;
+            $this->module_data['hooksContents']['actionAfterUpdate' . $classModel . 'FormHandler'] = $formHandlerContent;
 
             $this->module_data['use'][strtolower($classModel)] = array_merge($this->module_data['use'][strtolower($classModel)], $use);
 
@@ -1233,7 +1237,7 @@ class ModuleGenerator
             $transCount = 0;
             $count = 0;
             $where = "";
-            $lang=false;
+            $lang = false;
             foreach ($listingFields as $field) {
                 $customHead .= "<th>{l s='" . $field['column_name'] . "' mod='" . $params['lower']['module_name'] . "'}</th>" . PHP_EOL;
 
@@ -1326,7 +1330,7 @@ class ModuleGenerator
             if (!is_dir($gridDir) && !@mkdir($gridDir, 0777, true) && !is_dir($gridDir)) {
                 throw new \RuntimeException(sprintf('Cannot create directory "%s"', $gridDir));
             }
-            $this->module_data['hooks'][strtolower($classModel)] = array_merge($this->module_data['hooks'][strtolower($classModel)], ['action'.$classModel.'GridDefinitionModifier', 'action'.$classModel.'GridQueryBuilderModifier']);
+            $this->module_data['hooks'][strtolower($classModel)] = array_merge($this->module_data['hooks'][strtolower($classModel)], ['action' . $classModel . 'GridDefinitionModifier', 'action' . $classModel . 'GridQueryBuilderModifier']);
             $namespace = new PhpNamespace($this->params['upper']['company_name'] . '\\' . 'Module' . '\\' . $this->params['upper']['module_name'] . '\\' . 'Grid');
             $namespace->addUse('Module');
             $namespace->addUse('PrestaShop\PrestaShop\Core\Grid\Definition\GridDefinitionInterface');
@@ -1334,7 +1338,7 @@ class ModuleGenerator
             $namespace->addUse('PrestaShop\PrestaShop\Core\Grid\Column\Type\DataColumn');
             $namespace->addUse('PrestaShop\PrestaShop\Core\Grid\Column\ColumnCollection');
 
-            $class = $namespace->addClass($classModel.'GridDefinitionModifier');
+            $class = $namespace->addClass($classModel . 'GridDefinitionModifier');
             $class->addProperty('module')
                 ->setProtected();
             $class->addProperty('gridDefinition')
@@ -1397,13 +1401,13 @@ class ModuleGenerator
             $printer->setTypeResolving(false);
             $code = $printer->printNamespace($namespace);
 
-            file_put_contents($this->module_dir . '/src/Grid/'.$classModel.'GridDefinitionModifier.php', '<?php declare(strict_types=1);');
-            file_put_contents($this->module_dir . '/src/Grid/'.$classModel.'GridDefinitionModifier.php', PHP_EOL, FILE_APPEND);
-            file_put_contents($this->module_dir . '/src/Grid/'.$classModel.'GridDefinitionModifier.php', $code, FILE_APPEND);
+            file_put_contents($this->module_dir . '/src/Grid/' . $classModel . 'GridDefinitionModifier.php', '<?php declare(strict_types=1);');
+            file_put_contents($this->module_dir . '/src/Grid/' . $classModel . 'GridDefinitionModifier.php', PHP_EOL, FILE_APPEND);
+            file_put_contents($this->module_dir . '/src/Grid/' . $classModel . 'GridDefinitionModifier.php', $code, FILE_APPEND);
             $namespace = new PhpNamespace($this->params['upper']['company_name'] . '\\' . 'Module' . '\\' . $this->params['upper']['module_name'] . '\\' . 'Grid');
             $namespace->addUse('Module');
             $namespace->addUse('Doctrine\DBAL\Query\QueryBuilder');
-            $class = $namespace->addClass($classModel.'GridQueryBuilderModifier');
+            $class = $namespace->addClass($classModel . 'GridQueryBuilderModifier');
             $class->addProperty('module')
                 ->setProtected();
             $class->addProperty('filters')
@@ -1422,40 +1426,40 @@ class ModuleGenerator
             $updateQueryBuilder->addParameter('queryBuilder')->setType('QueryBuilder');
             $updateQueryBuilderBody = '$queryBuilder->leftJoin(' . PHP_EOL;
             $updateQueryBuilderBody .= '\'c\',' . PHP_EOL;
-            $updateQueryBuilderBody .= '_DB_PREFIX_.\'extra'.strtolower($classModel).'fields\',' . PHP_EOL;
-            $updateQueryBuilderBody .= '\'extra_'.strtolower($classModel).'\',' . PHP_EOL;
-            $updateQueryBuilderBody .= '\'extra_'.strtolower($classModel).'.id_'.strtolower($classModel).'=c.id_'.strtolower($classModel).'\'' . PHP_EOL;
+            $updateQueryBuilderBody .= '_DB_PREFIX_.\'extra' . strtolower($classModel) . 'fields\',' . PHP_EOL;
+            $updateQueryBuilderBody .= '\'extra_' . strtolower($classModel) . '\',' . PHP_EOL;
+            $updateQueryBuilderBody .= '\'extra_' . strtolower($classModel) . '.id_' . strtolower($classModel) . '=c.id_' . strtolower($classModel) . '\'' . PHP_EOL;
             $updateQueryBuilderBody .= ');' . PHP_EOL;
             if ($there_is_a_lang_field) {
                 $updateQueryBuilderBody .= '$queryBuilder->leftJoin(' . PHP_EOL;
-                $updateQueryBuilderBody .= '\'extra_'.strtolower($classModel).'\',' . PHP_EOL;
-                $updateQueryBuilderBody .= '_DB_PREFIX_.\'extra'.strtolower($classModel).'fields_lang\',' . PHP_EOL;
-                $updateQueryBuilderBody .= '\'extral_'.strtolower($classModel).'\',' . PHP_EOL;
-                $updateQueryBuilderBody .= '\'extra_'.strtolower($classModel).'.id_extra'.strtolower($classModel).'fields=extral_'.strtolower($classModel).'.id_extra'.strtolower($classModel).'fields AND extral_'.strtolower($classModel).'.id_lang=:context_lang_id\'' . PHP_EOL;
+                $updateQueryBuilderBody .= '\'extra_' . strtolower($classModel) . '\',' . PHP_EOL;
+                $updateQueryBuilderBody .= '_DB_PREFIX_.\'extra' . strtolower($classModel) . 'fields_lang\',' . PHP_EOL;
+                $updateQueryBuilderBody .= '\'extral_' . strtolower($classModel) . '\',' . PHP_EOL;
+                $updateQueryBuilderBody .= '\'extra_' . strtolower($classModel) . '.id_extra' . strtolower($classModel) . 'fields=extral_' . strtolower($classModel) . '.id_extra' . strtolower($classModel) . 'fields AND extral_' . strtolower($classModel) . '.id_lang=:context_lang_id\'' . PHP_EOL;
                 $updateQueryBuilderBody .= ');' . PHP_EOL;
                 $updateQueryBuilderBody .= '$queryBuilder->setParameter(\'context_lang_id\', $this->idLang);' . PHP_EOL;
             }
 
             foreach ($listingFields as $index => $item) {
                 if (!empty($item['is_column_lang'])) {
-                    $updateQueryBuilderBody .= '$queryBuilder->addSelect(\'extral_'.strtolower($classModel).'.' . $item['column_name'] . '\');';
+                    $updateQueryBuilderBody .= '$queryBuilder->addSelect(\'extral_' . strtolower($classModel) . '.' . $item['column_name'] . '\');';
                 } else {
-                    $updateQueryBuilderBody .= '$queryBuilder->addSelect(\'extra_'.strtolower($classModel).'.' . $item['column_name'] . '\');';
+                    $updateQueryBuilderBody .= '$queryBuilder->addSelect(\'extra_' . strtolower($classModel) . '.' . $item['column_name'] . '\');';
                 }
 
                 $updateQueryBuilderBody .= 'if(isset($this->filters[\'' . $item['column_name'] . '\'])){' . PHP_EOL;
                 if (!empty($item['is_column_lang'])) {
-                    $updateQueryBuilderBody .= '$queryBuilder->where(\'extral_'.strtolower($classModel).'.' . $item['column_name'] . ' LIKE :p_estral_'.strtolower($classModel).'_' . $item['column_name'] . '\');' . PHP_EOL;
-                    $updateQueryBuilderBody .= '$queryBuilder->setParameter(\'p_estral_'.strtolower($classModel).'_' . $item['column_name'] . '\', \'%\'.$this->filters[\'' . $item['column_name'] . '\'].\'%\');' . PHP_EOL;
+                    $updateQueryBuilderBody .= '$queryBuilder->where(\'extral_' . strtolower($classModel) . '.' . $item['column_name'] . ' LIKE :p_estral_' . strtolower($classModel) . '_' . $item['column_name'] . '\');' . PHP_EOL;
+                    $updateQueryBuilderBody .= '$queryBuilder->setParameter(\'p_estral_' . strtolower($classModel) . '_' . $item['column_name'] . '\', \'%\'.$this->filters[\'' . $item['column_name'] . '\'].\'%\');' . PHP_EOL;
                 } elseif ($item['column_type'] === 'TINYINT' || $item['column_type'] === 'BOOLEAN') {
                     $updateQueryBuilderBody .= 'if((bool)$this->filters[\'' . $item['column_name'] . '\']){' . PHP_EOL;
-                    $updateQueryBuilderBody .= '$queryBuilder->where(\'extra_'.strtolower($classModel).'.' . $item['column_name'] . ' = 1\');' . PHP_EOL;
+                    $updateQueryBuilderBody .= '$queryBuilder->where(\'extra_' . strtolower($classModel) . '.' . $item['column_name'] . ' = 1\');' . PHP_EOL;
                     $updateQueryBuilderBody .= '}else{' . PHP_EOL;
-                    $updateQueryBuilderBody .= '$queryBuilder->where(\'extra_'.strtolower($classModel).'.' . $item['column_name'] . ' = 0 OR ISNULL("extra_'.strtolower($classModel).'.' . $item['column_name'] . '")\');';
+                    $updateQueryBuilderBody .= '$queryBuilder->where(\'extra_' . strtolower($classModel) . '.' . $item['column_name'] . ' = 0 OR ISNULL("extra_' . strtolower($classModel) . '.' . $item['column_name'] . '")\');';
                     $updateQueryBuilderBody .= '}' . PHP_EOL;
-                }else{
-                    $updateQueryBuilderBody .= '$queryBuilder->where(\'extra_'.strtolower($classModel).'.' . $item['column_name'] . ' LIKE :p_estra_'.strtolower($classModel).'_' . $item['column_name'] . '\');' . PHP_EOL;
-                    $updateQueryBuilderBody .= '$queryBuilder->setParameter(\'p_estra_'.strtolower($classModel).'_' . $item['column_name'] . '\', \'%\'.$this->filters[\'' . $item['column_name'] . '\'].\'%\');' . PHP_EOL;
+                } else {
+                    $updateQueryBuilderBody .= '$queryBuilder->where(\'extra_' . strtolower($classModel) . '.' . $item['column_name'] . ' LIKE :p_estra_' . strtolower($classModel) . '_' . $item['column_name'] . '\');' . PHP_EOL;
+                    $updateQueryBuilderBody .= '$queryBuilder->setParameter(\'p_estra_' . strtolower($classModel) . '_' . $item['column_name'] . '\', \'%\'.$this->filters[\'' . $item['column_name'] . '\'].\'%\');' . PHP_EOL;
                 }
                 $updateQueryBuilderBody .= '}' . PHP_EOL;
             }
@@ -1464,26 +1468,26 @@ class ModuleGenerator
             $printer->setTypeResolving(false);
             $code = $printer->printNamespace($namespace);
 
-            file_put_contents($this->module_dir . '/src/Grid/'.$classModel.'GridQueryBuilderModifier.php', '<?php declare(strict_types=1);');
-            file_put_contents($this->module_dir . '/src/Grid/'.$classModel.'GridQueryBuilderModifier.php', PHP_EOL, FILE_APPEND);
-            file_put_contents($this->module_dir . '/src/Grid/'.$classModel.'GridQueryBuilderModifier.php', $code, FILE_APPEND);
-            $this->module_data['use'][strtolower($classModel)][$this->params['upper']['company_name'] . '\\' . 'Module' . '\\' . $this->params['upper']['module_name'] . '\\' . 'Grid' . '\\' . $classModel.'GridQueryBuilderModifier'] = $this->params['upper']['company_name'] . '\\' . 'Module' . '\\' . $this->params['upper']['module_name'] . '\\' . 'Grid' . '\\' . $classModel.'GridQueryBuilderModifier';
-            $this->module_data['use'][strtolower($classModel)][$this->params['upper']['company_name'] . '\\' . 'Module' . '\\' . $this->params['upper']['module_name'] . '\\' . 'Grid' . '\\' . $classModel.'GridDefinitionModifier'] = $this->params['upper']['company_name'] . '\\' . 'Module' . '\\' . $this->params['upper']['module_name'] . '\\' . 'Grid' . '\\' . $classModel.'GridDefinitionModifier';
-            $gridDefinitionModifierContent = '$'.strtolower($classModel).'GridDefinitionModifier= new '.$classModel.'GridDefinitionModifier(' . PHP_EOL;
+            file_put_contents($this->module_dir . '/src/Grid/' . $classModel . 'GridQueryBuilderModifier.php', '<?php declare(strict_types=1);');
+            file_put_contents($this->module_dir . '/src/Grid/' . $classModel . 'GridQueryBuilderModifier.php', PHP_EOL, FILE_APPEND);
+            file_put_contents($this->module_dir . '/src/Grid/' . $classModel . 'GridQueryBuilderModifier.php', $code, FILE_APPEND);
+            $this->module_data['use'][strtolower($classModel)][$this->params['upper']['company_name'] . '\\' . 'Module' . '\\' . $this->params['upper']['module_name'] . '\\' . 'Grid' . '\\' . $classModel . 'GridQueryBuilderModifier'] = $this->params['upper']['company_name'] . '\\' . 'Module' . '\\' . $this->params['upper']['module_name'] . '\\' . 'Grid' . '\\' . $classModel . 'GridQueryBuilderModifier';
+            $this->module_data['use'][strtolower($classModel)][$this->params['upper']['company_name'] . '\\' . 'Module' . '\\' . $this->params['upper']['module_name'] . '\\' . 'Grid' . '\\' . $classModel . 'GridDefinitionModifier'] = $this->params['upper']['company_name'] . '\\' . 'Module' . '\\' . $this->params['upper']['module_name'] . '\\' . 'Grid' . '\\' . $classModel . 'GridDefinitionModifier';
+            $gridDefinitionModifierContent = '$' . strtolower($classModel) . 'GridDefinitionModifier= new ' . $classModel . 'GridDefinitionModifier(' . PHP_EOL;
             $gridDefinitionModifierContent .= '$this,' . PHP_EOL;
             $gridDefinitionModifierContent .= '$params[\'definition\']' . PHP_EOL;
             $gridDefinitionModifierContent .= ');' . PHP_EOL;
-            $gridDefinitionModifierContent .= '$'.strtolower($classModel).'GridDefinitionModifier->addColumns();' . PHP_EOL;
-            $gridDefinitionModifierContent .= '$'.strtolower($classModel).'GridDefinitionModifier->addFilters();' . PHP_EOL;
-            $this->module_data['hooksContents']['action'.$classModel.'GridDefinitionModifier'] = $gridDefinitionModifierContent;
-            $gridQueryBuilderModifierContent = '$'.strtolower($classModel).'QueryBuilderModifier= new '.$classModel.'GridQueryBuilderModifier(' . PHP_EOL;
+            $gridDefinitionModifierContent .= '$' . strtolower($classModel) . 'GridDefinitionModifier->addColumns();' . PHP_EOL;
+            $gridDefinitionModifierContent .= '$' . strtolower($classModel) . 'GridDefinitionModifier->addFilters();' . PHP_EOL;
+            $this->module_data['hooksContents']['action' . $classModel . 'GridDefinitionModifier'] = $gridDefinitionModifierContent;
+            $gridQueryBuilderModifierContent = '$' . strtolower($classModel) . 'QueryBuilderModifier= new ' . $classModel . 'GridQueryBuilderModifier(' . PHP_EOL;
             $gridQueryBuilderModifierContent .= '$this,' . PHP_EOL;
             $gridQueryBuilderModifierContent .= '$params[\'search_criteria\']->getFilters(),' . PHP_EOL;
             $gridQueryBuilderModifierContent .= 'Context::getContext()->language->id' . PHP_EOL;
             $gridQueryBuilderModifierContent .= ');' . PHP_EOL;
-            $gridQueryBuilderModifierContent .= '$'.strtolower($classModel).'QueryBuilderModifier->updateQueryBuilder($params[\'count_query_builder\']);' . PHP_EOL;
-            $gridQueryBuilderModifierContent .= '$'.strtolower($classModel).'QueryBuilderModifier->updateQueryBuilder($params[\'search_query_builder\']);' . PHP_EOL;
-            $this->module_data['hooksContents']['action'.$classModel.'GridQueryBuilderModifier'] = $gridQueryBuilderModifierContent;
+            $gridQueryBuilderModifierContent .= '$' . strtolower($classModel) . 'QueryBuilderModifier->updateQueryBuilder($params[\'count_query_builder\']);' . PHP_EOL;
+            $gridQueryBuilderModifierContent .= '$' . strtolower($classModel) . 'QueryBuilderModifier->updateQueryBuilder($params[\'search_query_builder\']);' . PHP_EOL;
+            $this->module_data['hooksContents']['action' . $classModel . 'GridQueryBuilderModifier'] = $gridQueryBuilderModifierContent;
         }
         return true;
     }
@@ -1506,43 +1510,59 @@ class ModuleGenerator
     {
         $content = file_get_contents($this->base_dir . '/samples/settings.php');
         $content = $this->replaceStandardStrings($content);
-        $inputs='';
-        $there_is_carrier=false;
-        $there_is_category=false;
-        foreach ($this->module_data['settings']  as $settingData){
-            if(empty($settingData['name'])){
+        $inputs = '';
+        $there_is_carrier = false;
+        $there_is_category = false;
+        $there_is_product = false;
+        foreach ($this->module_data['settings'] as $settingData) {
+            if (empty($settingData['name'])) {
                 continue;
             }
-            $setting_name=explode(' ', $settingData['name']);
-            if(!empty($setting_name)){
-                foreach ($setting_name as $index=>$part){
-                    $setting_name[$index]=strtoupper($part);
+            $setting_name = explode(' ', $settingData['name']);
+            if (!empty($setting_name)) {
+                foreach ($setting_name as $index => $part) {
+                    $setting_name[$index] = strtoupper($part);
                 }
             }
-            $settingData['name']=strtoupper($this->params['upper']['module_name']).'_'.implode('_', $setting_name);
+            $settingData['name'] = strtoupper($this->params['upper']['module_name']) . '_' . implode('_', $setting_name);
 
-            $inputContent = file_get_contents($this->base_dir . '/samples/inputs/'.strtolower($settingData['type']).'.txt');
-            $inputContent= str_replace(array('setting_name', 'setting_label', 'setting_description'), array($settingData['name'], $settingData['label'], $settingData['description']), $inputContent);
-            $inputs.=$inputContent.PHP_EOL;
-            if(strtolower($settingData['type'])=='carrier-select'){
-                $there_is_carrier=true;
+            $inputContent = file_get_contents($this->base_dir . '/samples/inputs/' . strtolower($settingData['type']) . '.txt');
+
+            $inputContent = str_replace(array('setting_name', 'setting_label', 'setting_description'), array($settingData['name'], $settingData['label'], $settingData['description']), $inputContent);
+
+            $inputs .= $inputContent . PHP_EOL;
+
+            if (strtolower($settingData['type']) == 'carrier-select') {
+                $there_is_carrier = true;
             }
-            if(strtolower($settingData['type'])=='category-tree'){
-                $there_is_category=true;
+            if (strtolower($settingData['type']) == 'category-tree') {
+                $there_is_category = true;
             }
+            if (strtolower($settingData['type']) == 'product-select') {
+                $there_is_product = true;
+            }
+            dump($inputContent);
         }
-        $content=str_replace("'form_inputs'", $inputs, $content);
-        if($there_is_carrier){
+
+        $content = str_replace("'form_inputs'", $inputs, $content);
+
+        if ($there_is_carrier) {
             $carrierSelect = file_get_contents($this->base_dir . '/samples/conditionalCodeParts/carrier.php');
-            $content.=$carrierSelect.PHP_EOL;
+            $content .= $carrierSelect . PHP_EOL;
         }
-        if($there_is_category){
+        if ($there_is_category) {
             $categorySelect = file_get_contents($this->base_dir . '/samples/conditionalCodeParts/category.php');
-            $content.=$categorySelect.PHP_EOL;
+            $content .= $categorySelect . PHP_EOL;
         }
+        if ($there_is_product) {
+            $productSelect = file_get_contents($this->base_dir . '/samples/conditionalCodeParts/product.php');
+            $content .= $productSelect . PHP_EOL;
+        }
+        $moduleContent=file_get_contents($this->module_dir . '/' . $this->module_data['module_name'] . '.php');
 
-        dump($content);
-        exit;
+        $moduleContent=str_replace('/** settings */', $content, $moduleContent);
+        file_put_contents($this->module_dir . '/' . $this->module_data['module_name'] . '.php', $moduleContent);
+        return true;
     }
 
 

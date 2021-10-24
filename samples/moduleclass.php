@@ -59,8 +59,6 @@ class Moduleclass extends Module
     public function install()
     {
         include dirname(__FILE__) . '/sql/install.php';
-        Configuration::updateValue('MODULECLASS_LIVE_MODE', false);
-
         return parent::install() &&
             $this->registerHook('header') &&
             $this->registerHook('backOfficeHeader');
@@ -69,8 +67,6 @@ class Moduleclass extends Module
     public function uninstall()
     {
         include dirname(__FILE__) . '/sql/uninstall.php';
-        Configuration::deleteByName('MODULECLASS_LIVE_MODE');
-
         return parent::uninstall();
     }
 
@@ -95,4 +91,6 @@ class Moduleclass extends Module
         $this->context->controller->addJS($this->_path.'/views/js/front.js');
         $this->context->controller->addCSS($this->_path.'/views/css/front.css');
     }
+
+    /** settings */
 }

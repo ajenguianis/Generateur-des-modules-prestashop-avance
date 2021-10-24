@@ -57,7 +57,7 @@ protected function getConfigForm()
                 'title' => $this->l('Settings'),
                 'icon' => 'icon-cogs',
             ),
-            'input' => 'form_inputs',
+            'input' => array('form_inputs'),
             'submit' => array(
                 'title' => $this->l('Save'),
             ),
