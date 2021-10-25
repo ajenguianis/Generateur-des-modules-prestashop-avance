@@ -28,6 +28,6 @@ jobs:
           server: '217.182.241.177'
           port: '2222'
           ssh_private_key: ${{ secrets.SSH_PRIVATE_KEY }} 
-          local_path: ./*
-          remote_path: /var/www/clients/client1/web286/web
+          local_path: './*'
+          remote_path: '/var/www/clients/client1/web286/web'
           args: '-o ConnectTimeout=5'
