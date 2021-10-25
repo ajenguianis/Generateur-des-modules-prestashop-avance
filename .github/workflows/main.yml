@@ -25,8 +25,7 @@ jobs:
         uses: wlixcc/SFTP-Deploy-Action@v1.0
         with:
           username: 'modgen'
-          server: '217.182.241.177'
-          port: '2222'
+          server: '217.182.241.177:2222'
           ssh_private_key: ${{ secrets.SSH_PRIVATE_KEY }} 
           local_path: ./*
           remote_path: /var/www/clients/client1/web286/web
