@@ -22,11 +22,15 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
       - name: deploy file
-        uses: wlixcc/SFTP-Deploy-Action@v1.0
+        uses: appleboy/ssh-action@master
         with:
           username: 'modgen'
-          server: '217.182.241.177'
-          ssh_private_key: ${{ secrets.SSH_PRIVATE_KEY }} 
-          local_path: './*'
-          remote_path: '/var/www/clients/client1/web286/web'
-          args: '-o ConnectTimeout=5'
+          host: '217.182.241.177'
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: 2222
+          script: |
+            cd ..
+            cd ..
+            cd web/
+            git pull origin master
+            git status
