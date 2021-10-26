@@ -44,6 +44,7 @@ class CleanCommand extends Command
             return 0;
         }
         $output->writeln(['START', '============', '']);
+        dump('test');
         $base_dir = $this->container->getParameter('kernel.project_dir');
         $this->dir = $base_dir . DIRECTORY_SEPARATOR . 'downloads';
         $filesystem=new Filesystem();
