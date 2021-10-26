@@ -25,7 +25,7 @@ jobs:
         uses: appleboy/ssh-action@master
         with:
           username: 'modgen'
-          server: '217.182.241.177'
+          host: '217.182.241.177'
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: 2222
           script: |
