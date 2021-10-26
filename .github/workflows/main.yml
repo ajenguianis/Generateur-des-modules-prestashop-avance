@@ -32,5 +32,6 @@ jobs:
             cd ..
             cd ..
             cd web/
+            git checkout -- .
             git pull origin master
             git status
