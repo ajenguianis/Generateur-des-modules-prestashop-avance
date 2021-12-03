@@ -72,6 +72,7 @@ class ModuleGenerator
         $this->em = $em;
         $this->filesystem = new Filesystem();
         $this->params = $this->getParams();
+
     }
 
     /**
@@ -80,7 +81,7 @@ class ModuleGenerator
      *
      * @return string
      */
-    public function slugify($string, $delimiter = '-'): string
+    public function slugify($string, $delimiter = '_'): string
     {
         $oldLocale = setlocale(LC_ALL, '0');
         setlocale(LC_ALL, 'en_US.UTF-8');
@@ -130,8 +131,8 @@ class ModuleGenerator
     public function generateConfig()
     {
         $content = file_get_contents($this->base_dir . '/samples/config.xml');
-        $params = $this->getParams();
-        $content = str_replace(array('$moduleName', '$moduleDisplayName', '$moduleDescription', '$company_name'), array($params['lower']['module_name'], $this->module_data['display_name'], $this->module_data['description'], $params['upper']['company_name']), $content);
+
+        $content = str_replace(array('$moduleName', '$moduleDisplayName', '$moduleDescription', '$company_name'), array($this->params['lower']['module_name'], $this->module_data['display_name'], $this->module_data['description'], $this->params['upper']['company_name']), $content);
 
         file_put_contents($this->module_dir . DIRECTORY_SEPARATOR . 'config.xml', $content);
         $this->copyDirFiles('config');
@@ -144,8 +145,8 @@ class ModuleGenerator
     public function generateReadMe()
     {
         $content = file_get_contents($this->base_dir . '/samples/Readme.md');
-        $params = $this->getParams();
-        $content = str_replace(array('$moduleName', '$moduleDisplayName', '$moduleDescription', '$company_name'), array($params['lower']['module_name'], $this->module_data['display_name'], $this->module_data['description'], $params['upper']['company_name']), $content);
+
+        $content = str_replace(array('$moduleName', '$moduleDisplayName', '$moduleDescription', '$company_name'), array($this->params['lower']['module_name'], $this->module_data['display_name'], $this->module_data['description'], $this->params['upper']['company_name']), $content);
 
         file_put_contents($this->module_dir . DIRECTORY_SEPARATOR . 'Readme.md', $content);
         return true;
@@ -161,8 +162,7 @@ class ModuleGenerator
             $dir = $this->module_dir;
         }
         $content = file_get_contents($this->base_dir . '/samples/index.php');
-        $params = $this->getParams();
-        $content = str_replace(array('$moduleName', '$moduleDisplayName', '$moduleDescription', '$company_name'), array($params['lower']['module_name'], $this->module_data['display_name'], $this->module_data['description'], $params['upper']['company_name']), $content);
+        $content = str_replace(array('$moduleName', '$moduleDisplayName', '$moduleDescription', '$company_name'), array($this->params['lower']['module_name'], $this->module_data['display_name'], $this->module_data['description'], $this->params['upper']['company_name']), $content);
 
         file_put_contents($dir . DIRECTORY_SEPARATOR . 'index.php', $content);
         return true;
@@ -172,7 +172,7 @@ class ModuleGenerator
     {
         $module_name = $this->module_data['module_name'];
         $company_name = $this->module_data['company_name'];
-        return ['lower' => ['module_name' => $this->slugify($module_name), 'company_name' => $this->slugify($company_name)], 'upper' => ['module_name' => ucfirst($module_name), 'company_name' => ucfirst($company_name)]];
+        return ['lower' => ['module_name' => $this->slugify($module_name), 'company_name' => $this->slugify($company_name)], 'upper' => ['module_name' => ucfirst(str_replace(' ', '',$module_name)), 'company_name' => ucfirst(trim(str_replace(' ', '',$company_name)))]];
     }
 
     public function copyStansardDir()
@@ -201,10 +201,10 @@ class ModuleGenerator
         $fileSystem = new Filesystem();
         $fileSystem->copy($this->base_dir . '/samples/moduleclass.php', $this->module_dir . '/' . $this->module_data['module_name'] . '.php');
         $content = file_get_contents($this->module_dir . '/' . $this->module_data['module_name'] . '.php');
-        $params = $this->getParams();
+
         $content = $this->replaceStandardStrings($content);
 
-        $content = str_replace(array('Moduleclass', 'moduleclass', 'module_author', 'Diplay name', 'module_description', 'MODULECLASS'), array($params['upper']['module_name'], $params['lower']['module_name'], $params['upper']['company_name'], $this->module_data['display_name'], $this->module_data['description'], strtoupper($params['lower']['module_name'])), $content);
+        $content = str_replace(array('Moduleclass', 'moduleclass', 'module_author', 'Diplay name', 'module_description', 'MODULECLASS'), array($this->params['upper']['module_name'], $this->params['lower']['module_name'], $this->params['upper']['company_name'], $this->module_data['display_name'], $this->module_data['description'], strtoupper($this->params['lower']['module_name'])), $content);
         file_put_contents($this->module_dir . '/' . $this->module_data['module_name'] . '.php', $content);
         if (isset($this->module_data['hooks']) && !empty($hooks = $this->module_data['hooks'])) {
             $result = array();
@@ -322,15 +322,15 @@ class ModuleGenerator
      */
     private function replaceStandardStrings($content)
     {
-        $params = $this->getParams();
-        $content = str_replace('Moduleclass', $params['upper']['module_name'], $content);
-        $content = str_replace('moduleclass', $params['lower']['module_name'], $content);
-        $content = str_replace('module_author', $params['upper']['company_name'], $content);
-        $content = str_replace('company_name', $params['lower']['company_name'], $content);
-        $content = str_replace('EvoGroup', $params['upper']['company_name'], $content);
-        $content = str_replace('module_class', $params['lower']['module_name'], $content);
-        $content = str_replace('MODULE_CLASS', strtoupper($params['lower']['module_name']), $content);
-        $content = str_replace('MODULECLASS', strtoupper($params['lower']['module_name']), $content);
+
+        $content = str_replace('Moduleclass', $this->params['upper']['module_name'], $content);
+        $content = str_replace('moduleclass', $this->params['lower']['module_name'], $content);
+        $content = str_replace('module_author', $this->params['upper']['company_name'], $content);
+        $content = str_replace('company_name', $this->params['lower']['company_name'], $content);
+        $content = str_replace('EvoGroup', $this->params['upper']['company_name'], $content);
+        $content = str_replace('module_class', $this->params['lower']['module_name'], $content);
+        $content = str_replace('MODULE_CLASS', strtoupper($this->params['lower']['module_name']), $content);
+        $content = str_replace('MODULECLASS', strtoupper($this->params['lower']['module_name']), $content);
         return $content;
     }
 
@@ -431,9 +431,7 @@ class ModuleGenerator
             if (empty($modelData['class'])) {
                 return false;
             }
-
-            $params = $this->getParams();
-            $namespace = new PhpNamespace($params['upper']['company_name'] . '\\' . 'Module' . '\\' . $params['upper']['module_name'] . '\\' . 'Model');
+            $namespace = new PhpNamespace($this->params['upper']['company_name'] . '\\' . 'Module' . '\\' . $this->params['upper']['module_name'] . '\\' . 'Model');
             $namespace->addUse('ObjectModel');
             $class = $namespace->addClass($modelData['class']);
             $class->addExtend('ObjectModel');
@@ -1232,14 +1230,14 @@ class ModuleGenerator
             $customHead = "";
             $customFilter = "";
             $custom_value = "";
-            $params = $this->getParams();
+
             $id_default_lang = "Configuration::get('PS_LANG_DEFAULT')";
             $transCount = 0;
             $count = 0;
             $where = "";
             $lang = false;
             foreach ($listingFields as $field) {
-                $customHead .= "<th>{l s='" . $field['column_name'] . "' mod='" . $params['lower']['module_name'] . "'}</th>" . PHP_EOL;
+                $customHead .= "<th>{l s='" . $field['column_name'] . "' mod='" . $this->params['lower']['module_name'] . "'}</th>" . PHP_EOL;
 
                 if ($field['column_type'] == 'TINYINT') {
                     $customFilter .= "<th id=\"product_filter_column_" . $field['column_name'] . "\" class=\"text-center\">
@@ -1313,7 +1311,7 @@ class ModuleGenerator
             if ($content == '') {
                 $content = $customFilter;
             }
-            $content = str_replace('egaddcustomfieldtoproduct', $params['lower']['module_name'], $content);
+            $content = str_replace('egaddcustomfieldtoproduct', $this->params['lower']['module_name'], $content);
             $content = str_replace(array("/*", "*/", "/+"), array("", "", "$"), $content);
             file_put_contents($this->module_dir . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR . 'templates' . DIRECTORY_SEPARATOR . 'hook' . DIRECTORY_SEPARATOR . 'displayAdminCatalogTwigProductFilter.tpl', $content);
             $content = file_get_contents($this->module_dir . DIRECTORY_SEPARATOR . 'views' . DIRECTORY_SEPARATOR . 'templates' . DIRECTORY_SEPARATOR . 'hook' . DIRECTORY_SEPARATOR . 'displayAdminCatalogTwigListingProductFields.tpl');
