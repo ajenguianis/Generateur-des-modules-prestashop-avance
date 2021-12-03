@@ -160,6 +160,70 @@ a{
 .snippet-fields input[type="checkbox"] {
     width: 20px;
 }
-    
+.select2-container{
+    width: 100% !important;
+}
+.bootstrap .pull-right {
+    float: right!important;
+}
+
+element.style {
+}
+.bootstrap .pull-right {
+    float: right!important;
+    display: flex;
+}
+.bootstrap .nav {
+    list-style: none;
+    margin-bottom: 0;
+    padding-left: 0;
+}
+.bootstrap ol, .bootstrap ul {
+    margin-bottom: 8.5px;
+    margin-top: 0;
+}
+.bootstrap .pull-right>li>a {
+    border-radius: 3px;
+}
+.bootstrap .pull-right>li>a {
+    padding: 10px 15px;
+}
+
+element.style {
+}
+.bootstrap .nav-pills>li>a {
+    border-radius: 3px;
+}
+.bootstrap .nav>li>a {
+    padding: 10px 15px;
+}
+.bootstrap .pull-right>li, .bootstrap .pull-right>li>a {
+    display: block;
+    position: relative;
+}
+
+.bootstrap .pull-right>li{
+    text-align: center;
+}
+.bootstrap a {
+    color: #00aff0;
+    text-decoration: none;
+}
+[class^=process-icon-] {
+    background: transparent;
+    background-position: 50%;
+    background-size: 26px;
+    display: block;
+    font-size: 28px;
+    height: 30px;
+    margin: 0 auto;
+    width: 30px;
+}
+.process-icon-new-url:before, .process-icon-new:before, .process-icon-newAttributes:before, .process-icon-newCombination.toolbar-new:before, .process-icon-plus:before, .icon-plus-circle:before, .icon-plus-sign:before {
+    content: "\F055";
+}
+.process-icon-cancel:before, .icon-close:before, .icon-remove:before, .icon-times:before {
+    content: "\F00D";
+}
     
     

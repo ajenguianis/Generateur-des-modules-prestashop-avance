@@ -1,4 +1,9 @@
 $(document).ready(function () {
+    $('.js-select2').select2({
+        placeholder: "Select from existing Hooks",
+        allowClear: true
+    });
+    $( "#first-hook" ).focus();
     $('.login-info-box').fadeOut();
     $('.login-show').addClass('show-log-panel');
     $("#backend-tab-gen .choice").each(function () {
@@ -807,4 +812,16 @@ $('.login-reg-panel input[type="radio"]').on('change', function () {
         $('.register-show').removeClass('show-log-panel');
     }
 });
-
+$(document).on("click", '.new-hooks #add-new', function () {
+    var lastInputNumber=$(this).attr('data-hook');
+    var newInputNumber=parseInt(lastInputNumber) + 1;
+    var html='                  <div class="form-group label-floating">\n' +
+        '                                                         <label class="control-label">Hook name</label>\n' +
+        '                                                         <input type="text" name="new_hook_'+newInputNumber+'" class="form-control">\n' +
+        '                                                         <span class="material-input"></span></div>';
+    $('.new-hooks .hook-inputs').append(html);
+    $(this).attr('data-hook', newInputNumber);
+});
+$(document).on("click", '.new-hooks #remove-last', function () {
+    $('.new-hooks .hook-inputs div:last-child').remove();
+});
