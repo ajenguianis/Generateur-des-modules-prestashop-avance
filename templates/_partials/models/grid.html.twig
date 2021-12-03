@@ -1,0 +1,198 @@
+<div class="modal fade bd-example-modal-lg" id="grid" role="dialog">
+    <div class="modal-dialog modal-lg">
+
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">Grid Entity</h4>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="field-input col-xs-8">
+                    </div>
+                    <div class="field-input col-xs-2">
+                        <div class="form-group">
+                            <button type="button" id="model-count" class="btn btn-default add-new" data-model="2" data-type="object">
+                                New Entity
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="liste-box" data-currentCount="1">
+                    <div class="snippet-fields row">
+                        <div class="field-input col-xs-4">
+                            <div class="form-group">
+                                <label for="object_name" class="control-label">Model name</label>
+                                <input value="" id="object" name="object_name_1" class="form-control" type="text"
+                                       placeholder="">
+                                <div class="help-block"></div>
+                            </div>
+                        </div>
+
+                        <div class="field-input col-xs-4">
+                            <div class="form-group">
+                                <label for="table_name" class="control-label">Table name</label>
+                                <input value="" id="table" name="table_name_1" class="form-control" type="text"
+                                       placeholder="">
+                                <div class="help-block"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="field-input col-xs-8">
+                        </div>
+                        <div class="field-input col-xs-2">
+                            <div class="form-group">
+                                <button type="button" id="field-count" class="btn btn-default add-new" data-child="2" data-type="field">
+                                    New field
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="snippet-fields row">
+                        <div class="field-input">
+                            <div class="form-group">
+                                <label for="field_name-1" class="control-label">field name</label>
+                                <input value="" id="service-1" name="field_name_1_1" class="form-control" type="text"
+                                       placeholder="">
+                                <div class="help-block"></div>
+                            </div>
+                        </div>
+                        <div class="field-input">
+                            <div class="form-group">
+                                <label for="field_type-1" class="control-label">Type</label>
+                                <select class="form-control" name="field_type_1_1">
+                                    <option title="Un nombre entier de 4 octets. La fourchette des entiers relatifs est de -2 147 483 648 à 2 147 483 647. Pour les entiers positifs, c\est de 0 à 4 294 967 295">
+                                        INT
+                                    </option>
+                                    <option title="Une chaîne de longueur variable (0-65,535), la longueur effective réelle dépend de la taille maximale d\une ligne">
+                                        VARCHAR
+                                    </option>
+                                    <option title="Une colonne TEXT d\une longueur maximale de 65 535 (2^16 - 1) caractères, stockée avec un préfixe de deux octets indiquant la longueur de la valeur en octets">
+                                        TEXT
+                                    </option>
+                                    <optgroup label="Numérique">
+                                        <option title="Un nombre entier de 1 octet. La fourchette des nombres avec signe est de -128 à 127. Pour les nombres sans signe, c\est de 0 à 255">
+                                            TINYINT
+                                        </option>
+                                        <option title="Un nombre entier de 4 octets. La fourchette des entiers relatifs est de -2 147 483 648 à 2 147 483 647. Pour les entiers positifs, c\est de 0 à 4 294 967 295">
+                                            INT
+                                        </option>
+                                        <option title="Un nombre en virgule fixe (M, D). Le nombre maximum de chiffres (M) est de 65 (10 par défaut), le nombre maximum de décimales (D) est de 30 (0 par défaut)">
+                                            DECIMAL
+                                        </option>
+                                        <option title="Un synonyme de TINYINT(1), une valeur de zéro signifie faux, une valeur non-zéro signifie vrai">
+                                            BOOLEAN
+                                        </option>
+                                    </optgroup>
+
+                                    <optgroup label="Date et l\heure">
+                                        <option title="Une date, la fourchette est de «1000-01-01» à «9999-12-31»">
+                                            DATE
+                                        </option>
+                                        <option title="Une combinaison date et heure, la fourchette est de « 1000-01-01 00:00:00 » à « 9999-12-31 23:59:59 »">
+                                            DATETIME
+                                        </option>
+                                    </optgroup>
+                                    <optgroup label="Chaîne de caractères">
+                                        <option title="Une chaîne de longueur variable (0-65,535), la longueur effective réelle dépend de la taille maximale d\une ligne">
+                                            VARCHAR
+                                        </option>
+
+                                        <option title="Une colonne TEXT d\une longueur maximale de 65 535 (2^16 - 1) caractères, stockée avec un préfixe de deux octets indiquant la longueur de la valeur en octets">
+                                            TEXT
+                                        </option>
+                                        >
+                                        <option title="Une colonne TEXT d\une longueur maximale de 4 294 967 295 ou 4 GiB (2^32 - 1) caractères, stockée avec un préfixe de quatre octets indiquant la longueur de la valeur en octets">
+                                            LONGTEXT
+                                        </option>
+                                    </optgroup>
+                                    <optgroup label="Specifique">
+                                        <option>
+                                            EMAIL
+                                        </option>
+                                        <option>
+                                            HTML
+                                        </option>
+                                        <option>
+                                            PERCENT
+                                        </option>
+                                        <option>
+                                            UnsignedInt
+                                        </option>
+                                    </optgroup>
+                                </select>
+                                <div class="help-block"></div>
+                            </div>
+                        </div>
+                        <div class="field-input">
+                            <div class="form-group">
+                                <label for="field_length-1" class="control-label">Length</label>
+                                <input id="service-1" name="field_length_1_1" class="form-control" type="text"
+                                       placeholder="">
+                                <div class="help-block"></div>
+                            </div>
+                        </div>
+                        <div class="field-input">
+                            <div class="form-group">
+                                <label for="is_nullable-1" class="control-label">Null</label>
+                                <input value="1" id="service-1" name="is_nullable_1_1" class="form-control" type="checkbox"
+                                       placeholder="">
+                                <div class="help-block"></div>
+                            </div>
+                        </div>
+                        <div class="field-input">
+                            <div class="form-group">
+                                <label for="is_auto_increment-1" class="control-label">A.I</label>
+                                <input value="1" id="service-1" name="is_auto_increment_1_1" class="form-control"
+                                       type="checkbox"
+                                       placeholder="">
+                                <div class="help-block"></div>
+                            </div>
+                        </div>
+                        <div class="field-input">
+                            <div class="form-group">
+                                <label for="is_auto_increment-1" class="control-label">Lang?</label>
+                                <input value="1" id="service-1" name="is_lang_1_1" class="form-control"
+                                       type="checkbox"
+                                       placeholder="">
+                                <div class="help-block"></div>
+                            </div>
+                        </div>
+                        <div class="field-input">
+                            <div class="form-group">
+                                <label for="is_auto_increment-1" class="control-label">Shop?</label>
+                                <input value="1" id="service-1" name="is_shop_1_1" class="form-control"
+                                       type="checkbox"
+                                       placeholder="">
+                                <div class="help-block"></div>
+                            </div>
+                        </div>
+                        <div class="field-input">
+                            <div class="form-group">
+                                <label for="default_value-1" class="control-label">Default Value</label>
+                                <input value="" id="service-1" name="default_value_1_1" class="form-control" type="text"
+                                       placeholder="">
+                                <div class="help-block"></div>
+                            </div>
+                        </div>
+                        <div class="field-input">
+                            <div class="form-group">
+                                <button type="button" class="btn btn-danger remove">
+                                    Remove
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-success" data-dismiss="modal">Save changes</button>
+            </div>
+        </div>
+
+    </div>
+</div>

@@ -112,8 +112,11 @@ class GeneratorController extends AbstractController
             $this->_codeGen->generateServices();
         }
 
-        if (isset($this->_codeGen->module_data['models']) && !empty($this->_codeGen->module_data['models'])) {
+        if (isset($this->_codeGen->module_data['models']) && !empty($this->_codeGen->module_data['models']) && (empty($this->_codeGen->module_data['grid']) || (!empty($this->_codeGen->module_data['grid']) && $this->_codeGen->module_data['grid']==0))) {
             $this->_codeGen->generateModels();
+        }
+        if (isset($this->_codeGen->module_data['models']) && !empty($this->_codeGen->module_data['models']) && !empty($this->_codeGen->module_data['grid'])) {
+            $this->_codeGen->generateGrid();
         }
         if (isset($this->_codeGen->module_data['objectModels']) && !empty($this->_codeGen->module_data['objectModels'])) {
             $this->_codeGen->generateModelCustomFields();
@@ -270,6 +273,7 @@ class GeneratorController extends AbstractController
         if (!empty($settings)) {
             $data = array_merge(['settings' => $settings], $data);
         }
+
         return new ModuleGenerator($base_dir, $module_dir, $data, $this->_em);
     }
 
