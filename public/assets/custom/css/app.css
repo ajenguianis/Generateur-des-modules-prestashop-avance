@@ -163,6 +163,7 @@ a{
 .select2-container{
     width: 100% !important;
 }
+
 .bootstrap .pull-right {
     float: right!important;
 }
@@ -225,5 +226,6 @@ element.style {
 .process-icon-cancel:before, .icon-close:before, .icon-remove:before, .icon-times:before {
     content: "\F00D";
 }
+
     
     
