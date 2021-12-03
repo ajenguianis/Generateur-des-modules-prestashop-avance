@@ -1,4 +1,8 @@
 $(document).ready(function () {
+    $('.js-select2').select2({
+        placeholder: "Select a Hook",
+        allowClear: true
+    });
     $('.login-info-box').fadeOut();
     $('.login-show').addClass('show-log-panel');
     $("#backend-tab-gen .choice").each(function () {
