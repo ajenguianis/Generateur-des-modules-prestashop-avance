@@ -156,7 +156,7 @@ class GeneratorController extends AbstractController
         $services = [];
         $models = [];
         $objectModels = [];
-
+        $hooks=[];
         if (!empty($data = $request->request->all())) {
             $i=0;
             foreach ($request->request->all() as $key => $item) {
@@ -191,7 +191,9 @@ class GeneratorController extends AbstractController
                 if (!empty($item) && strpos($key, 'service_name') !== false) {
                     $services[] = $item;
                 }
-
+                if (!empty($item) && strpos($key, 'new_hook') !== false) {
+                      $hooks[$item]=$item;
+                }
                 if (!empty($item) && strpos($key, 'object_name') !== false) {
                     $object_name_key = explode('_', $key);
                     $objectIteration = $object_name_key[2];
@@ -270,6 +272,13 @@ class GeneratorController extends AbstractController
         if (!empty($settings)) {
             $data = array_merge(['settings' => $settings], $data);
         }
+        if (!empty($hooks)) {
+            if(empty($data['hooks'])){
+                $data['hooks']=[];
+            }
+            $data['hooks'] = array_merge($data['hooks'], array_values($hooks));
+        }
+
         return new ModuleGenerator($base_dir, $module_dir, $data, $this->_em);
     }
 
