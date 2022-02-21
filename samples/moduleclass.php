@@ -69,7 +69,7 @@ class Moduleclass extends Module
         include dirname(__FILE__) . '/sql/uninstall.php';
         return parent::uninstall();
     }
-
+    /** getContent */
     /** form setting */
 
     /**

@@ -72,6 +72,10 @@ class ModuleGenerator
      * @var array
      */
     private $unInstallSql;
+    private $setters;
+    private $getters;
+    private $langFields;
+    private $tabs;
 
     /**
      * ModuleGenerator constructor.
@@ -214,6 +218,7 @@ class ModuleGenerator
 
     public function generateModuleClass()
     {
+
         $fileSystem = new Filesystem();
         $fileSystem->copy($this->base_dir . '/samples/moduleclass.php', $this->module_dir . '/' . $this->module_data['module_name'] . '.php');
         $content = file_get_contents($this->module_dir . '/' . $this->module_data['module_name'] . '.php');
@@ -221,6 +226,7 @@ class ModuleGenerator
         $content = $this->replaceStandardStrings($content);
 
         $content = str_replace(array('Moduleclass', 'moduleclass', 'module_author', 'Diplay name', 'module_description', 'MODULECLASS'), array($params['upper']['module_name'], $params['lower']['module_name'], $params['upper']['company_name'], $this->module_data['display_name'], $this->module_data['description'], strtoupper($params['lower']['module_name'])), $content);
+        $class = new ClassType('demo');
         file_put_contents($this->module_dir . '/' . $this->module_data['module_name'] . '.php', $content);
         if (isset($this->module_data['hooks']) && !empty($hooks = $this->module_data['hooks'])) {
             $result = array();
@@ -228,7 +234,7 @@ class ModuleGenerator
                 $result[] = $v;
             });
             $register_hooks = '';
-            $class = new ClassType('demo');
+
             foreach ($result as $hook) {
                 $register_hooks .= " && method->registerHook('" . $hook . "')\n";
                 $lowerHookName = $hook;
@@ -242,6 +248,8 @@ class ModuleGenerator
                     }
                 }
             }
+            $content = str_replace("registerHook('backOfficeHeader')", "registerHook('backOfficeHeader')\n" . $register_hooks, $content);
+        }
             if (!empty($this->module_data['query']) && !empty($query = $this->module_data['query'])) {
                 foreach ($query as $ind => $qb) {
                     $method = $class->addMethod('updateExtra' . $ind . 'Field');
@@ -259,6 +267,7 @@ class ModuleGenerator
                 }
             }
             $installSql = '';
+
             if (!empty($this->installSql)) {
                 foreach ($this->installSql as $sql) {
                     $installSql .= PHP_EOL . $sql;
@@ -291,7 +300,7 @@ class ModuleGenerator
                 file_put_contents($this->module_dir . DIRECTORY_SEPARATOR . 'sql/uninstall.php', $executionLoop, FILE_APPEND);
             }
 
-            $content = str_replace("registerHook('backOfficeHeader')", "registerHook('backOfficeHeader')\n" . $register_hooks, $content);
+
             $content = str_replace("method", '$this', $content);
 
             file_put_contents($this->module_dir . DIRECTORY_SEPARATOR . $this->module_data['module_name'] . '.php', $content);
@@ -307,7 +316,7 @@ class ModuleGenerator
 
             file_put_contents($this->module_dir . '/' . $this->module_data['module_name'] . '.php', implode('', $lines));
             file_put_contents($this->module_dir . '/' . $this->module_data['module_name'] . '.php', $code, FILE_APPEND);
-        }
+
 
         if (!empty($this->module_data['use']) && !empty($query = $this->module_data['use'])) {
             $useContent = '';
@@ -321,6 +330,15 @@ class ModuleGenerator
             $content = file_get_contents($this->module_dir . '/' . $this->module_data['module_name'] . '.php');
             $content = str_replace('/** add uses */', $useContent, $content);
             file_put_contents($this->module_dir . '/' . $this->module_data['module_name'] . '.php', $content);
+        }
+        if(!empty($this->tabs)){
+            foreach ($this->tabs as $key=>$tab){
+                if($key==='getContent'){
+                    $content = file_get_contents($this->module_dir . '/' . $this->module_data['module_name'] . '.php');
+                    $content = str_replace('/** getContent */', $tab, $content);
+                    file_put_contents($this->module_dir . '/' . $this->module_data['module_name'] . '.php', $content);
+                }
+            }
         }
 
         return true;
@@ -380,13 +398,19 @@ class ModuleGenerator
         $content = str_replace('module_class', $params['lower']['module_name'], $content);
         $content = str_replace('MODULE_CLASS', strtoupper($params['lower']['module_name']), $content);
         $content = str_replace('MODULECLASS', strtoupper($params['lower']['module_name']), $content);
+        $content = str_replace('prestashop.module.demodoctrine', $params['lower']['company_name'] . '.module.' . $params['lower']['module_name'], $content);
+        $content = str_replace('PrestaShop\Module\DemoDoctrine', $this->params['upper']['company_name'] . '\\' . 'Module' . '\\' . $this->params['upper']['module_name'], $content);
+        $content = str_replace('ps_demodoctrine', $params['lower']['module_name'], $content);
+        $content = str_replace('demodoctrine', $params['lower']['module_name'], $content);
+        $content = str_replace('Demodoctrine', ucfirst($params['lower']['module_name']), $content);
+        $content = str_replace('demo-doctrine', $params['lower']['module_name'], $content);
         return $content;
     }
 
-    private function addService(string $content)
+    private function addService(string $content, $typo = 'services')
     {
         $fs = new Filesystem();
-        $fs->appendToFile($this->module_dir . '/config/services.yml', $content);
+        $fs->appendToFile($this->module_dir . '/config/' . $typo . '.yml', $content);
         return true;
     }
 
@@ -1611,6 +1635,17 @@ class ModuleGenerator
         $this->generateGridEntities();
         $this->generateGridDefinition();
         $this->generateGridFilters();
+        $this->generateGridQuery();
+        $this->generateSQl();
+        $this->generateFormTypeAndHandler();
+        $this->generateRepository();
+        $this->generateRoutesAndServices();
+        $this->generateController();
+        $this->generateViews();
+        $this->generateJsfiles();
+        $this->generateCompiledJs();
+        $this->generateCompiledCss();
+        $this->setGrindTab();
 
         return true;
     }
@@ -2073,6 +2108,8 @@ class ModuleGenerator
                 $method->addComment('@return ' . $parent);
                 $method->setBody('return $this->' . strtolower($parent) . ';');
                 $setter = $class->addMethod('set' . $parent);
+                $this->langFields[$field['field_name']] = $class->getName();
+                $this->setters[$field['field_name']] = 'set' . $parent;
                 $setter->addComment('@param ' . $parent . ' $' . strtolower($parent));
                 $setter->addComment('@return $this');
                 $setter->addParameter(strtolower($parent))->setType($parent);
@@ -2083,6 +2120,8 @@ class ModuleGenerator
                 $method->addComment('@return ' . $parent);
                 $method->setBody('return $this->' . strtolower($parent) . ';');
                 $setter = $class->addMethod('set' . $parent);
+                $this->setters[$field['field_name']] = 'set' . $parent;
+                $this->getters[$field['field_name']] = 'get' . $parent;
                 $setter->addComment('@param ' . $parent . ' $' . strtolower($parent));
                 $setter->addComment('@return $this');
                 $setter->addParameter(strtolower($parent))->setType($parent);
@@ -2098,6 +2137,8 @@ class ModuleGenerator
                 $method->addComment('@return Lang');
                 $method->setBody('return $this->lang;');
                 $setter = $class->addMethod('setLang');
+                $this->setters[$field['field_name']] = 'setLang';
+                $this->getters[$field['field_name']] = 'getLang';
                 $setter->addComment('@param Lang $lang');
                 $setter->addComment('@return $this');
                 $setter->addParameter('lang')->setType('Lang');
@@ -2107,6 +2148,8 @@ class ModuleGenerator
                 $method->addComment('@return Shop');
                 $method->setBody('return $this->shop;');
                 $setter = $class->addMethod('setShop');
+                $this->setters[$field['field_name']] = 'setShop';
+                $this->getters[$field['field_name']] = 'getShop';
                 $setter->addComment('@param Shop $shop');
                 $setter->addComment('@return $this');
                 $setter->addParameter('shop')->setType('Shop');
@@ -2118,6 +2161,7 @@ class ModuleGenerator
                     $getter->addComment('@return int');
                     $getter->setBody('return $this->' . $name . ';');
                     $setter = $class->addMethod('set' . $methodName);
+                    $this->setters[$field] = 'set' . $methodName;
                     $setter->addComment('@param int $' . $name);
                     $setter->addComment('@return $this');
                     $setter->addParameter($name)->setType('int');
@@ -2164,6 +2208,9 @@ class ModuleGenerator
                     $setter->addParameter($name)->setType('DateTime');
                     $setter->setBody('$this->' . $name . ' = $' . $name . ';' . PHP_EOL . 'return $this;');
                 }
+
+                $this->setters[$field['field_name']] = 'set' . $methodName;
+                $this->getters[$field['field_name']] = 'get' . $methodName;
             }
 
         }
@@ -2245,7 +2292,6 @@ class ModuleGenerator
             $printer = new Printer;
             $printer->setTypeResolving(false);
             $code = $printer->printClass($class);
-            dump($this->use);
             file_put_contents($this->module_dir . '/src/Entity/' . $modelData['class'] . '.php', '<?php declare(strict_types=1);');
             file_put_contents($this->module_dir . '/src/Entity/' . $modelData['class'] . '.php', PHP_EOL, FILE_APPEND);
             if (!empty($uses = $this->use[$modelData['class']])) {
@@ -2313,6 +2359,7 @@ class ModuleGenerator
             $content = str_replace('/** replace with uses */', $useStatements, $content);
             $content = str_replace(array('quote', 'Quote', 'SampleGridDefinitionFactory', 'Demodoctrine', 'ps_demodoctrine_quote'), array(strtolower($modelData['class']), $modelData['class'], $modelData['class'] . 'GridDefinitionFactory', $this->params['upper']['module_name'], $this->params['lower']['module_name'] . '_' . strtolower($modelData['class'])), $content);
             $this->createDir('Grid/Definition/Factory');
+            $content = $this->replaceStandardStrings($content);
             file_put_contents($this->module_dir . '/src/Grid/Definition/Factory/' . $modelData['class'] . 'GridDefinitionFactory.php', $content);
         }
         return true;
@@ -2463,9 +2510,557 @@ class ModuleGenerator
             }
             $content = str_replace(array('quote', 'Quote', 'SampleGridDefinitionFactory', 'Demodoctrine', 'ps_demodoctrine_quote'), array(strtolower($modelData['class']), $modelData['class'], $modelData['class'] . 'GridDefinitionFactory', $this->params['upper']['module_name'], $this->params['lower']['module_name'] . '_' . strtolower($modelData['class'])), $content);
             $this->createDir('Grid/Filters');
-            file_put_contents($this->module_dir.'/src/Grid/Filters/'.$modelData['class'].'Filters.php', $content);
+            file_put_contents($this->module_dir . '/src/Grid/Filters/' . $modelData['class'] . 'Filters.php', $content);
         }
-        exit('here');
+        return true;
+    }
+
+    private function generateGridQuery()
+    {
+        $content = file_get_contents($this->base_dir . '/samples/src/Grid/Query/SampleQueryBuilder.php');
+        $content = str_replace('module_namespace', $this->params['upper']['company_name'] . '\\' . 'Module' . '\\' . $this->params['upper']['module_name'], $content);
+        foreach ($this->module_data['models'] as $index => $modelData) {
+            if (empty($modelData['class'])) {
+                continue;
+            }
+            $content = str_replace(array('quote', 'Quote', 'SampleGridDefinitionFactory', 'Demodoctrine', 'ps_demodoctrine_quote'), array(strtolower($modelData['class']), $modelData['class'], $modelData['class'] . 'GridDefinitionFactory', $this->params['upper']['module_name'], $this->params['lower']['module_name'] . '_' . strtolower($modelData['class'])), $content);
+            $langSelect = '';
+            $select = '';
+            $auto_increment = '';
+            $selectStatement = '';
+            $firsPass = false;
+            $allowedFilters = '$allowedFilters=[' . PHP_EOL;
+            $queryBuilder = '        $qb = $this->connection
+            ->createQueryBuilder()
+            ->from($this->dbPrefix . ' . "'" . $modelData['table'] . "'" . ', \'q\')' . PHP_EOL;
+            if (!empty($modelData['fields'])) {
+                foreach ($modelData['fields'] as $field) {
+                    $allowedFilters .= "            '" . $field['field_name'] . "'," . PHP_EOL;
+                    if ($field['is_auto_increment'] == 1) {
+                        $auto_increment = "q." . $field['field_name'];
+                    } else {
+                        if ($field['is_lang'] == 1) {
+                            $langSelect .= ", ql." . $field['field_name'];
+                            if (!$firsPass) {
+                                $queryBuilder .= '            ->innerJoin(\'q\', $this->dbPrefix . ' . "'" . $modelData['table'] . "_lang'" . ', \'ql\', \'q.id_' . strtolower($modelData['class']) . ' = ql.id_' . strtolower($modelData['class']) . '\')
+                                    ->andWhere(\'ql.`id_lang`= :language\')
+                                    ->setParameter(\'language\', $this->languageId)';
+                            }
+
+                        } else {
+                            $select .= ', q.' . $field['field_name'];
+                        }
+                    }
+                }
+                $selectStatement = "'" . $auto_increment . $select . $langSelect . "'";
+            }
+
+            $queryBuilder .= ';';
+            $allowedFilters .= '            ];';
+            $queryBuilder = ($allowedFilters) . PHP_EOL . $queryBuilder;
+            $searchQueryBuilder = '        $qb = $this->getQueryBuilder($searchCriteria->getFilters());
+        $qb
+            ->select(' . $selectStatement . ')
+            ->groupBy(' . "'" . $auto_increment . "'" . ');
+
+        $this->searchCriteriaApplicator
+            ->applySorting($searchCriteria, $qb)
+            ->applyPagination($searchCriteria, $qb)
+        ;
+
+        return $qb;';
+            $content = str_replace('/** replace with SearchQueryBuilder */', $searchQueryBuilder, $content);
+            $content = str_replace('/** replace with queryBuilder */', $queryBuilder, $content);
+
+            $this->createDir('Grid/Query');
+            file_put_contents($this->module_dir . '/src/Grid/Query/' . $modelData['class'] . 'QueryBuilder.php', $content);
+        }
+
+        return true;
+    }
+
+    private function generateFormTypeAndHandler()
+    {
+        foreach ($this->module_data['models'] as $index => $modelData) {
+            if (empty($classModel = $modelData['class'])) {
+                continue;
+            }
+            $use = [];
+            $namespace = new PhpNamespace($this->params['upper']['company_name'] . '\\' . 'Module' . '\\' . $this->params['upper']['module_name'] . '\\' . 'Form');
+            $namespace->addUse('PrestaShopBundle\Form\Admin\Type\TranslatorAwareType');
+            $namespace->addUse('Symfony\Component\Form\FormBuilderInterface');
+
+            $class = $namespace->addClass($classModel . 'Type')->addExtend('TranslatorAwareType')->addComment('{@inheritdoc}');
+            $buildForm = $class->addMethod('buildForm');
+            $buildForm->addParameter('builder')->setType('FormBuilderInterface');
+            $buildForm->addParameter('options' . $classModel)->setType('array');
+            $i = 0;
+
+            $addFieldsBody = '        $builder';
+            if (!empty($fields = $modelData['fields'])) {
+                foreach ($fields as $item) {
+                    if ($item['is_auto_increment'] == 1) {
+                        continue;
+                    }
+                    if ($item['field_type'] === 'TINYINT' || $item['field_type'] === 'BOOLEAN') {
+                        $addFieldsBody .= '->add(' . PHP_EOL;
+                        $addFieldsBody .= "'" . $item['field_name'] . "'," . PHP_EOL;
+                        $namespace->addUse('PrestaShopBundle\Form\Admin\Type\SwitchType');
+                        $addFieldsBody .= "SwitchType::class," . PHP_EOL;
+                        $addFieldsBody .= "[" . PHP_EOL;
+                        $addFieldsBody .= '\'label\'=>$this->trans(\'' . $item['field_name'] . '\', \'Modules.' . $this->params['upper']['module_name'] . '.Admin\', []),' . PHP_EOL;
+                        $addFieldsBody .= '\'required\'=>true,' . PHP_EOL;
+                        $addFieldsBody .= "]" . PHP_EOL;
+                        $addFieldsBody .= ')' . PHP_EOL;
+                    } elseif (!empty($item['is_lang'])) {
+                        $addFieldsBody .= '->add(' . PHP_EOL;
+                        $addFieldsBody .= "'" . $item['field_name'] . "'," . PHP_EOL;
+                        $namespace->addUse('PrestaShopBundle\Form\Admin\Type\TranslatableType');
+                        $namespace->addUse('Symfony\Component\Form\Extension\Core\Type\TextareaType');
+                        $namespace->addUse('Symfony\Component\Validator\Constraints\Regex');
+                        $namespace->addUse('PrestaShop\PrestaShop\Core\ConstraintValidator\Constraints\DefaultLanguage');
+                        $addFieldsBody .= "TranslatableType::class," . PHP_EOL;
+                        $addFieldsBody .= "[" . PHP_EOL;
+                        $addFieldsBody .= '\'label\'=>$this->trans(\'' . $item['field_name'] . '\', \'Modules.' . $this->params['upper']['module_name'] . '.Admin\', []),' . PHP_EOL;
+                        $addFieldsBody .= '\'type\'=>TextareaType::class,' . PHP_EOL;
+                        $addFieldsBody .= '\'required\'=>true,' . PHP_EOL;
+                        $addFieldsBody .= '\'constraints\'=>[new DefaultLanguage([
+                        \'message\' => $this->trans(
+                            \'The field %field_name% is required at least in your default language.\',
+                            \'Admin.Notifications.Error\',
+                            [
+                                \'%field_name%\' => sprintf(
+                                    \'"%s"\',
+                                    $this->trans(\'Content\', \'Modules.' . $this->params['upper']['module_name'] . '.Admin\')
+                                ),
+                            ]
+                        ),
+                    ])],' . PHP_EOL;
+                        $addFieldsBody .= '\'options\'=>[' . PHP_EOL;
+                        $addFieldsBody .= '\'constraints\'=>[' . PHP_EOL;
+                        $addFieldsBody .= 'new Regex([' . PHP_EOL;
+                        $addFieldsBody .= '\'pattern\'=>\'/^[^<>;=#{}]*$/u\',' . PHP_EOL;
+                        $addFieldsBody .= '\'message\'=>$this->trans(\'%s id invalid\', \'Modules.' . $this->params['upper']['module_name'] . '.Admin\', [])' . PHP_EOL;
+                        $addFieldsBody .= ']),' . PHP_EOL;
+                        $addFieldsBody .= '],' . PHP_EOL;
+                        $addFieldsBody .= '],' . PHP_EOL;
+                        $addFieldsBody .= "]" . PHP_EOL;
+                        $addFieldsBody .= ')' . PHP_EOL;
+                    } elseif ($item['field_type'] === 'DATETIME' || $item['field_type'] === 'DATE') {
+                        $namespace->addUse('PrestaShopBundle\Form\Admin\Type\DatePickerType');
+                        $addFieldsBody .= '->add(' . PHP_EOL;
+                        $addFieldsBody .= "'" . $item['field_name'] . "'," . PHP_EOL;
+                        $addFieldsBody .= "DatePickerType::class," . PHP_EOL;
+                        $addFieldsBody .= "[" . PHP_EOL;
+                        $addFieldsBody .= '\'label\'=>$this->trans(\'' . $item['field_name'] . '\', \'Modules.' . $this->params['upper']['module_name'] . '.Admin\', []),' . PHP_EOL;
+                        $addFieldsBody .= '\'required\'=>true,' . PHP_EOL;
+                        $addFieldsBody .= "]" . PHP_EOL;
+                        $addFieldsBody .= ')' . PHP_EOL;
+                    } else {
+                        $namespace->addUse('Symfony\Component\Form\Extension\Core\Type\TextType');
+                        $addFieldsBody .= '->add(' . PHP_EOL;
+                        $addFieldsBody .= "'" . $item['field_name'] . "'," . PHP_EOL;
+                        $addFieldsBody .= "TextType::class," . PHP_EOL;
+                        $addFieldsBody .= "[" . PHP_EOL;
+                        $addFieldsBody .= '\'label\'=>$this->trans(\'' . $item['field_name'] . '\', \'Modules.' . $this->params['upper']['module_name'] . '.Admin\', []),' . PHP_EOL;
+                        $addFieldsBody .= '\'required\'=>true,' . PHP_EOL;
+                        $addFieldsBody .= "]" . PHP_EOL;
+                        $addFieldsBody .= ')' . PHP_EOL;
+                    }
+                }
+            }
+            $buildForm->setBody($addFieldsBody . ';');
+            $printer = new Printer;
+            $printer->setTypeResolving(false);
+            $code = $printer->printNamespace($namespace);
+            $this->createDir('Form');
+            file_put_contents($this->module_dir . '/src/Form/' . $classModel . 'Type.php', '<?php declare(strict_types=1);');
+            file_put_contents($this->module_dir . '/src/Form/' . $classModel . 'Type.php', PHP_EOL, FILE_APPEND);
+            file_put_contents($this->module_dir . '/src/Form/' . $classModel . 'Type.php', $code, FILE_APPEND);
+            $namespace = new PhpNamespace($this->params['upper']['company_name'] . '\\' . 'Module' . '\\' . $this->params['upper']['module_name'] . '\\' . 'Form');
+            $namespace->addUse('Doctrine\ORM\EntityManagerInterface');
+            $namespace->addUse('PrestaShop\PrestaShop\Core\Form\IdentifiableObject\DataHandler\FormDataHandlerInterface');
+            $namespace->addUse($this->params['upper']['company_name'] . '\\' . 'Module' . '\\' . $this->params['upper']['module_name'] . '\\' . 'Entity' . '\\' . $classModel);
+            $namespace->addUse($this->params['upper']['company_name'] . '\\' . 'Module' . '\\' . $this->params['upper']['module_name'] . '\\' . 'Repository' . '\\' . $classModel . 'Repository');
+            $namespace->addUse('PrestaShopBundle\Entity\Repository\LangRepository');
+
+            $class = $namespace->addClass($classModel . 'FormDataHandler')->addImplement('FormDataHandlerInterface');
+            $class->addProperty(strtolower($classModel) . 'Repository')->setComment('@var ' . $classModel . 'Repository')->setPrivate();
+            $class->addProperty('langRepository')->setComment('@var LangRepository')->setPrivate();
+            $class->addProperty('entityManager')->setComment('@var  EntityManagerInterface')->setPrivate();
+            $construct = $class->addMethod('__construct');
+            $construct->addParameter(strtolower($classModel) . 'Repository')->setType($classModel . 'Repository');
+            $construct->addParameter('langRepository')->setType('LangRepository');
+            $construct->addParameter('entityManager')->setType('EntityManagerInterface');
+            $constructBody = '        $this->' . strtolower($classModel) . 'Repository = $' . strtolower($classModel) . 'Repository;' . PHP_EOL;
+            $constructBody .= '        $this->langRepository = $langRepository;' . PHP_EOL;
+            $constructBody .= '        $this->entityManager = $entityManager;' . PHP_EOL;
+            $construct->setBody($constructBody);
+            $create = $class->addMethod('create');
+            $create->addParameter('data')->setType('array');
+            $create->addComment('@inheritdoc');
+            $createBody = '        $' . strtolower($classModel) . '=new ' . $classModel . '();' . PHP_EOL;
+            if (!empty($this->setters)) {
+                foreach ($this->setters as $fieldName => $setterMethod) {
+                    $createBody .= '$' . strtolower($classModel) . '->' . $setterMethod . '($data["' . $fieldName . '"]);' . PHP_EOL;
+                }
+                $createBody .= '$this->entityManager->persist($' . strtolower($classModel) . ');' . PHP_EOL;
+                $createBody .= '$this->entityManager->flush();' . PHP_EOL;
+                $createBody .= 'return $' . strtolower($classModel) . '->getId();' . PHP_EOL;
+            }
+            $create->setBody($createBody);
+            $update = $class->addMethod('update');
+            $update->addParameter('id');
+            $update->addParameter('data')->setType('array');
+            $update->addComment('@inheritdoc');
+            $updateBody = '        $' . strtolower($classModel) . '=$this->' . strtolower($classModel) . 'Repository->find($id);' . PHP_EOL;
+            if (!empty($this->setters)) {
+                foreach ($this->setters as $fieldName => $setterMethod) {
+                    $updateBody .= '$' . strtolower($classModel) . '->' . $setterMethod . '($data["' . $fieldName . '"]);' . PHP_EOL;
+                }
+                $updateBody .= '$this->entityManager->persist($' . strtolower($classModel) . ');' . PHP_EOL;
+                $updateBody .= '$this->entityManager->flush();' . PHP_EOL;
+                $updateBody .= 'return $' . strtolower($classModel) . '->getId();' . PHP_EOL;
+            }
+            $update->setBody($updateBody);
+            $code = $printer->printNamespace($namespace);
+            $this->createDir('Form');
+            file_put_contents($this->module_dir . '/src/Form/' . $classModel . 'FormDataHandler.php', '<?php declare(strict_types=1);');
+            file_put_contents($this->module_dir . '/src/Form/' . $classModel . 'FormDataHandler.php', PHP_EOL, FILE_APPEND);
+            file_put_contents($this->module_dir . '/src/Form/' . $classModel . 'FormDataHandler.php', $code, FILE_APPEND);
+            $namespace = new PhpNamespace($this->params['upper']['company_name'] . '\\' . 'Module' . '\\' . $this->params['upper']['module_name'] . '\\' . 'Form');
+            $namespace->addUse('PrestaShop\PrestaShop\Core\Form\IdentifiableObject\DataProvider\FormDataProviderInterface');
+            $namespace->addUse($this->params['upper']['company_name'] . '\\' . 'Module' . '\\' . $this->params['upper']['module_name'] . '\\' . 'Repository' . '\\' . $classModel . 'Repository');
+
+            $class = $namespace->addClass($classModel . 'FormDataProvider')->addImplement('FormDataProviderInterface');
+            $class->addProperty(strtolower($classModel) . 'Repository')->setComment('@var ' . $classModel . 'Repository')->setPrivate();
+
+            $construct = $class->addMethod('__construct');
+            $construct->addParameter(strtolower($classModel) . 'Repository')->setType($classModel . 'Repository');
+            $constructBody = '        $this->' . strtolower($classModel) . 'Repository = $' . strtolower($classModel) . 'Repository;' . PHP_EOL;
+            $construct->setBody($constructBody);
+            $getData = $class->addMethod('getData');
+            $getData->addParameter(strtolower($classModel) . 'Id');
+            $getData->addComment('@inheritdoc');
+            $getDataBody = '        $' . strtolower($classModel) . '=$this->' . strtolower($classModel) . 'Repository->find($' . strtolower($classModel) . 'Id)' . ';' . PHP_EOL;
+            if (!empty($this->getters)) {
+                $getDataBody .= 'return [' . PHP_EOL;
+                foreach ($this->getters as $fieldName => $getterMethod) {
+                    $getDataBody .= "'" . $fieldName . "'=>$" . strtolower($classModel) . "->" . $getterMethod . "()," . PHP_EOL;
+                }
+                $getDataBody .= '];' . PHP_EOL;
+            }
+            $getData->setBody($getDataBody);
+            $getDefaultData = $class->addMethod('getDefaultData');
+            $getDefaultData->addComment('@inheritdoc');
+            $getDefaultDataBody = '        ' . PHP_EOL;
+            if (!empty($this->getters)) {
+                $getDefaultDataBody .= 'return [' . PHP_EOL;
+                foreach ($this->getters as $fieldName => $getterMethod) {
+                    $getDefaultDataBody .= "'" . $fieldName . "'=>''," . PHP_EOL;
+                }
+                $getDefaultDataBody .= '];' . PHP_EOL;
+            }
+            $getDefaultData->setBody($getDefaultDataBody);
+            $code = $printer->printNamespace($namespace);
+            $this->createDir('Form');
+            file_put_contents($this->module_dir . '/src/Form/' . $classModel . 'FormDataProvider.php', '<?php declare(strict_types=1);');
+            file_put_contents($this->module_dir . '/src/Form/' . $classModel . 'FormDataProvider.php', PHP_EOL, FILE_APPEND);
+            file_put_contents($this->module_dir . '/src/Form/' . $classModel . 'FormDataProvider.php', $code, FILE_APPEND);
+            return true;
+
+        }
+    }
+
+    private function generateRepository()
+    {
+        foreach ($this->module_data['models'] as $index => $modelData) {
+            if (empty($classModel = $modelData['class'])) {
+                continue;
+            }
+
+            $namespace = new PhpNamespace($this->params['upper']['company_name'] . '\\' . 'Module' . '\\' . $this->params['upper']['module_name'] . '\\' . 'Repository');
+            $namespace->addUse('Doctrine\ORM\EntityRepository');
+            $namespace->addUse('Doctrine\ORM\QueryBuilder');
+
+            $class = $namespace->addClass($classModel . 'Repository')->addExtend('EntityRepository');
+            $getRandom = $class->addMethod('getRandom');
+            $getRandom->addParameter('langId')->setDefaultValue(0);
+            $getRandom->addParameter('limit')->setDefaultValue(0);
+            $getRandom->addComment('Since RAND() is not available by default in Doctrine and we haven\'t an extension that');
+            $getRandom->addComment('adds it we perform the random fetch and sorting programmatically in PHP.');
+            $getRandom->addComment('@param int $langId');
+            $getRandom->addComment('@param int $limit');
+            $getRandom->addComment('@return array');
+            $getRandomBody = '        /** @var QueryBuilder $qb */' . PHP_EOL;
+            $getRandomBody .= '$qb = $this->createQueryBuilder(\'q\')' . PHP_EOL;
+            $getRandomBody .= '    ->addSelect(\'q\')' . PHP_EOL;
+            if (!empty($this->langFields)) {
+                $getRandomBody .= '    ->addSelect(\'ql\'))' . PHP_EOL;
+                $getRandomBody .= '    ->leftJoin(\'q.' . strtolower($classModel) . 'Langs\', \'ql\')' . PHP_EOL;
+                $getRandomBody .= ';' . PHP_EOL;
+                $getRandomBody .= 'if (0 !== $langId) {' . PHP_EOL;
+                $getRandomBody .= '    $qb' . PHP_EOL;
+                $getRandomBody .= '       ->andWhere(\'ql.lang = :langId\')' . PHP_EOL;
+                $getRandomBody .= '       ->setParameter(\'langId\', $langId)' . PHP_EOL;
+                $getRandomBody .= '    ;' . PHP_EOL;
+                $getRandomBody .= '}' . PHP_EOL;
+            } else {
+                $getRandomBody .= ';' . PHP_EOL;
+            }
+
+            $getRandomBody .= '$ids = $this->getAllIds();' . PHP_EOL;
+            $getRandomBody .= 'shuffle($ids);' . PHP_EOL;
+            $getRandomBody .= 'if ($limit > 0) {' . PHP_EOL;
+            $getRandomBody .= '    $ids = array_slice($ids, 0, $limit);' . PHP_EOL;
+            $getRandomBody .= '}' . PHP_EOL;
+            $getRandomBody .= '$qb' . PHP_EOL;
+            $getRandomBody .= '    ->andWhere(\'q.id in (:ids)\')' . PHP_EOL;
+            $getRandomBody .= '    ->setParameter(\'ids\', $ids)' . PHP_EOL;
+            $getRandomBody .= ';' . PHP_EOL;
+            $getRandomBody .= '$' . strtolower($classModel) . 's = $qb->getQuery()->getResult();' . PHP_EOL;
+            $getRandomBody .= 'uasort($' . strtolower($classModel) . 's, function($a, $b) use ($ids) {' . PHP_EOL;
+            $getRandomBody .= '    return array_search($a->getId(), $ids) - array_search($b->getId(), $ids);' . PHP_EOL;
+            $getRandomBody .= '});' . PHP_EOL;
+            $getRandomBody .= 'return $' . strtolower($classModel) . 's;' . PHP_EOL;
+            $getRandom->setBody($getRandomBody);
+            $getAllIds = $class->addMethod('getAllIds');
+            $getAllIdsBody = '        /** @var QueryBuilder $qb */' . PHP_EOL;
+            $getAllIdsBody .= '$qb = $this' . PHP_EOL;
+            $getAllIdsBody .= '    ->createQueryBuilder(\'q\')' . PHP_EOL;
+            $getAllIdsBody .= '    ->select(\'q.id\')' . PHP_EOL;
+            $getAllIdsBody .= ';' . PHP_EOL;
+            $getAllIdsBody .= '$' . strtolower($classModel) . 's = $qb->getQuery()->getScalarResult();' . PHP_EOL;
+            $getAllIdsBody .= 'return array_map(function($' . strtolower($classModel) . ') {' . PHP_EOL;
+            $getAllIdsBody .= '    return $' . strtolower($classModel) . '[\'id\'];' . PHP_EOL;
+            $getAllIdsBody .= '}, $' . strtolower($classModel) . 's);' . PHP_EOL;
+            $getAllIds->setBody($getAllIdsBody);
+            $printer = new Printer;
+            $code = $printer->printNamespace($namespace);
+
+            $this->createDir('Repository');
+            file_put_contents($this->module_dir . '/src/Repository/' . $classModel . 'Repository.php', '<?php declare(strict_types=1);');
+            file_put_contents($this->module_dir . '/src/Repository/' . $classModel . 'Repository.php', PHP_EOL, FILE_APPEND);
+            file_put_contents($this->module_dir . '/src/Repository/' . $classModel . 'Repository.php', $code, FILE_APPEND);
+
+        }
+        return true;
+    }
+
+    private function generateRoutesAndServices()
+    {
+        foreach ($this->module_data['models'] as $index => $modelData) {
+            if (empty($classModel = $modelData['class'])) {
+                continue;
+            }
+            $content = file_get_contents($this->base_dir . '/samples/gridServices.yml');
+            $content = $this->replaceStandardStrings($content);
+            $content = str_replace('quote', strtolower($classModel), $content);
+            $content = str_replace('Quote', $classModel, $content);
+            $this->addService($content);
+            $content = file_get_contents($this->base_dir . '/samples/gridCommon.yml');
+            $content = $this->replaceStandardStrings($content);
+            $content = str_replace('quote', strtolower($classModel), $content);
+            $content = str_replace('Quote', $classModel, $content);
+            $this->addService($content, 'common');
+            $content = file_get_contents($this->base_dir . '/samples/gridRoutes.yml');
+            $content = $this->replaceStandardStrings($content);
+            $content = str_replace('quote', strtolower($classModel), $content);
+            $content = str_replace('Quote', $classModel, $content);
+            $this->addService($content, 'routes');
+        }
+        return true;
+    }
+
+    private function generateController()
+    {
+        foreach ($this->module_data['models'] as $index => $modelData) {
+            if (empty($classModel = $modelData['class'])) {
+                continue;
+            }
+            $content = file_get_contents($this->base_dir . '/samples/gridController.php');
+            if(!empty($this->langFields)){
+                $content = str_replace('/*use PrestaShop\Module\DemoDoctrine\Entity\QuoteLang;*/', 'use PrestaShop\Module\DemoDoctrine\Entity\QuoteLang;', $content);
+            }else{
+                $content = str_replace('/*use PrestaShop\Module\DemoDoctrine\Entity\QuoteLang;*/', '', $content);
+            }
+            $content = $this->replaceStandardStrings($content);
+
+            $content = str_replace('quote', strtolower($classModel), $content);
+            $content = str_replace('Quote', $classModel, $content);
+
+            $fs = new Filesystem();
+            $this->createDir('Controller/Admin');
+            $fs->appendToFile($this->module_dir . '/src/Controller/Admin/' . $classModel . 'Controller.php', $content);
+        }
+        return true;
+    }
+
+    private function generateViews()
+    {
+        $fileSystem = new Filesystem();
+        $finder = new Finder();
+        $finder->files()->in($this->base_dir . '/samples/views/templates/grid');
+        foreach ($this->module_data['models'] as $index => $modelData) {
+            if (empty($classModel = $modelData['class'])) {
+                continue;
+            }
+            foreach ($finder as $file) {
+                $path = str_replace($this->base_dir . DIRECTORY_SEPARATOR . 'samples', '', $file->getRealPath());
+                $path = str_replace('grid', 'admin', $path);
+                $fileSystem->copy($file->getRealPath(), $this->module_dir . $path);
+                $content = file_get_contents($this->module_dir . $path);
+                $content = $this->replaceStandardStrings($content);
+                $content = str_replace('quote', strtolower($classModel), $content);
+                $content = str_replace('Quote', $classModel, $content);
+                file_put_contents($this->module_dir . $path, $content);
+            }
+        }
+        return true;
+    }
+
+    private function generateJsfiles()
+    {
+        $fileSystem = new Filesystem();
+        $finder = new Finder();
+        $finder->files()->in($this->base_dir . '/samples/js');
+        foreach ($this->module_data['models'] as $index => $modelData) {
+            if (empty($classModel = $modelData['class'])) {
+                continue;
+            }
+            foreach ($finder as $file) {
+                $path = str_replace($this->base_dir . DIRECTORY_SEPARATOR . 'samples', '', $file->getRealPath());
+                $path = str_replace('quotes', strtolower($classModel).'s', $path);
+                $path = str_replace('.webpack', 'webpack', $path);
+                $fileSystem->copy($file->getRealPath(), $this->module_dir . $path);
+                $content = file_get_contents($this->module_dir . $path);
+                $content = $this->replaceStandardStrings($content);
+                $content = str_replace('quote', strtolower($classModel), $content);
+                $content = str_replace('Quote', $classModel, $content);
+                file_put_contents($this->module_dir . $path, $content);
+            }
+        }
+
+        return true;
+    }
+    private function generateCompiledJs()
+    {
+        $fileSystem = new Filesystem();
+        $finder = new Finder();
+        $finder->files()->in($this->base_dir . '/samples/src/gridJs');
+        foreach ($this->module_data['models'] as $index => $modelData) {
+            if (empty($classModel = $modelData['class'])) {
+                continue;
+            }
+            foreach ($finder as $file) {
+                $path = str_replace($this->base_dir . DIRECTORY_SEPARATOR . 'samples', '', $file->getRealPath());
+                $path = str_replace('quotes', strtolower($classModel).'s', $path);
+                $path = str_replace('.webpack', 'webpack', $path);
+                $path = str_replace('src\gridJs', 'views\js', $path);
+
+                $fileSystem->copy($file->getRealPath(), $this->module_dir . $path);
+                $content = file_get_contents($this->module_dir . $path);
+                $content = $this->replaceStandardStrings($content);
+                $content = str_replace('quote', strtolower($classModel), $content);
+                $content = str_replace('Quote', $classModel, $content);
+                file_put_contents($this->module_dir . $path, $content);
+            }
+        }
+        return true;
+    }
+    private function generateCompiledCss()
+    {
+        $fileSystem = new Filesystem();
+        $finder = new Finder();
+        $finder->files()->in($this->base_dir . '/samples/src/gridCss');
+        foreach ($this->module_data['models'] as $index => $modelData) {
+            if (empty($classModel = $modelData['class'])) {
+                continue;
+            }
+            foreach ($finder as $file) {
+                $path = str_replace($this->base_dir . DIRECTORY_SEPARATOR . 'samples', '', $file->getRealPath());
+                $path = str_replace('quotes', strtolower($classModel).'s', $path);
+                $path = str_replace('.webpack', 'webpack', $path);
+                $path = str_replace('src\gridCss', 'views\css', $path);
+                $fileSystem->copy($file->getRealPath(), $this->module_dir . $path);
+                $content = file_get_contents($this->module_dir . $path);
+                $content = $this->replaceStandardStrings($content);
+                $content = str_replace('quote', strtolower($classModel), $content);
+                $content = str_replace('Quote', $classModel, $content);
+                file_put_contents($this->module_dir . $path, $content);
+            }
+        }
+        return true;
+    }
+
+    private function setGrindTab()
+    {
+        $getContent='';
+
+        foreach ($this->module_data['models'] as $index => $modelData) {
+            if (empty($classModel = $modelData['class'])) {
+                continue;
+            }
+            $getContent.='    public function getContent()'.PHP_EOL;
+            $getContent.='    {'.PHP_EOL;
+            $getContent.='        Tools::redirectAdmin('.PHP_EOL;
+            $getContent.='            $this->context->link->getAdminLink(\'AdminDemodoctrineQuote\')'.PHP_EOL;
+            $getContent.='        );'.PHP_EOL;
+            $getContent.='    }'.PHP_EOL;
+            $getContent = $this->replaceStandardStrings($getContent);
+            $getContent = str_replace('quote', strtolower($classModel), $getContent);
+            $getContent = str_replace('Quote', $classModel, $getContent);
+            $this->tabs['getContent']=$getContent;
+        }
+        return true;
+    }
+
+    private function generateSQl()
+    {
+        $sql = '';
+        $sql_uninstal = '';
+        $sql_shop = '';
+        $sql_lang = '';
+        foreach ($this->module_data['models'] as $index => $modelData) {
+
+            if (empty($modelData['class'])) {
+                return false;
+            }
+            $params = $this->getParams();
+            $namespace = new PhpNamespace($params['upper']['company_name'] . '\\' . 'Module' . '\\' . $params['upper']['module_name'] . '\\' . 'Model');
+            $namespace->addUse('ObjectModel');
+            $class = $namespace->addClass($modelData['class']);
+            $class->addExtend('ObjectModel');
+
+            $fieldsData = $this->renderModel($modelData, $class, false);
+
+            $fieldsDataSql = $fieldsData['sql'];
+            $fieldsDataUninstall = $fieldsData['sql_uninstall'];
+            $fieldsDataSql_shop = $fieldsData['sql_shop'];
+            $fieldsDataSql_lang = $fieldsData['sql_lang'];
+            $fieldsDataSql .= 'PRIMARY KEY  (`' . $modelData['primary'] . '`)' . PHP_EOL;
+            $fieldsDataSql .= ') ENGINE=/*_MYSQL_ENGINE_*/ DEFAULT CHARSET=utf8;' . PHP_EOL;
+            $fieldsDataSql = str_replace(array("/*", "*/"), array("'.", ".'"), $fieldsDataSql);
+            $sql .= '$sql[]=' . $fieldsDataSql . "';" . PHP_EOL;
+            $fieldsDataUninstall = str_replace(array("/*", "*/"), array("'.", ".'"), $fieldsDataUninstall);
+            $sql_uninstal .= $fieldsDataUninstall . PHP_EOL;
+
+            if (!empty($fieldsDataSql_shop)) {
+                $fieldsDataSql_shop .= ') ENGINE=/*_MYSQL_ENGINE_*/ DEFAULT CHARSET=utf8;' . PHP_EOL;
+                $fieldsDataSql_shop .= 'ALTER TABLE `/*_DB_PREFIX_*/' . $modelData['table'] . '_shop` DROP PRIMARY KEY, ADD PRIMARY KEY (`' . $modelData['primary'] . '`, `id_shop`) USING BTREE;' . PHP_EOL;
+                $fieldsDataSql_shop = str_replace(array("/*", "*/", 'NUL)'), array("'.", ".'", 'NULL)'), $fieldsDataSql_shop);
+                $sql_shop .= '$sql[]=' . $fieldsDataSql_shop . "';" . PHP_EOL;
+            }
+            if (!empty($fieldsDataSql_lang)) {
+                $fieldsDataSql_lang .= ') ENGINE=/*_MYSQL_ENGINE_*/ DEFAULT CHARSET=utf8;' . PHP_EOL;
+                $fieldsDataSql_lang .= 'ALTER TABLE `/*_DB_PREFIX_*/' . $modelData['table'] . '_lang` DROP PRIMARY KEY, ADD PRIMARY KEY (`' . $modelData['primary'] . '`, `id_lang`) USING BTREE;' . PHP_EOL;
+                $fieldsDataSql_lang = str_replace(array("/*", "*/", 'NUL)'), array("'.", ".'", 'NULL)'), $fieldsDataSql_lang);
+                $sql_lang .= '$sql[]=' . $fieldsDataSql_lang . "';" . PHP_EOL;
+            }
+        }
+        $this->installSql[] = $sql . $sql_lang . $sql_shop;
+        $this->unInstallSql[] = $sql_uninstal;
+
         return true;
     }
 

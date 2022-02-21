@@ -115,6 +115,7 @@ class GeneratorController extends AbstractController
         if (isset($this->_codeGen->module_data['models']) && !empty($this->_codeGen->module_data['models']) && (empty($this->_codeGen->module_data['grid']) || (!empty($this->_codeGen->module_data['grid']) && $this->_codeGen->module_data['grid']==0))) {
             $this->_codeGen->generateModels();
         }
+
         if (isset($this->_codeGen->module_data['models']) && !empty($this->_codeGen->module_data['models']) && !empty($this->_codeGen->module_data['grid'])) {
             $this->_codeGen->generateGrid();
         }
