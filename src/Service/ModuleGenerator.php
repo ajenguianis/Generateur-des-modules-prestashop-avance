@@ -1645,7 +1645,7 @@ class ModuleGenerator
         $this->generateJsfiles();
         $this->generateCompiledJs();
         $this->generateCompiledCss();
-        $this->setGrindTab();
+        $this->setGridTab();
 
         return true;
     }
@@ -2161,7 +2161,7 @@ class ModuleGenerator
                     $getter->addComment('@return int');
                     $getter->setBody('return $this->' . $name . ';');
                     $setter = $class->addMethod('set' . $methodName);
-                    $this->setters[$field] = 'set' . $methodName;
+                    $this->setters[$field['field_name']] = 'set' . $methodName;
                     $setter->addComment('@param int $' . $name);
                     $setter->addComment('@return $this');
                     $setter->addParameter($name)->setType('int');
@@ -2796,7 +2796,7 @@ class ModuleGenerator
             $getRandomBody .= '$qb = $this->createQueryBuilder(\'q\')' . PHP_EOL;
             $getRandomBody .= '    ->addSelect(\'q\')' . PHP_EOL;
             if (!empty($this->langFields)) {
-                $getRandomBody .= '    ->addSelect(\'ql\'))' . PHP_EOL;
+                $getRandomBody .= '    ->addSelect(\'ql\')' . PHP_EOL;
                 $getRandomBody .= '    ->leftJoin(\'q.' . strtolower($classModel) . 'Langs\', \'ql\')' . PHP_EOL;
                 $getRandomBody .= ';' . PHP_EOL;
                 $getRandomBody .= 'if (0 !== $langId) {' . PHP_EOL;
@@ -2993,7 +2993,7 @@ class ModuleGenerator
         return true;
     }
 
-    private function setGrindTab()
+    private function setGridTab()
     {
         $getContent='';
 
@@ -3012,6 +3012,8 @@ class ModuleGenerator
             $getContent = str_replace('Quote', $classModel, $getContent);
             $this->tabs['getContent']=$getContent;
         }
+        dump($this->module_data['models']);
+        exit;
         return true;
     }
 
