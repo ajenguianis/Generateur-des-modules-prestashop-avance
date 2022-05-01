@@ -492,6 +492,12 @@ class ModuleGenerator
                 if ($modelObject == 'Customer') {
                     $relatedField = 'id_customer';
                 }
+                if ($modelObject == 'CmsPage') {
+                    $relatedField = 'id_cmspage';
+                }
+                if ($modelObject == 'CmsPageCategory') {
+                    $relatedField = 'id_cmspagecategory';
+                }
                 //getter
                 $method = $class->addMethod('getExtra' . $modelObject . 'FieldsBy' . $modelObject . 'Id')->setStatic();
                 $method->addParameter($relatedField, null);
@@ -1037,8 +1043,11 @@ class ModuleGenerator
 
             file_put_contents($this->module_dir . '/views/PrestaShop/Products/extra_translatable_fields.html.twig', $contentForTranslatableTemplates);
         }
-        if ($classModel === 'Category' || $classModel === 'Customer') {
+        if (in_array($classModel, ['Category', 'Customer', 'CmsPage', 'CmsPageCategory'])) {
             $this->module_data['hooks'][strtolower($classModel)] = array_merge($this->module_data['hooks'][strtolower($classModel)], ['action' . $classModel . 'FormBuilderModifier', 'actionAfterCreate' . $classModel . 'FormHandler', 'actionAfterUpdate' . $classModel . 'FormHandler']);
+            if ($classModel === 'Customer' && isset($_POST['show_front']) && $_POST['show_front']) {
+                $this->module_data['hooks'][strtolower($classModel)] = array_merge($this->module_data['hooks'][strtolower($classModel)], ['additional' . $classModel . 'FormFields', 'validate' . $classModel . 'FormFields', 'action' . $classModel . 'AccountUpdate', 'action' . $classModel . 'AccountAdd']);
+            }
             $gridDir = $this->module_dir . DIRECTORY_SEPARATOR . 'src' . DIRECTORY_SEPARATOR . 'Grid';
             if (!is_dir($gridDir) && !@mkdir($gridDir, 0777, true) && !is_dir($gridDir)) {
                 throw new \RuntimeException(sprintf('Cannot create directory "%s"', $gridDir));
@@ -1171,9 +1180,70 @@ class ModuleGenerator
             $formHandlerContent .= ');' . PHP_EOL;
             $this->module_data['hooksContents']['actionAfterCreate' . $classModel . 'FormHandler'] = $formHandlerContent;
             $this->module_data['hooksContents']['actionAfterUpdate' . $classModel . 'FormHandler'] = $formHandlerContent;
-
             $this->module_data['use'][strtolower($classModel)] = array_merge($this->module_data['use'][strtolower($classModel)], $use);
 
+            if ($classModel === 'Customer' && isset($_POST['show_front']) && $_POST['show_front']) {
+                $formFieldsContent = '$extra' . $classModel . 'Fields = Extra' . $classModel . 'Fields::getExtra' . $classModel . 'FieldsBy' . $classModel . 'Id(' . PHP_EOL;
+                $formFieldsContent .= chr(9).'(int)Context::getContext()->' . strtolower($classModel) . '->id' . PHP_EOL;
+                $formFieldsContent .= ');' . PHP_EOL;
+                $formFieldsContent .= '$extra_fields = array();' . PHP_EOL;
+                foreach ($fields as $index => $item) {
+                    $formFieldsContent .= '$extra_fields["'. $item['column_name'] .'"] = (new FormField)' . PHP_EOL;
+                    $formFieldsContent .= chr(9).'->setName("'. $item['column_name'] .'")' . PHP_EOL;
+
+                    if ($item['column_type'] === 'TINYINT' || $item['column_type'] === 'BOOLEAN') {
+                        $formFieldsContent .= chr(9).'->setType(\'radio-buttons\')' . PHP_EOL;
+                        $formFieldsContent .= chr(9).'->addAvailableValue(0, \'No\')' . PHP_EOL;
+                        $formFieldsContent .= chr(9).'->addAvailableValue(1, \'Yes\')' . PHP_EOL;
+                    } elseif ($item['column_type'] === 'DATETIME' || $item['column_type'] === 'DATE') {
+                        $formFieldsContent .= chr(9).'->setType(\'date\')' . PHP_EOL;PHP_EOL;
+                    } elseif ($item['column_type'] === 'INT') {
+                        $formFieldsContent .= chr(9).'->setType(\'number\')' . PHP_EOL;PHP_EOL;
+                    } else {
+                        $formFieldsContent .= chr(9).'->setType(\'text\')' . PHP_EOL;
+                    }
+
+                    $formFieldsContent .= chr(9).'->setValue($extra' . $classModel . 'Fields->'. $item['column_name'] .')' . PHP_EOL;
+                    $formFieldsContent .= chr(9).' ->setLabel($this->l(\''. $item['column_name'] .'\'));' . PHP_EOL;
+                }
+                $formFieldsContent .= 'return $extra_fields;' . PHP_EOL;
+
+                $this->module_data['hooksContents']['additional' . $classModel . 'FormFields'] = $formFieldsContent;
+
+                $validateFormFieldsContent = '$module_fields = $params[\'fields\'];' . PHP_EOL;
+
+                foreach ($fields as $index => $item) {
+                    $i = $index - 1;
+                    if($item['column_type'] == "INT") {
+                        $validateFormFieldsContent .= 'if (!is_numeric($module_fields['. $i .']->getValue())) {' . PHP_EOL;
+                        $validateFormFieldsContent .= chr(9).'$module_fields['. $i .']->addError(' . PHP_EOL;
+                        $validateFormFieldsContent .= chr(9).chr(9).'$this->l(\'Numeric value only\')' . PHP_EOL;
+                        $validateFormFieldsContent .= chr(9).');' . PHP_EOL;
+                        $validateFormFieldsContent .= '}' . PHP_EOL;
+                    }
+                }
+
+                $validateFormFieldsContent .= 'return array(' . PHP_EOL;
+                $validateFormFieldsContent .= chr(9).'$module_fields' . PHP_EOL;
+                $validateFormFieldsContent .= ');' . PHP_EOL;
+
+                $this->module_data['hooksContents']['validate' . $classModel . 'FormFields'] = $validateFormFieldsContent;
+
+                $this->module_data['use'][strtolower($classModel)] = array_merge($this->module_data['use'][strtolower($classModel)], $use);
+
+                $accountSaveBody = '$id = (int)$params[\''. strtolower($classModel) .'\']->id;' . PHP_EOL;
+
+                foreach ($fields as $index => $item) {
+                    $accountSaveBody .= '$form_data[\''. $item['column_name'] .'\'] = Tools::getValue(\''. $item['column_name'] .'\');' . PHP_EOL;
+                }
+
+                $accountSaveBody .= 'Extra' . $classModel . 'Fields::SetExtra' . $classModel . 'FieldsBy' . $classModel . 'Id((int)$id, $form_data);' . PHP_EOL;
+
+                $this->module_data['hooksContents']['action' . $classModel . 'AccountUpdate'] = $accountSaveBody;
+
+                $this->module_data['hooksContents']['action' . $classModel . 'AccountAdd'] = $accountSaveBody;
+
+            }
         }
 
         return true;

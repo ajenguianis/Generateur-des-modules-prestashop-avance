@@ -1,4 +1,13 @@
 $(document).ready(function () {
+
+    $(document).on("change", 'select[name="object_model_name_1"]', function () {
+        if($(this).val() === "Customer") {
+            $('.show-front-customer').removeClass('hidden');
+        } else {
+            $('.show-front-customer').addClass('hidden');
+        }
+    });
+
     $('.js-select2').select2({
         placeholder: "Select from existing Hooks",
         allowClear: true
