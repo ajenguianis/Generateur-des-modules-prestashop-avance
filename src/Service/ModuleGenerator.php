@@ -338,6 +338,18 @@ class ModuleGenerator
                     $content = str_replace('/** getContent */', $tab, $content);
                     file_put_contents($this->module_dir . '/' . $this->module_data['module_name'] . '.php', $content);
                 }
+                if($key==='const'){
+                    $content = file_get_contents($this->module_dir . '/' . $this->module_data['module_name'] . '.php');
+                    $content = str_replace('/** consts */', $tab, $content);
+                    file_put_contents($this->module_dir . '/' . $this->module_data['module_name'] . '.php', $content);
+                }
+                if($key==='tabs'){
+                    $content = file_get_contents($this->module_dir . '/' . $this->module_data['module_name'] . '.php');
+                    $content = str_replace('/** getModuleTabs */', $tab, $content);
+                    $content = str_replace('parent::install() &&', 'parent::install() && $this->installTabs($this) &&', $content);
+                    $content = str_replace('parent::uninstall()', 'parent::uninstall() && $this->uninstallTabs($this)', $content);
+                    file_put_contents($this->module_dir . '/' . $this->module_data['module_name'] . '.php', $content);
+                }
             }
         }
 
@@ -2995,25 +3007,199 @@ class ModuleGenerator
 
     private function setGridTab()
     {
-        $getContent='';
+        $const='';
+        $tabs="    /**
+     * Returns module tabs data
+     *
+     * @param Module /+module Module object
+     *
+     * @return array Module tabs data
+     */
+    public function getModuleTabs(Module /+module)
+    {
+        return [
+            [
+                'name' => /+module->l('EVOGROUP', __CLASS__),
+                'parent' => 0,
+                'class_name' => self::CONTROLLER_EVOGROUP,
+                'module_tab' => false,
+                'main_tab' => true,
+            ],
 
+            [
+                'name' => /+module->name,
+                'parent' => self::CONTROLLER_EVOGROUP,
+                'class_name' => self::CONTROLLER_MODULE,
+                'module_tab' => true,
+                'icon' => 'repeat',
+            ],".PHP_EOL;
+        $const.="const CONTROLLER_EVOGROUP = 'AdminEvoGroup';".PHP_EOL;
+        $const.="const CONTROLLER_MODULE = 'Admin".$this->params['upper']['module_name']."';".PHP_EOL;
         foreach ($this->module_data['models'] as $index => $modelData) {
             if (empty($classModel = $modelData['class'])) {
                 continue;
             }
-            $getContent.='    public function getContent()'.PHP_EOL;
-            $getContent.='    {'.PHP_EOL;
-            $getContent.='        Tools::redirectAdmin('.PHP_EOL;
-            $getContent.='            $this->context->link->getAdminLink(\'AdminDemodoctrineQuote\')'.PHP_EOL;
-            $getContent.='        );'.PHP_EOL;
-            $getContent.='    }'.PHP_EOL;
-            $getContent = $this->replaceStandardStrings($getContent);
-            $getContent = str_replace('quote', strtolower($classModel), $getContent);
-            $getContent = str_replace('Quote', $classModel, $getContent);
-            $this->tabs['getContent']=$getContent;
+            $const.="const CONTROLLER_".strtoupper($classModel)." = 'Admin".$classModel."';".PHP_EOL;
+            $this->addLegacyController("Admin".$classModel);
+            $tabs.="            [
+                'name' => /+module->l('".$modelData['table']."', __CLASS__),
+                'parent' => self::CONTROLLER_MODULE,
+                'class_name' => self::CONTROLLER_".strtoupper($classModel).",
+                'module_tab' => false,
+                'modules_tab' => true,
+                'icon' => 'repeat',
+            ],".PHP_EOL;
+            $tabs = $this->replaceStandardStrings($tabs);
+            $tabs = str_replace('quote', strtolower($classModel), $tabs);
+            $tabs = str_replace('Quote', $classModel, $tabs);
+
         }
-        dump($this->module_data['models']);
-        exit;
+        $tabs.="        ];
+    }".PHP_EOL;
+        $tabs.="    /**
+     * Function used to install module tabs
+     * Collects error messages if install process is not successful
+     *
+     * @param Module /+module Module object
+     *
+     * @return bool Tabs installed successfully or not
+     */
+    public function installTabs(Module /+module)
+    {
+        /+tabs = /+this->getModuleTabs(/+module);
+
+        if (empty(/+tabs)) {
+            return true;
+        }
+
+        foreach (/+tabs as /+tab) {
+            if (Tab::getIdFromClassName(/+tab['class_name'])) {
+                continue;
+            }
+
+            /+id_parent = is_int(/+tab['parent']) ? (int) /+tab['parent'] : (int) Tab::getIdFromClassName(/+tab['parent']);
+            /+icon = /+tab['icon'] ?? null;
+            if (!/+this->installTab(/+tab['name'], (int) /+id_parent, /+tab['class_name'], /+module->name, /+icon)) {
+                /+this->errors[] = sprintf(/+module->l('Could not install %s tab', __CLASS__), /+tab['name']);
+
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * Registers BackOffice tabs
+     *
+     * @param string /+name Tab name
+     * @param int /+id_parent Parent tab ID
+     * @param string /+class_name Tab controller class name
+     * @param string /+moduleName Module name
+     * @param null /+icon
+     *
+     * @return bool|int Tab could not be installed | Installed tab ID
+     */
+    private function installTab(/+name, /+id_parent, /+class_name, /+moduleName, /+icon = null)
+    {
+        if (!Tab::getIdFromClassName(/+class_name)) {
+            /+module_tab = new Tab();
+            /+languages = Language::getLanguages(true);
+
+            foreach (/+languages as /+language) {
+                /+module_tab->name[(int) /+language['id_lang']] = /+name;
+            }
+
+            /+module_tab->class_name = /+class_name;
+            /+module_tab->id_parent = (int) /+id_parent;
+            /+module_tab->module = /+moduleName;
+            /+module_tab->icon = /+icon;
+
+            if (/+module_tab->add()) {
+                return (int) /+module_tab->id;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Removes BackOffice tab registration
+     *
+     * @param string /+class_name Tab controller class name
+     *
+     * @return bool Tab uninstalled successfully or not
+     */
+    private function uninstallTab(/+class_name)
+    {
+        if (/+id_tab = (int) Tab::getIdFromClassName(/+class_name)) {
+            /+tab = new Tab((int) /+id_tab);
+
+            return /+tab->delete();
+        }
+
+        return true;
+    }
+
+    /**
+     * Function used to uninstall module tabs
+     * Collects error messages if uninstall process is not successful
+     *
+     * @param Module /+module Module object
+     *
+     * @return bool Tabs uninstalled successfully or not
+     */
+    public function uninstallTabs(Module /+module)
+    {
+        /+tabs = /+this->getModuleTabs(/+module);
+
+        if (empty(/+tabs)) {
+            return true;
+        }
+
+        /+parent_tabs = [];
+        /+modules_tab = [];
+
+        foreach (/+tabs as /+tab) {
+            if (!/+tab['module_tab']) {
+                if (isset(/+tab['modules_tab'])) {
+                    /+modules_tab = /+tab;
+                    /+parent_tabs[] = /+tab;
+                } else {
+                    /+parent_tabs[] = /+tab;
+                }
+
+                continue;
+            }
+
+            if (!/+this->uninstallTab(/+tab['class_name'])) {
+                /+this->errors[] = sprintf(/+module->l('Could not uninstall %s tab', __CLASS__), /+tab['name']);
+
+                return false;
+            }
+        }
+
+        if (!empty(/+modules_tab)) {
+            if (Tab::getNbTabs(Tab::getIdFromClassName(/+modules_tab['class_name']))) {
+                return true; // Invertus modules tab is not empty
+            }
+
+            foreach (/+parent_tabs as /+tab) {
+                if (!/+this->uninstallTab(/+tab['class_name'])) {
+                    /+this->errors[] = sprintf(/+module->l('Could not uninstall %s tab', __CLASS__), /+tab['name']);
+
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }".PHP_EOL;
+        $const = str_replace('/*', '$', $const);
+        $tabs = str_replace('/+', '$', $tabs);
+        $this->tabs['const']=$const;
+        $this->tabs['tabs']=$tabs;
+
         return true;
     }
 
@@ -3063,6 +3249,31 @@ class ModuleGenerator
         $this->installSql[] = $sql . $sql_lang . $sql_shop;
         $this->unInstallSql[] = $sql_uninstal;
 
+        return true;
+    }
+
+    /**
+     * @param string $controllerName
+     * @return bool
+     */
+    private function addLegacyController(string $controllerName)
+    {
+        $class = new ClassType($controllerName.'Controller');
+        $class->setExtends('ModuleAdminController');
+        $method=$class->addMethod('__construct');
+        $body='     parent::__construct();
+        Tools::redirectAdmin(Context::getContext()->link->getAdminLink(\''.str_replace('Admin', 'Admin'.$this->params['upper']['module_name'], $controllerName).'\'));'.PHP_EOL;
+        $method->setBody($body);
+        $folder = $this->module_dir . '/controllers';
+        if (!is_dir($folder) && !@mkdir($folder, 0777, true) && !is_dir($folder)) {
+            throw new \RuntimeException(sprintf('Cannot create directory "%s"', $folder));
+        }
+        $printer = new Printer;
+        $printer->setTypeResolving(false);
+        $code = $printer->printClass($class);
+        file_put_contents($this->module_dir . '/controllers/'.$controllerName.'Controller' . '.php', '<?php declare(strict_types=1);');
+        file_put_contents($this->module_dir . '/controllers/'.$controllerName.'Controller' . '.php', PHP_EOL, FILE_APPEND);
+        file_put_contents($this->module_dir . '/controllers/'.$controllerName.'Controller' . '.php', $code, FILE_APPEND);
         return true;
     }
 

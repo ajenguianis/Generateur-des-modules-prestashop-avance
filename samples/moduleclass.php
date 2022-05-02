@@ -31,6 +31,7 @@ if (!defined('_PS_VERSION_')) {
 
 class Moduleclass extends Module
 {
+    /** consts */
     protected $config_form = false;
 
     public function __construct()
@@ -70,6 +71,7 @@ class Moduleclass extends Module
         return parent::uninstall();
     }
     /** getContent */
+
     /** form setting */
 
     /**
@@ -93,4 +95,5 @@ class Moduleclass extends Module
     }
 
     /** settings */
+    /** getModuleTabs */
 }
