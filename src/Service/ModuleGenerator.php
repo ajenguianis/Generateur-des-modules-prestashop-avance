@@ -498,6 +498,9 @@ class ModuleGenerator
                 if ($modelObject == 'CmsPageCategory') {
                     $relatedField = 'id_cmspagecategory';
                 }
+                if ($modelObject == 'CartRule') {
+                    $relatedField = 'id_cartrule';
+                }
                 //getter
                 $method = $class->addMethod('getExtra' . $modelObject . 'FieldsBy' . $modelObject . 'Id')->setStatic();
                 $method->addParameter($relatedField, null);
@@ -545,7 +548,6 @@ class ModuleGenerator
             file_put_contents($this->module_dir . '/src/Model/' . $modelData['class'] . '.php', PHP_EOL, FILE_APPEND);
             file_put_contents($this->module_dir . '/src/Model/' . $modelData['class'] . '.php', $code, FILE_APPEND);
 
-
         }
         $executionLoop = 'foreach ($sql as $query) {
     if (Db::getInstance()->execute($query) == false) {
@@ -557,6 +559,34 @@ class ModuleGenerator
         $installContent[26] = $sql . $sql_lang . $sql_shop;
         file_put_contents($this->module_dir . DIRECTORY_SEPARATOR . 'sql/install.php', implode("", $installContent));
         file_put_contents($this->module_dir . DIRECTORY_SEPARATOR . 'sql/install.php', PHP_EOL, FILE_APPEND);
+        if ($modelObject === 'CartRule') {
+            $content = '$orig =  _PS_BO_ALL_THEMES_DIR_.\'default/template/controllers/cart_rules/\';'.PHP_EOL;
+            $content .= '$dest = _PS_ROOT_DIR_.\'/override/controllers/admin/templates/cart_rules/\';'.PHP_EOL;
+            $content .= 'if(!is_dir($dest)){'.PHP_EOL;
+            $content .= chr(9).'mkdir ($dest,0777);'.PHP_EOL;
+            $content .= '}'.PHP_EOL;
+            $content .= '$dir = dir($orig);'.PHP_EOL;
+            $content .= 'while ($entry=$dir->read()) {'.PHP_EOL;
+            $content .= chr(9).'$pathOrig = "$orig/$entry";'.PHP_EOL;
+            $content .= chr(9).'$pathDest = "$dest/$entry";'.PHP_EOL;
+            $content .= chr(9).'if (is_file($pathOrig) and ($pathDest<>\'\') and ($fp=fopen($pathOrig,\'rb\')) and in_array($entry, array(\'form.tpl\', \'index.php\'))) {'.PHP_EOL;
+            $content .= chr(9).chr(9).'$buf = fread($fp,filesize($pathOrig));'.PHP_EOL;
+            $content .= chr(9).chr(9).'$cop = fopen($pathDest,\'w\');'.PHP_EOL;
+            $content .= chr(9).chr(9).'fputs ($cop,$buf);'.PHP_EOL;
+            $content .= chr(9).chr(9).'fclose ($cop);'.PHP_EOL;
+            $content .= chr(9).chr(9).'fclose ($fp);'.PHP_EOL;
+            $content .= chr(9).'}'.PHP_EOL;
+            $content .= '}'.PHP_EOL;
+            $content .= '$dir->close();'.PHP_EOL;
+            $content .= '$str = "{include file=\'controllers/cart_rules/informations.tpl\'}";'.PHP_EOL;
+            $content .= '$replace = $str;'.PHP_EOL;
+            $content .= '$replace.= "{Hook::exec(\'DisplayExtraFieldCarteRule\')}";'.PHP_EOL;
+            $content .= '$file = _PS_ROOT_DIR_.\'/override/controllers/admin/templates/cart_rules/form.tpl\';'.PHP_EOL;
+            $content .= '$addContentHook = file_get_contents($file);'.PHP_EOL;
+            $content .= '$addContentHook = str_replace($str, $replace, $addContentHook);'.PHP_EOL;
+            $content .= 'file_put_contents($file, $addContentHook);'.PHP_EOL;
+            file_put_contents($this->module_dir . DIRECTORY_SEPARATOR . 'sql/install.php', $content, FILE_APPEND);
+        }
         file_put_contents($this->module_dir . DIRECTORY_SEPARATOR . 'sql/install.php', $executionLoop, FILE_APPEND);
         //uninstall
         $uninstallContent = file($this->base_dir . DIRECTORY_SEPARATOR . 'samples' . DIRECTORY_SEPARATOR . 'install_vg.php');
@@ -1042,6 +1072,46 @@ class ModuleGenerator
             file_put_contents($this->module_dir . '/views/PrestaShop/Products/extra_no_translatable_fields.html.twig', $contentForNonTranslatableTemplates);
 
             file_put_contents($this->module_dir . '/views/PrestaShop/Products/extra_translatable_fields.html.twig', $contentForTranslatableTemplates);
+        }
+        if ($classModel == 'CartRule') {
+            $this->module_data['hooks'][strtolower($classModel)] = array_merge($this->module_data['hooks'][strtolower($classModel)], ['displayExtraFieldCarteRule', 'actionObjectUpdateAfter', 'actionObjectAddAfter']);
+            $this->module_data['use'][strtolower($classModel)][$this->params['upper']['company_name'] . '\\' . 'Module' . '\\' . $this->params['upper']['module_name'] . '\\' . 'Model' . '\\' . 'ExtraCartRuleFields'] = $this->params['upper']['company_name'] . '\\' . 'Module' . '\\' . $this->params['upper']['module_name'] . '\\' . 'Model' . '\\' . 'ExtraCartRuleFields';
+            $contentForTemplate = "";
+            foreach ($this->module_data['hooks'][strtolower($classModel)] as $hook) {
+                if ($hook == 'displayExtraFieldCarteRule') {
+                    $extra_content = '$cartRuleFields = ExtraCartRuleFields::getExtraCartRuleFieldsByCartRuleId((int)Tools::getValue(\'id_cart_rule\'));' . PHP_EOL;
+                    $extra_content .= '$this->context->smarty->assign([' . PHP_EOL;
+                    foreach ($fields as $index => $item) {
+                        $extra_content .= chr(9).'"'.$item['column_name'].'" => $cartRuleFields->'.$item['column_name'].',' . PHP_EOL;
+                        $contentForTemplate .= "<div class=\"form-group\">" . PHP_EOL;
+                        $contentForTemplate .= chr(9)."<label class=\"control-label col-lg-3\">{l s='" . $item['column_name'] . "' mod='" . $this->params['lower']['module_name'] . "'}</label>" . PHP_EOL;
+                        $contentForTemplate .= chr(9)."<div class=\"col-lg-8\">" . PHP_EOL;
+                        $contentForTemplate .= chr(9).chr(9)."<input type=\"text\" name=\"".$item['column_name']."\" value=\"{\$".$item['column_name']."}\">" . PHP_EOL;
+                        $contentForTemplate .= chr(9)."</div>" . PHP_EOL;
+                        $contentForTemplate .= "</div>" . PHP_EOL;
+                    }
+                    $extra_content .= ']);' . PHP_EOL;
+                    $extra_content .= 'return $this->display(__FILE__, \'views/templates/admin/extraCartRuleFields.tpl\');' . PHP_EOL;
+
+                    $this->module_data['hooksContents'][$hook] = $extra_content;
+                }
+                if (in_array($hook, ['actionObjectUpdateAfter', 'actionObjectAddAfter'])) {
+                    $extra_content = 'if( get_class($params["object"]) === \'CartRule\'' . PHP_EOL;
+                    foreach ($fields as $index => $item) {
+                        $extra_content .= chr(9).' && Tools::getIsset("' . $item['column_name'] . '")' . PHP_EOL;
+                    }
+                    $extra_content .= ') {' . PHP_EOL;
+                    foreach ($fields as $index => $item) {
+                        $extra_content .= chr(9).'$form_data["' . $item['column_name'] . '"] = Tools::getValue("' . $item['column_name'] . '");' . PHP_EOL;
+                    }
+                    $extra_content .= chr(9).'Extra' . $classModel . 'Fields::SetExtra' . $classModel . 'FieldsByCartRuleId((int)$params["object"]->id, $form_data);' . PHP_EOL;
+                    $extra_content .= '}' . PHP_EOL;
+
+                    $this->module_data['hooksContents'][$hook] = $extra_content;
+                }
+            }
+
+            file_put_contents($this->module_dir . '/views/templates/admin/extraCartRuleFields.tpl', $contentForTemplate);
         }
         if (in_array($classModel, ['Category', 'Customer', 'CmsPage', 'CmsPageCategory'])) {
             $this->module_data['hooks'][strtolower($classModel)] = array_merge($this->module_data['hooks'][strtolower($classModel)], ['action' . $classModel . 'FormBuilderModifier', 'actionAfterCreate' . $classModel . 'FormHandler', 'actionAfterUpdate' . $classModel . 'FormHandler']);
