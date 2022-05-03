@@ -16,6 +16,7 @@ use Nette\PhpGenerator\ClassType;
 use Nette\PhpGenerator\Printer;
 use Nette\PhpGenerator\PhpNamespace;
 use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\ORM\EntityRepository;
 
 class ModuleGenerator
 {
@@ -1993,6 +1994,10 @@ class ModuleGenerator
             } else {
                 $property = $class->addProperty('id')->setPrivate();
                 $property->addComment('@ORM\GeneratedValue(strategy="AUTO")');
+                $property->addComment('@ORM\Id');
+                if($field['field_name']!=='id'){
+                    $property->addComment('@ORM\Column(name="' . $field['field_name'] . '", type="integer"' . $nullableCondition . ')');
+                }
             }
         } else {
             if ($field['field_name'] == 'id_lang') {
@@ -2010,7 +2015,8 @@ class ModuleGenerator
             }
 
         }
-        if (($field['field_type'] === 'INT' || $field['field_type'] === 'UnsignedInt')) {
+
+        if (($field['field_type'] === 'INT' || $field['field_type'] === 'UnsignedInt') && empty($field['is_auto_increment'])) {
             $property->addComment('@var int');
             $property->addComment('@ORM\Column(name="' . $field['field_name'] . '", type="integer"' . $nullableCondition . ')');
 
@@ -2032,7 +2038,6 @@ class ModuleGenerator
         }
         if (($field['field_type'] === 'DATE' || $field['field_type'] === 'DATETIME')) {
             $property->addComment('@var DateTime');
-            $this->use[$class->getName()]['DateTime'] = 'DateTime';
             $property->addComment('@ORM\Column(name="' . $field['field_name'] . '", type="datetime", scale=6' . $nullableCondition . ')');
         }
         return $class;
@@ -2051,14 +2056,14 @@ class ModuleGenerator
     /**
      * @param $fields
      * @param string $type
-     * @param $class
+     * @param $modelData
      * @return array
      */
-    private function prepareFields($fields, string $type, $class)
+    private function prepareFields($fields, string $type, $modelData)
     {
         $results = [];
         $results[0] = [
-            "field_name" => "id_" . strtolower($class),
+            "field_name" => $modelData['primary'],
             "field_type" => "INT",
             "field_length" => "11",
             "is_auto_increment" => "1",
@@ -2266,13 +2271,15 @@ class ModuleGenerator
             }
             if (!empty($has_lang_field)) {
                 $langClass = $this->makeEntity($modelData['class'] . 'Lang', $modelData, true);
-                $fields = $this->prepareFields($modelData['fields'], 'lang', $modelData['class']);
+                $fields = $this->prepareFields($modelData['fields'], 'lang', $modelData);
                 $langClass = $this->makeFields($fields, $langClass, $has_lang_field, false);
                 $langClass = $this->makeMethods($fields, $langClass, $has_lang_field, false);
                 $printer = new Printer;
                 $printer->setTypeResolving(false);
                 $code = $printer->printClass($langClass);
                 file_put_contents($this->module_dir . '/src/Entity/' . $modelData['class'] . 'Lang.php', '<?php declare(strict_types=1);');
+                file_put_contents($this->module_dir . '/src/Entity/' . $modelData['class'] . 'Lang.php', PHP_EOL, FILE_APPEND);
+                file_put_contents($this->module_dir . '/src/Entity/' . $modelData['class'] . 'Lang.php', 'namespace '.$params['upper']['company_name'] . '\\' . 'Module' . '\\' . $params['upper']['module_name'] . '\\' . 'Entity;' , FILE_APPEND);
                 file_put_contents($this->module_dir . '/src/Entity/' . $modelData['class'] . 'Lang.php', PHP_EOL, FILE_APPEND);
                 if (!empty($uses = $this->use[$modelData['class'] . 'Lang'])) {
                     foreach ($uses as $use) {
@@ -2281,10 +2288,12 @@ class ModuleGenerator
                 }
                 file_put_contents($this->module_dir . '/src/Entity/' . $modelData['class'] . 'Lang.php', PHP_EOL, FILE_APPEND);
                 file_put_contents($this->module_dir . '/src/Entity/' . $modelData['class'] . 'Lang.php', $code, FILE_APPEND);
+                $method1=$class->addMethod('get'.$modelData['class'].'Langs')->setComment('@return ArrayCollection');
+                $method1->setBody('return $this->'.strtolower($modelData['class']).'Langs;');
             }
             if (!empty($has_shop_field)) {
                 $shopClass = $this->makeEntity($modelData['class'] . 'Shop', $modelData, false, true);
-                $fields = $this->prepareFields($modelData['fields'], 'shop', $modelData['class']);
+                $fields = $this->prepareFields($modelData['fields'], 'shop', $modelData);
                 $shopClass = $this->makeFields($fields, $shopClass, false, $has_shop_field);
                 $shopClass = $this->makeMethods($fields, $shopClass, false, $has_shop_field);
                 $printer = new Printer;
@@ -2305,6 +2314,8 @@ class ModuleGenerator
             $printer->setTypeResolving(false);
             $code = $printer->printClass($class);
             file_put_contents($this->module_dir . '/src/Entity/' . $modelData['class'] . '.php', '<?php declare(strict_types=1);');
+            file_put_contents($this->module_dir . '/src/Entity/' . $modelData['class'] . '.php', PHP_EOL, FILE_APPEND);
+            file_put_contents($this->module_dir . '/src/Entity/' . $modelData['class'] . '.php', 'namespace '.$params['upper']['company_name'] . '\\' . 'Module' . '\\' . $params['upper']['module_name'] . '\\' . 'Entity;', FILE_APPEND);
             file_put_contents($this->module_dir . '/src/Entity/' . $modelData['class'] . '.php', PHP_EOL, FILE_APPEND);
             if (!empty($uses = $this->use[$modelData['class']])) {
                 foreach ($uses as $use) {
@@ -2350,13 +2361,14 @@ class ModuleGenerator
      */
     private function generateGridDefinition()
     {
-        $content = file_get_contents($this->base_dir . '/samples/src/Grid/Definition/Factory/SampleGridDefinitionFactory.php');
-        $content = str_replace('module_namespace', $this->params['upper']['company_name'] . '\\' . 'Module' . '\\' . $this->params['upper']['module_name'], $content);
-
         foreach ($this->module_data['models'] as $index => $modelData) {
             if (empty($modelData['class'])) {
                 continue;
             }
+            $content = file_get_contents($this->base_dir . '/samples/src/Grid/Definition/Factory/SampleGridDefinitionFactory.php');
+            $content = str_replace('module_namespace', $this->params['upper']['company_name'] . '\\' . 'Module' . '\\' . $this->params['upper']['module_name'], $content);
+
+            $content=str_replace('GRID_ID = \'quote\'','GRID_ID = \''.str_replace('id_', '', $modelData['primary']).'\'', $content);
             $columns = $this->makeColumns($modelData);
             $content = str_replace('/** replace with columns */', $columns, $content);
             $filters = $this->makeFilters($modelData);
@@ -2365,10 +2377,12 @@ class ModuleGenerator
             if (!empty($uses = $this->use[$modelData['class'] . 'GridDefinitionFactory'])) {
 
                 foreach ($uses as $use) {
-                    $useStatements = 'use ' . $use . ';' . PHP_EOL;
+                    $useStatements .= 'use ' . $use . ';' . PHP_EOL;
                 }
             }
+
             $content = str_replace('/** replace with uses */', $useStatements, $content);
+            $content=str_replace('id_quote', $modelData['primary'], $content);
             $content = str_replace(array('quote', 'Quote', 'SampleGridDefinitionFactory', 'Demodoctrine', 'ps_demodoctrine_quote'), array(strtolower($modelData['class']), $modelData['class'], $modelData['class'] . 'GridDefinitionFactory', $this->params['upper']['module_name'], $this->params['lower']['module_name'] . '_' . strtolower($modelData['class'])), $content);
             $this->createDir('Grid/Definition/Factory');
             $content = $this->replaceStandardStrings($content);
@@ -2509,6 +2523,7 @@ class ModuleGenerator
                 ->setAssociatedColumn(\'actions\')
             )
         ;' . PHP_EOL;
+        $this->use[$modelData['class'] . 'GridDefinitionFactory']['TextType'] = 'Symfony\Component\Form\Extension\Core\Type\TextType';
         return $filters;
     }
 
@@ -2520,6 +2535,7 @@ class ModuleGenerator
             if (empty($modelData['class'])) {
                 continue;
             }
+            $content=str_replace('id_quote', $modelData['primary'], $content);
             $content = str_replace(array('quote', 'Quote', 'SampleGridDefinitionFactory', 'Demodoctrine', 'ps_demodoctrine_quote'), array(strtolower($modelData['class']), $modelData['class'], $modelData['class'] . 'GridDefinitionFactory', $this->params['upper']['module_name'], $this->params['lower']['module_name'] . '_' . strtolower($modelData['class'])), $content);
             $this->createDir('Grid/Filters');
             file_put_contents($this->module_dir . '/src/Grid/Filters/' . $modelData['class'] . 'Filters.php', $content);
@@ -2535,6 +2551,7 @@ class ModuleGenerator
             if (empty($modelData['class'])) {
                 continue;
             }
+            $content=str_replace('id_quote', $modelData['primary'], $content);
             $content = str_replace(array('quote', 'Quote', 'SampleGridDefinitionFactory', 'Demodoctrine', 'ps_demodoctrine_quote'), array(strtolower($modelData['class']), $modelData['class'], $modelData['class'] . 'GridDefinitionFactory', $this->params['upper']['module_name'], $this->params['lower']['module_name'] . '_' . strtolower($modelData['class'])), $content);
             $langSelect = '';
             $select = '';
@@ -2554,7 +2571,7 @@ class ModuleGenerator
                         if ($field['is_lang'] == 1) {
                             $langSelect .= ", ql." . $field['field_name'];
                             if (!$firsPass) {
-                                $queryBuilder .= '            ->innerJoin(\'q\', $this->dbPrefix . ' . "'" . $modelData['table'] . "_lang'" . ', \'ql\', \'q.id_' . strtolower($modelData['class']) . ' = ql.id_' . strtolower($modelData['class']) . '\')
+                                $queryBuilder .= '            ->innerJoin(\'q\', $this->dbPrefix . ' . "'" . $modelData['table'] . "_lang'" . ', \'ql\', \'q.' . strtolower($modelData['primary']) . ' = ql.' . strtolower($modelData['primary']) . '\')
                                     ->andWhere(\'ql.`id_lang`= :language\')
                                     ->setParameter(\'language\', $this->languageId)';
                             }
@@ -2795,7 +2812,7 @@ class ModuleGenerator
             $namespace->addUse('Doctrine\ORM\EntityRepository');
             $namespace->addUse('Doctrine\ORM\QueryBuilder');
 
-            $class = $namespace->addClass($classModel . 'Repository')->addExtend('EntityRepository');
+            $class = $namespace->addClass($classModel . 'Repository')->addExtend(EntityRepository::class);
             $getRandom = $class->addMethod('getRandom');
             $getRandom->addParameter('langId')->setDefaultValue(0);
             $getRandom->addParameter('limit')->setDefaultValue(0);
