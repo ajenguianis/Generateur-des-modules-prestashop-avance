@@ -1074,7 +1074,7 @@ class ModuleGenerator
             file_put_contents($this->module_dir . '/views/PrestaShop/Products/extra_translatable_fields.html.twig', $contentForTranslatableTemplates);
         }
         if ($classModel == 'CartRule') {
-            $this->module_data['hooks'][strtolower($classModel)] = array_merge($this->module_data['hooks'][strtolower($classModel)], ['displayExtraFieldCarteRule', 'actionObjectUpdateAfter', 'actionObjectAddAfter']);
+            $this->module_data['hooks'][strtolower($classModel)] = array_merge($this->module_data['hooks'][strtolower($classModel)], ['displayExtraFieldCarteRule', 'actionObjectCartRuleUpdateAfter', 'actionObjectCartRuleAddAfter']);
             $this->module_data['use'][strtolower($classModel)][$this->params['upper']['company_name'] . '\\' . 'Module' . '\\' . $this->params['upper']['module_name'] . '\\' . 'Model' . '\\' . 'ExtraCartRuleFields'] = $this->params['upper']['company_name'] . '\\' . 'Module' . '\\' . $this->params['upper']['module_name'] . '\\' . 'Model' . '\\' . 'ExtraCartRuleFields';
             $contentForTemplate = "";
             foreach ($this->module_data['hooks'][strtolower($classModel)] as $hook) {
@@ -1095,10 +1095,13 @@ class ModuleGenerator
 
                     $this->module_data['hooksContents'][$hook] = $extra_content;
                 }
-                if (in_array($hook, ['actionObjectUpdateAfter', 'actionObjectAddAfter'])) {
-                    $extra_content = 'if( get_class($params["object"]) === \'CartRule\'' . PHP_EOL;
+                if (in_array($hook, ['actionObjectCartRuleUpdateAfter', 'actionObjectCartRuleAddAfter'])) {
+                    $extra_content = "";
                     foreach ($fields as $index => $item) {
-                        $extra_content .= chr(9).' && Tools::getIsset("' . $item['column_name'] . '")' . PHP_EOL;
+                        if($index === 1)
+                            $extra_content = 'if( Tools::getIsset("' . $item['column_name'] . '")' . PHP_EOL;
+                        else
+                            $extra_content .= chr(9).' && Tools::getIsset("' . $item['column_name'] . '")' . PHP_EOL;
                     }
                     $extra_content .= ') {' . PHP_EOL;
                     foreach ($fields as $index => $item) {
