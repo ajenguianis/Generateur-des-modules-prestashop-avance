@@ -1097,18 +1097,11 @@ class ModuleGenerator
                 }
                 if (in_array($hook, ['actionObjectCartRuleUpdateAfter', 'actionObjectCartRuleAddAfter'])) {
                     $extra_content = "";
+
                     foreach ($fields as $index => $item) {
-                        if($index === 1)
-                            $extra_content = 'if( Tools::getIsset("' . $item['column_name'] . '")' . PHP_EOL;
-                        else
-                            $extra_content .= chr(9).' && Tools::getIsset("' . $item['column_name'] . '")' . PHP_EOL;
+                        $extra_content .= '$form_data["' . $item['column_name'] . '"] = Tools::getValue("' . $item['column_name'] . '");' . PHP_EOL;
                     }
-                    $extra_content .= ') {' . PHP_EOL;
-                    foreach ($fields as $index => $item) {
-                        $extra_content .= chr(9).'$form_data["' . $item['column_name'] . '"] = Tools::getValue("' . $item['column_name'] . '");' . PHP_EOL;
-                    }
-                    $extra_content .= chr(9).'Extra' . $classModel . 'Fields::SetExtra' . $classModel . 'FieldsByCartRuleId((int)$params["object"]->id, $form_data);' . PHP_EOL;
-                    $extra_content .= '}' . PHP_EOL;
+                    $extra_content .= 'Extra' . $classModel . 'Fields::SetExtra' . $classModel . 'FieldsByCartRuleId((int)$params["object"]->id, $form_data);' . PHP_EOL;
 
                     $this->module_data['hooksContents'][$hook] = $extra_content;
                 }
