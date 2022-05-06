@@ -559,7 +559,7 @@ class ModuleGenerator
         $installContent[26] = $sql . $sql_lang . $sql_shop;
         file_put_contents($this->module_dir . DIRECTORY_SEPARATOR . 'sql/install.php', implode("", $installContent));
         file_put_contents($this->module_dir . DIRECTORY_SEPARATOR . 'sql/install.php', PHP_EOL, FILE_APPEND);
-        if ($modelObject === 'CartRule') {
+        if (isset($modelObject) && $modelObject === 'CartRule') {
             $content = '$orig =  _PS_BO_ALL_THEMES_DIR_.\'default/template/controllers/cart_rules/\';'.PHP_EOL;
             $content .= '$dest = _PS_ROOT_DIR_.\'/override/controllers/admin/templates/cart_rules/\';'.PHP_EOL;
             $content .= 'if(!is_dir($dest)){'.PHP_EOL;
