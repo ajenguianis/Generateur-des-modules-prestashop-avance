@@ -1088,14 +1088,17 @@ class ModuleGenerator
                         $contentForTemplate .= chr(9)."<div class=\"col-lg-8\">" . PHP_EOL;
                         if ($item['column_type'] === 'TINYINT' || $item['column_type'] === 'BOOLEAN') {
                             $contentForTemplate .= chr(9)."<span class=\"switch prestashop-switch fixed-width-lg\">" . PHP_EOL;
-                            $contentForTemplate .= chr(9).chr(9)."<input type=\"radio\" name=\"".$item['column_name']."\" id=\"".$item['column_name']."_on\" value=\"1\" checked=\"checked\">" . PHP_EOL;
+                            $contentForTemplate .= chr(9).chr(9)."<input type=\"radio\" name=\"".$item['column_name']."\" id=\"".$item['column_name']."_on\" value=\"1\"{if \$".$item['column_name']." == 1} checked=\"checked\"{/if}>" . PHP_EOL;
                             $contentForTemplate .= chr(9).chr(9)."<label class=\"t\" for=\"".$item['column_name']."_on\">{l s='Yes' mod='" . $this->params['lower']['module_name'] . "'}</label>" . PHP_EOL;
-                            $contentForTemplate .= chr(9).chr(9)."<input type=\"radio\" name=\"".$item['column_name']."\" id=\"".$item['column_name']."_off\" value=\"0\">" . PHP_EOL;
+                            $contentForTemplate .= chr(9).chr(9)."<input type=\"radio\" name=\"".$item['column_name']."\" id=\"".$item['column_name']."_off\" value=\"0\"{if \$".$item['column_name']." == 0} checked=\"checked\"{/if}>" . PHP_EOL;
                             $contentForTemplate .= chr(9).chr(9)."<label class=\"t\" for=\"".$item['column_name']."_off\">{l s='No' mod='" . $this->params['lower']['module_name'] . "'}</label>" . PHP_EOL;
                             $contentForTemplate .= chr(9).chr(9)."<a class=\"slide-button btn\"></a>" . PHP_EOL;
                             $contentForTemplate .= chr(9)."</span>" . PHP_EOL;
                         } elseif ($item['column_type'] === 'DATETIME' || $item['column_type'] === 'DATE') {
-                            $contentForTemplate .= chr(9).chr(9)."<input type=\"text\" name=\"".$item['column_name']."\" value=\"{\$".$item['column_name']."}\" class=\"datepicker input-medium\">" . PHP_EOL;
+                            $contentForTemplate .= chr(9).chr(9)."<div class=\"input-group\">" . PHP_EOL;
+                            $contentForTemplate .= chr(9).chr(9).chr(9)."<input type=\"text\" name=\"".$item['column_name']."\" value=\"{\$".$item['column_name']."}\" class=\"datepicker input-medium\">" . PHP_EOL;
+                            $contentForTemplate .= chr(9).chr(9).chr(9)."<span class=\"input-group-addon\"><i class=\"icon-calendar-empty\"></i></span>" . PHP_EOL;
+                            $contentForTemplate .= chr(9).chr(9)."</div>" . PHP_EOL;
                         } else {
                             $contentForTemplate .= chr(9).chr(9)."<input type=\"text\" name=\"".$item['column_name']."\" value=\"{\$".$item['column_name']."}\">" . PHP_EOL;
                         }
