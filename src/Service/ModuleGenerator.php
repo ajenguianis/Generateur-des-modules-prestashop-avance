@@ -1086,7 +1086,19 @@ class ModuleGenerator
                         $contentForTemplate .= "<div class=\"form-group\">" . PHP_EOL;
                         $contentForTemplate .= chr(9)."<label class=\"control-label col-lg-3\">{l s='" . $item['column_name'] . "' mod='" . $this->params['lower']['module_name'] . "'}</label>" . PHP_EOL;
                         $contentForTemplate .= chr(9)."<div class=\"col-lg-8\">" . PHP_EOL;
-                        $contentForTemplate .= chr(9).chr(9)."<input type=\"text\" name=\"".$item['column_name']."\" value=\"{\$".$item['column_name']."}\">" . PHP_EOL;
+                        if ($item['column_type'] === 'TINYINT' || $item['column_type'] === 'BOOLEAN') {
+                            $contentForTemplate .= chr(9)."<span class=\"switch prestashop-switch fixed-width-lg\">" . PHP_EOL;
+                            $contentForTemplate .= chr(9).chr(9)."<input type=\"radio\" name=\"".$item['column_name']."\" id=\"".$item['column_name']."_on\" value=\"1\" checked=\"checked\">" . PHP_EOL;
+                            $contentForTemplate .= chr(9).chr(9)."<label class=\"t\" for=\"".$item['column_name']."_on\">{l s='Yes' mod='" . $this->params['lower']['module_name'] . "'}</label>" . PHP_EOL;
+                            $contentForTemplate .= chr(9).chr(9)."<input type=\"radio\" name=\"".$item['column_name']."\" id=\"".$item['column_name']."_off\" value=\"0\">" . PHP_EOL;
+                            $contentForTemplate .= chr(9).chr(9)."<label class=\"t\" for=\"".$item['column_name']."_off\">{l s='No' mod='" . $this->params['lower']['module_name'] . "'}</label>" . PHP_EOL;
+                            $contentForTemplate .= chr(9).chr(9)."<a class=\"slide-button btn\"></a>" . PHP_EOL;
+                            $contentForTemplate .= chr(9)."</span>" . PHP_EOL;
+                        } elseif ($item['column_type'] === 'DATETIME' || $item['column_type'] === 'DATE') {
+                            $contentForTemplate .= chr(9).chr(9)."<input type=\"text\" name=\"".$item['column_name']."\" value=\"{\$".$item['column_name']."}\" class=\"datepicker input-medium\">" . PHP_EOL;
+                        } else {
+                            $contentForTemplate .= chr(9).chr(9)."<input type=\"text\" name=\"".$item['column_name']."\" value=\"{\$".$item['column_name']."}\">" . PHP_EOL;
+                        }
                         $contentForTemplate .= chr(9)."</div>" . PHP_EOL;
                         $contentForTemplate .= "</div>" . PHP_EOL;
                     }
@@ -1111,7 +1123,7 @@ class ModuleGenerator
         }
         if (in_array($classModel, ['Category', 'Customer', 'CmsPage', 'CmsPageCategory'])) {
             $this->module_data['hooks'][strtolower($classModel)] = array_merge($this->module_data['hooks'][strtolower($classModel)], ['action' . $classModel . 'FormBuilderModifier', 'actionAfterCreate' . $classModel . 'FormHandler', 'actionAfterUpdate' . $classModel . 'FormHandler']);
-            if ($classModel === 'Customer' && isset($_POST['show_front']) && $_POST['show_front']) {
+            if ($classModel === 'Customer') {
                 $this->module_data['hooks'][strtolower($classModel)] = array_merge($this->module_data['hooks'][strtolower($classModel)], ['additional' . $classModel . 'FormFields', 'validate' . $classModel . 'FormFields', 'action' . $classModel . 'AccountUpdate', 'action' . $classModel . 'AccountAdd']);
             }
             $gridDir = $this->module_dir . DIRECTORY_SEPARATOR . 'src' . DIRECTORY_SEPARATOR . 'Grid';
@@ -1248,7 +1260,7 @@ class ModuleGenerator
             $this->module_data['hooksContents']['actionAfterUpdate' . $classModel . 'FormHandler'] = $formHandlerContent;
             $this->module_data['use'][strtolower($classModel)] = array_merge($this->module_data['use'][strtolower($classModel)], $use);
 
-            if ($classModel === 'Customer' && isset($_POST['show_front']) && $_POST['show_front']) {
+            if ($classModel === 'Customer') {
                 $formFieldsContent = '$extra' . $classModel . 'Fields = Extra' . $classModel . 'Fields::getExtra' . $classModel . 'FieldsBy' . $classModel . 'Id(' . PHP_EOL;
                 $formFieldsContent .= chr(9).'(int)Context::getContext()->' . strtolower($classModel) . '->id' . PHP_EOL;
                 $formFieldsContent .= ');' . PHP_EOL;
@@ -1297,7 +1309,23 @@ class ModuleGenerator
 
                 $this->module_data['use'][strtolower($classModel)] = array_merge($this->module_data['use'][strtolower($classModel)], $use);
 
-                $accountSaveBody = '$id = (int)$params[\''. strtolower($classModel) .'\']->id;' . PHP_EOL;
+                $accountUpdateBody = 'if (!isset($params[\'customer\']) || !isset($params[\'customer\']->id)) {' . PHP_EOL;
+
+                $accountUpdateBody .= chr(9).'return;' . PHP_EOL;
+
+                $accountUpdateBody .= '}' . PHP_EOL;
+
+                $accountUpdateBody .= '$id = (int)$params[\'customer\']->id;' . PHP_EOL;
+
+                $accountAddBody = 'if (!isset($params[\'newCustomer\']) || !isset($params[\'newCustomer\']->id)) {' . PHP_EOL;
+
+                $accountAddBody .= chr(9).'return;' . PHP_EOL;
+
+                $accountAddBody .= '}' . PHP_EOL;
+
+                $accountAddBody .= '$id = (int)$params[\'newCustomer\']->id;' . PHP_EOL;
+
+                $accountSaveBody = "";
 
                 foreach ($fields as $index => $item) {
                     $accountSaveBody .= '$form_data[\''. $item['column_name'] .'\'] = Tools::getValue(\''. $item['column_name'] .'\');' . PHP_EOL;
@@ -1305,9 +1333,9 @@ class ModuleGenerator
 
                 $accountSaveBody .= 'Extra' . $classModel . 'Fields::SetExtra' . $classModel . 'FieldsBy' . $classModel . 'Id((int)$id, $form_data);' . PHP_EOL;
 
-                $this->module_data['hooksContents']['action' . $classModel . 'AccountUpdate'] = $accountSaveBody;
+                $this->module_data['hooksContents']['action' . $classModel . 'AccountUpdate'] = $accountUpdateBody.$accountSaveBody;
 
-                $this->module_data['hooksContents']['action' . $classModel . 'AccountAdd'] = $accountSaveBody;
+                $this->module_data['hooksContents']['action' . $classModel . 'AccountAdd'] = $accountAddBody.$accountSaveBody;
 
             }
         }
