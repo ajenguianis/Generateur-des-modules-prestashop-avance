@@ -3281,7 +3281,7 @@ class ModuleGenerator
         $body='     parent::__construct();
         Tools::redirectAdmin(Context::getContext()->link->getAdminLink(\''.str_replace('Admin', 'Admin'.$this->params['upper']['module_name'], $controllerName).'\'));'.PHP_EOL;
         $method->setBody($body);
-        $folder = $this->module_dir . '/controllers';
+        $folder = $this->module_dir . '/controllers/admin';
         if (!is_dir($folder) && !@mkdir($folder, 0777, true) && !is_dir($folder)) {
             throw new \RuntimeException(sprintf('Cannot create directory "%s"', $folder));
         }
