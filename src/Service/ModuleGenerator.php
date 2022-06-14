@@ -251,72 +251,72 @@ class ModuleGenerator
             }
             $content = str_replace("registerHook('backOfficeHeader')", "registerHook('backOfficeHeader')\n" . $register_hooks, $content);
         }
-            if (!empty($this->module_data['query']) && !empty($query = $this->module_data['query'])) {
-                foreach ($query as $ind => $qb) {
-                    $method = $class->addMethod('updateExtra' . $ind . 'Field');
-                    $method->addParameter(strtolower($ind) . 'Id');
-                    $qb = str_replace(array("/*", "*/", "/+"), array("", "", "$"), $qb);
-                    $method->setBody($qb);
-                }
+        if (!empty($this->module_data['query']) && !empty($query = $this->module_data['query'])) {
+            foreach ($query as $ind => $qb) {
+                $method = $class->addMethod('updateExtra' . $ind . 'Field');
+                $method->addParameter(strtolower($ind) . 'Id');
+                $qb = str_replace(array("/*", "*/", "/+"), array("", "", "$"), $qb);
+                $method->setBody($qb);
             }
-            if (!empty($this->module_data['presenter']['product']) && !empty($presenters = $this->module_data['presenter']['product'])) {
-                foreach ($presenters as $fn => $body) {
-                    $method = $class->addMethod($fn);
-                    $method->addParameter('value');
-                    $body = str_replace(array("/*", "*/", "/+"), array("", "", "$"), $body);
-                    $method->setBody($body);
-                }
+        }
+        if (!empty($this->module_data['presenter']['product']) && !empty($presenters = $this->module_data['presenter']['product'])) {
+            foreach ($presenters as $fn => $body) {
+                $method = $class->addMethod($fn);
+                $method->addParameter('value');
+                $body = str_replace(array("/*", "*/", "/+"), array("", "", "$"), $body);
+                $method->setBody($body);
             }
-            $installSql = '';
+        }
+        $installSql = '';
 
-            if (!empty($this->installSql)) {
-                foreach ($this->installSql as $sql) {
-                    $installSql .= PHP_EOL . $sql;
-                }
+        if (!empty($this->installSql)) {
+            foreach ($this->installSql as $sql) {
+                $installSql .= PHP_EOL . $sql;
             }
-            $executionLoop = 'foreach ($sql as $query) {
+        }
+        $executionLoop = 'foreach ($sql as $query) {
             if (Db::getInstance()->execute($query) == false) {
                     return false;
                 }
             }';
-            if (!empty($installSql)) {
-                $installContent = file($this->base_dir . DIRECTORY_SEPARATOR . 'samples' . DIRECTORY_SEPARATOR . 'install_vg.php');
-                $installContent[26] = $installSql;
-                file_put_contents($this->module_dir . DIRECTORY_SEPARATOR . 'sql/install.php', implode("", $installContent));
-                file_put_contents($this->module_dir . DIRECTORY_SEPARATOR . 'sql/install.php', PHP_EOL, FILE_APPEND);
-                file_put_contents($this->module_dir . DIRECTORY_SEPARATOR . 'sql/install.php', $executionLoop, FILE_APPEND);
+        if (!empty($installSql)) {
+            $installContent = file($this->base_dir . DIRECTORY_SEPARATOR . 'samples' . DIRECTORY_SEPARATOR . 'install_vg.php');
+            $installContent[26] = $installSql;
+            file_put_contents($this->module_dir . DIRECTORY_SEPARATOR . 'sql/install.php', implode("", $installContent));
+            file_put_contents($this->module_dir . DIRECTORY_SEPARATOR . 'sql/install.php', PHP_EOL, FILE_APPEND);
+            file_put_contents($this->module_dir . DIRECTORY_SEPARATOR . 'sql/install.php', $executionLoop, FILE_APPEND);
+        }
+        $unInstallSql = '';
+        if (!empty($this->installSql)) {
+            foreach ($this->unInstallSql as $sql) {
+                $unInstallSql .= PHP_EOL . $sql;
             }
-            $unInstallSql = '';
-            if (!empty($this->installSql)) {
-                foreach ($this->unInstallSql as $sql) {
-                    $unInstallSql .= PHP_EOL . $sql;
-                }
-            }
-            if (!empty($unInstallSql)) {
-                //uninstall
-                $uninstallContent = file($this->base_dir . DIRECTORY_SEPARATOR . 'samples' . DIRECTORY_SEPARATOR . 'install_vg.php');
-                $uninstallContent[26] = $unInstallSql;
-                file_put_contents($this->module_dir . DIRECTORY_SEPARATOR . 'sql/uninstall.php', implode("", $uninstallContent));
-                file_put_contents($this->module_dir . DIRECTORY_SEPARATOR . 'sql/uninstall.php', PHP_EOL, FILE_APPEND);
-                file_put_contents($this->module_dir . DIRECTORY_SEPARATOR . 'sql/uninstall.php', $executionLoop, FILE_APPEND);
-            }
+        }
+        if (!empty($unInstallSql)) {
+            //uninstall
+            $uninstallContent = file($this->base_dir . DIRECTORY_SEPARATOR . 'samples' . DIRECTORY_SEPARATOR . 'install_vg.php');
+            $uninstallContent[26] = $unInstallSql;
+            file_put_contents($this->module_dir . DIRECTORY_SEPARATOR . 'sql/uninstall.php', implode("", $uninstallContent));
+            file_put_contents($this->module_dir . DIRECTORY_SEPARATOR . 'sql/uninstall.php', PHP_EOL, FILE_APPEND);
+            file_put_contents($this->module_dir . DIRECTORY_SEPARATOR . 'sql/uninstall.php', $executionLoop, FILE_APPEND);
+        }
 
 
-            $content = str_replace("method", '$this', $content);
+        $content = str_replace("method", '$this', $content);
 
-            file_put_contents($this->module_dir . DIRECTORY_SEPARATOR . $this->module_data['module_name'] . '.php', $content);
+        file_put_contents($this->module_dir . DIRECTORY_SEPARATOR . $this->module_data['module_name'] . '.php', $content);
 
-            $printer = new Printer;
-            $code = $printer->printClass($class);
+        $printer = new Printer;
+        $code = $printer->printClass($class);
 
-            $arr = explode("\n", $code);
-            unset($arr[0], $arr[1]);
-            $code = implode("\n", $arr);
-            $lines = file($this->module_dir . '/' . $this->module_data['module_name'] . '.php');
-            array_pop($lines);
+        $arr = explode("\n", $code);
+        unset($arr[0], $arr[1]);
+        $code = implode("\n", $arr);
+        $lines = file($this->module_dir . '/' . $this->module_data['module_name'] . '.php');
+        array_pop($lines);
 
-            file_put_contents($this->module_dir . '/' . $this->module_data['module_name'] . '.php', implode('', $lines));
-            file_put_contents($this->module_dir . '/' . $this->module_data['module_name'] . '.php', $code, FILE_APPEND);
+        file_put_contents($this->module_dir . '/' . $this->module_data['module_name'] . '.php', implode('', $lines));
+        file_put_contents($this->module_dir . '/' . $this->module_data['module_name'] . '.php', $code, FILE_APPEND);
 
 
         if (!empty($this->module_data['use']) && !empty($query = $this->module_data['use'])) {
@@ -332,19 +332,19 @@ class ModuleGenerator
             $content = str_replace('/** add uses */', $useContent, $content);
             file_put_contents($this->module_dir . '/' . $this->module_data['module_name'] . '.php', $content);
         }
-        if(!empty($this->tabs)){
-            foreach ($this->tabs as $key=>$tab){
-                if($key==='getContent'){
+        if (!empty($this->tabs)) {
+            foreach ($this->tabs as $key => $tab) {
+                if ($key === 'getContent') {
                     $content = file_get_contents($this->module_dir . '/' . $this->module_data['module_name'] . '.php');
                     $content = str_replace('/** getContent */', $tab, $content);
                     file_put_contents($this->module_dir . '/' . $this->module_data['module_name'] . '.php', $content);
                 }
-                if($key==='const'){
+                if ($key === 'const') {
                     $content = file_get_contents($this->module_dir . '/' . $this->module_data['module_name'] . '.php');
                     $content = str_replace('/** consts */', $tab, $content);
                     file_put_contents($this->module_dir . '/' . $this->module_data['module_name'] . '.php', $content);
                 }
-                if($key==='tabs'){
+                if ($key === 'tabs') {
                     $content = file_get_contents($this->module_dir . '/' . $this->module_data['module_name'] . '.php');
                     $content = str_replace('/** getModuleTabs */', $tab, $content);
                     $content = str_replace('parent::install() &&', 'parent::install() && $this->installTabs($this) &&', $content);
@@ -1860,6 +1860,17 @@ class ModuleGenerator
                 $langField = $class->addProperty(strtolower($class->getName()) . 'Langs')->setPrivate();
                 $langField->addComment('one to many relation');
                 $langField->addComment('@ORM\OneToMany(targetEntity="' . $class->getNamespace()->getName() . '\\' . $class->getName() . 'Lang", cascade={"persist", "remove"}, mappedBy="' . strtolower($class->getName()) . '")');
+                $method = $class->addMethod('get' . ucfirst($class->getName()) . ucfirst($field['field_name']));
+                $body = '
+                        if ($this->' . strtolower($class->getName()) . 'Langs->count() <= 0) {
+            return \'\';
+        }
+
+        $' . strtolower($class->getName()) . 'Lang = $this->' . strtolower($class->getName()) . 'Langs->first();
+
+        return $' . strtolower($class->getName()) . 'Lang->get' . ucfirst($field['field_name']) . '();
+                ';
+                $method->addBody($body);
                 return $class;
             }
             if ($field['is_shop'] === '1') {
@@ -1908,6 +1919,28 @@ class ModuleGenerator
      */
     private function makeMethods($fields, ClassType $class, $is_lang_entity = false, $is_shop_entity = false)
     {
+        if (!$is_lang_entity) {
+            $method = $class->addMethod('add' . ucfirst($class->getName()) . 'Lang');
+            $method->addParameter(strtolower($class->getName()) . 'Lang')->setType(ucfirst($class->getName()).'Lang');
+            $body = '
+                $' . strtolower($class->getName()) . 'Lang->set' . ucfirst($class->getName()) . '($this);
+        $this->' . strtolower($class->getName()) . 'Langs->add($' . strtolower($class->getName()) . 'Lang);
+
+        return $this;
+        ';
+            $method->addBody($body);
+            $method = $class->addMethod('get' . ucfirst($class->getName()) . 'LangByLangId');
+            $method->addParameter('langId')->setType('int');
+            $body = '        foreach ($this->'.strtolower($class->getName()).'Langs as $'.strtolower($class->getName()).'Lang) {
+            if ($langId === $'.strtolower($class->getName()).'Lang->getLang()->getId()) {
+                return $'.strtolower($class->getName()).'Lang;
+            }
+        }
+
+        return null;'.PHP_EOL;
+            $method->addBody($body);
+        }
+
         if (!empty($fields)) {
             foreach ($fields as $field) {
                 $class = $this->addFieldWithGetterAndSetter($field, $class, 'GetterAndSetter', $is_lang_entity, $is_shop_entity);
@@ -1980,22 +2013,27 @@ class ModuleGenerator
         } else {
             $nullableCondition = '';
         }
+        $is_relation=false;
         if (!empty($field['is_auto_increment'])) {
             if ($skipForLang) {
                 $this->use[$class->getName()][] = 'PrestaShopBundle\Entity\Lang';
                 $property = $class->addProperty(str_replace('lang', '', strtolower($class->getName())))->setPrivate();
+                $property->addComment('@ORM\Id');
                 $property->addComment('@ORM\ManyToOne(targetEntity="' . $class->getNamespace()->getName() . '\\' . str_replace('Lang', '', $class->getName()) . '", inversedBy="' . lcfirst($class->getName()) . 's")');
                 $property->addComment('@ORM\JoinColumn(name="' . $field['field_name'] . '", referencedColumnName="' . $field['field_name'] . '", nullable=false)');
+                $is_relation=true;
             } elseif ($skipForShop) {
                 $this->use[$class->getName()][] = 'PrestaShopBundle\Entity\Shop';
                 $property = $class->addProperty(str_replace('shop', '', strtolower($class->getName())))->setPrivate();
+                $property->addComment('@ORM\Id');
                 $property->addComment('@ORM\ManyToOne(targetEntity="' . $class->getNamespace()->getName() . '\\' . str_replace('Shop', '', $class->getName()) . '", inversedBy="' . lcfirst($class->getName()) . 's")');
                 $property->addComment('@ORM\JoinColumn(name="' . $field['field_name'] . '", referencedColumnName="' . $field['field_name'] . '", nullable=false)');
+                $is_relation=true;
             } else {
                 $property = $class->addProperty('id')->setPrivate();
                 $property->addComment('@ORM\GeneratedValue(strategy="AUTO")');
                 $property->addComment('@ORM\Id');
-                if($field['field_name']!=='id'){
+                if ($field['field_name'] !== 'id') {
                     $property->addComment('@ORM\Column(name="' . $field['field_name'] . '", type="integer"' . $nullableCondition . ')');
                 }
             }
@@ -2005,41 +2043,45 @@ class ModuleGenerator
                 $property->addComment('@var Lang');
                 $property->addComment('@ORM\ManyToOne(targetEntity="PrestaShopBundle\Entity\Lang")');
                 $property->addComment('@ORM\JoinColumn(name="id_lang", referencedColumnName="id_lang", nullable=false, onDelete="CASCADE")');
+                $is_relation=true;
             } elseif ($field['field_name'] == 'id_shop') {
                 $property = $class->addProperty('shop')->setPrivate();
                 $property->addComment('@var Shop');
                 $property->addComment('@ORM\ManyToOne(targetEntity="PrestaShopBundle\Entity\Shop")');
                 $property->addComment('@ORM\JoinColumn(name="id_shop", referencedColumnName="id_shop", nullable=false, onDelete="CASCADE")');
+                $is_relation=true;
             } else {
                 $property = $class->addProperty($name)->setPrivate();
             }
 
         }
+        if(!$is_relation){
+            if (($field['field_type'] === 'INT' || $field['field_type'] === 'UnsignedInt') && empty($field['is_auto_increment'])) {
+                $property->addComment('@var int');
+                $property->addComment('@ORM\Column(name="' . $field['field_name'] . '", type="integer"' . $nullableCondition . ')');
 
-        if (($field['field_type'] === 'INT' || $field['field_type'] === 'UnsignedInt') && empty($field['is_auto_increment'])) {
-            $property->addComment('@var int');
-            $property->addComment('@ORM\Column(name="' . $field['field_name'] . '", type="integer"' . $nullableCondition . ')');
+            }
+            if ($field['field_type'] === 'TEXT' || $field['field_type'] === 'LONGTEXT') {
+                $property->addComment('@var string');
+                $property->addComment('@ORM\Column(name="' . $field['field_name'] . '", type="text", length=1000' . $nullableCondition . ')');
+            }
+            if (($field['field_type'] === 'EMAIL' || $field['field_type'] === 'VARCHAR' || $field['field_type'] === 'HTML' || $field['field_type'] === 'PERCENT')) {
 
+                $property->addComment('@var string');
+                $property->addComment('@ORM\Column(name="' . $field['field_name'] . '", type="text", length=255' . $nullableCondition . ')');
+            }
+            if (($field['field_type'] === 'TINYINT' || $field['field_type'] === 'BOOLEAN')) {
+                $property->addComment('@ORM\Column(name="' . $field['field_name'] . '", type="boolean")')->setValue(false);
+            }
+            if (($field['field_type'] === 'DECIMAL' || $field['field_type'] === 'FLOAT')) {
+                $property->addComment('@ORM\Column(name="' . $field['field_name'] . '",type="decimal", scale=6' . $nullableCondition . ')');
+            }
+            if (($field['field_type'] === 'DATE' || $field['field_type'] === 'DATETIME')) {
+                $property->addComment('@var DateTime');
+                $property->addComment('@ORM\Column(name="' . $field['field_name'] . '", type="datetime", scale=6' . $nullableCondition . ')');
+            }
         }
-        if ($field['field_type'] === 'TEXT' || $field['field_type'] === 'LONGTEXT') {
-            $property->addComment('@var string');
-            $property->addComment('@ORM\Column(name="' . $field['field_name'] . '", type="text", length=1000' . $nullableCondition . ')');
-        }
-        if (($field['field_type'] === 'EMAIL' || $field['field_type'] === 'VARCHAR' || $field['field_type'] === 'HTML' || $field['field_type'] === 'PERCENT')) {
 
-            $property->addComment('@var string');
-            $property->addComment('@ORM\Column(name="' . $field['field_name'] . '", type="text", length=255' . $nullableCondition . ')');
-        }
-        if (($field['field_type'] === 'TINYINT' || $field['field_type'] === 'BOOLEAN')) {
-            $property->addComment('@ORM\Column(name="' . $field['field_name'] . '", type="boolean")')->setValue(false);
-        }
-        if (($field['field_type'] === 'DECIMAL' || $field['field_type'] === 'FLOAT')) {
-            $property->addComment('@ORM\Column(name="' . $field['field_name'] . '",type="decimal", scale=6' . $nullableCondition . ')');
-        }
-        if (($field['field_type'] === 'DATE' || $field['field_type'] === 'DATETIME')) {
-            $property->addComment('@var DateTime');
-            $property->addComment('@ORM\Column(name="' . $field['field_name'] . '", type="datetime", scale=6' . $nullableCondition . ')');
-        }
         return $class;
     }
 
@@ -2279,7 +2321,7 @@ class ModuleGenerator
                 $code = $printer->printClass($langClass);
                 file_put_contents($this->module_dir . '/src/Entity/' . $modelData['class'] . 'Lang.php', '<?php declare(strict_types=1);');
                 file_put_contents($this->module_dir . '/src/Entity/' . $modelData['class'] . 'Lang.php', PHP_EOL, FILE_APPEND);
-                file_put_contents($this->module_dir . '/src/Entity/' . $modelData['class'] . 'Lang.php', 'namespace '.$params['upper']['company_name'] . '\\' . 'Module' . '\\' . $params['upper']['module_name'] . '\\' . 'Entity;' , FILE_APPEND);
+                file_put_contents($this->module_dir . '/src/Entity/' . $modelData['class'] . 'Lang.php', 'namespace ' . $params['upper']['company_name'] . '\\' . 'Module' . '\\' . $params['upper']['module_name'] . '\\' . 'Entity;', FILE_APPEND);
                 file_put_contents($this->module_dir . '/src/Entity/' . $modelData['class'] . 'Lang.php', PHP_EOL, FILE_APPEND);
                 if (!empty($uses = $this->use[$modelData['class'] . 'Lang'])) {
                     foreach ($uses as $use) {
@@ -2288,8 +2330,8 @@ class ModuleGenerator
                 }
                 file_put_contents($this->module_dir . '/src/Entity/' . $modelData['class'] . 'Lang.php', PHP_EOL, FILE_APPEND);
                 file_put_contents($this->module_dir . '/src/Entity/' . $modelData['class'] . 'Lang.php', $code, FILE_APPEND);
-                $method1=$class->addMethod('get'.$modelData['class'].'Langs')->setComment('@return ArrayCollection');
-                $method1->setBody('return $this->'.strtolower($modelData['class']).'Langs;');
+                $method1 = $class->addMethod('get' . $modelData['class'] . 'Langs')->setComment('@return ArrayCollection');
+                $method1->setBody('return $this->' . strtolower($modelData['class']) . 'Langs;');
             }
             if (!empty($has_shop_field)) {
                 $shopClass = $this->makeEntity($modelData['class'] . 'Shop', $modelData, false, true);
@@ -2315,7 +2357,7 @@ class ModuleGenerator
             $code = $printer->printClass($class);
             file_put_contents($this->module_dir . '/src/Entity/' . $modelData['class'] . '.php', '<?php declare(strict_types=1);');
             file_put_contents($this->module_dir . '/src/Entity/' . $modelData['class'] . '.php', PHP_EOL, FILE_APPEND);
-            file_put_contents($this->module_dir . '/src/Entity/' . $modelData['class'] . '.php', 'namespace '.$params['upper']['company_name'] . '\\' . 'Module' . '\\' . $params['upper']['module_name'] . '\\' . 'Entity;', FILE_APPEND);
+            file_put_contents($this->module_dir . '/src/Entity/' . $modelData['class'] . '.php', 'namespace ' . $params['upper']['company_name'] . '\\' . 'Module' . '\\' . $params['upper']['module_name'] . '\\' . 'Entity;', FILE_APPEND);
             file_put_contents($this->module_dir . '/src/Entity/' . $modelData['class'] . '.php', PHP_EOL, FILE_APPEND);
             if (!empty($uses = $this->use[$modelData['class']])) {
                 foreach ($uses as $use) {
@@ -2368,7 +2410,7 @@ class ModuleGenerator
             $content = file_get_contents($this->base_dir . '/samples/src/Grid/Definition/Factory/SampleGridDefinitionFactory.php');
             $content = str_replace('module_namespace', $this->params['upper']['company_name'] . '\\' . 'Module' . '\\' . $this->params['upper']['module_name'], $content);
 
-            $content=str_replace('GRID_ID = \'quote\'','GRID_ID = \''.str_replace('id_', '', $modelData['primary']).'\'', $content);
+            $content = str_replace('GRID_ID = \'quote\'', 'GRID_ID = \'' . str_replace('id_', '', $modelData['primary']) . '\'', $content);
             $columns = $this->makeColumns($modelData);
             $content = str_replace('/** replace with columns */', $columns, $content);
             $filters = $this->makeFilters($modelData);
@@ -2382,7 +2424,7 @@ class ModuleGenerator
             }
 
             $content = str_replace('/** replace with uses */', $useStatements, $content);
-            $content=str_replace('id_quote', $modelData['primary'], $content);
+            $content = str_replace('id_quote', $modelData['primary'], $content);
             $content = str_replace(array('quote', 'Quote', 'SampleGridDefinitionFactory', 'Demodoctrine', 'ps_demodoctrine_quote'), array(strtolower($modelData['class']), $modelData['class'], $modelData['class'] . 'GridDefinitionFactory', $this->params['upper']['module_name'], $this->params['lower']['module_name'] . '_' . strtolower($modelData['class'])), $content);
             $this->createDir('Grid/Definition/Factory');
             $content = $this->replaceStandardStrings($content);
@@ -2535,7 +2577,7 @@ class ModuleGenerator
             if (empty($modelData['class'])) {
                 continue;
             }
-            $content=str_replace('id_quote', $modelData['primary'], $content);
+            $content = str_replace('id_quote', $modelData['primary'], $content);
             $content = str_replace(array('quote', 'Quote', 'SampleGridDefinitionFactory', 'Demodoctrine', 'ps_demodoctrine_quote'), array(strtolower($modelData['class']), $modelData['class'], $modelData['class'] . 'GridDefinitionFactory', $this->params['upper']['module_name'], $this->params['lower']['module_name'] . '_' . strtolower($modelData['class'])), $content);
             $this->createDir('Grid/Filters');
             file_put_contents($this->module_dir . '/src/Grid/Filters/' . $modelData['class'] . 'Filters.php', $content);
@@ -2551,7 +2593,7 @@ class ModuleGenerator
             if (empty($modelData['class'])) {
                 continue;
             }
-            $content=str_replace('id_quote', $modelData['primary'], $content);
+            $content = str_replace('id_quote', $modelData['primary'], $content);
             $content = str_replace(array('quote', 'Quote', 'SampleGridDefinitionFactory', 'Demodoctrine', 'ps_demodoctrine_quote'), array(strtolower($modelData['class']), $modelData['class'], $modelData['class'] . 'GridDefinitionFactory', $this->params['upper']['module_name'], $this->params['lower']['module_name'] . '_' . strtolower($modelData['class'])), $content);
             $langSelect = '';
             $select = '';
@@ -2710,6 +2752,7 @@ class ModuleGenerator
             $namespace->addUse('Doctrine\ORM\EntityManagerInterface');
             $namespace->addUse('PrestaShop\PrestaShop\Core\Form\IdentifiableObject\DataHandler\FormDataHandlerInterface');
             $namespace->addUse($this->params['upper']['company_name'] . '\\' . 'Module' . '\\' . $this->params['upper']['module_name'] . '\\' . 'Entity' . '\\' . $classModel);
+            $namespace->addUse($this->params['upper']['company_name'] . '\\' . 'Module' . '\\' . $this->params['upper']['module_name'] . '\\' . 'Entity' . '\\' . $classModel.'Lang');
             $namespace->addUse($this->params['upper']['company_name'] . '\\' . 'Module' . '\\' . $this->params['upper']['module_name'] . '\\' . 'Repository' . '\\' . $classModel . 'Repository');
             $namespace->addUse('PrestaShopBundle\Entity\Repository\LangRepository');
 
@@ -2729,9 +2772,33 @@ class ModuleGenerator
             $create->addParameter('data')->setType('array');
             $create->addComment('@inheritdoc');
             $createBody = '        $' . strtolower($classModel) . '=new ' . $classModel . '();' . PHP_EOL;
+
             if (!empty($this->setters)) {
                 foreach ($this->setters as $fieldName => $setterMethod) {
-                    $createBody .= '$' . strtolower($classModel) . '->' . $setterMethod . '($data["' . $fieldName . '"]);' . PHP_EOL;
+                    if($fieldName==='id_log_status') {
+                        continue;
+                    }
+
+                    foreach ($fields as $field) {
+                        if ($fieldName !== $field['field_name']) {
+                            continue;
+                        }
+                        if ($fieldName === $field['field_name'] && (int)$field['is_lang'] === 1) {
+                            $createBody .= '        foreach ($data[\''.$fieldName.'\'] as $langId => $lang'.ucfirst($fieldName).') {
+            $lang = $this->langRepository->findOneById($langId);
+            $'.strtolower($classModel).'Lang = new '.ucfirst($classModel).'Lang();
+            $'.strtolower($classModel).'Lang
+                ->setLang($lang)
+                ->set'.ucfirst($fieldName).'($lang'.ucfirst($fieldName).')
+            ;
+            $'.strtolower($classModel).'->add'.ucfirst($classModel).'Lang($'.strtolower($classModel).'Lang);
+        }' . PHP_EOL;
+
+                        } else {
+                            $createBody .= '$' . strtolower($classModel) . '->' . $setterMethod . '($data["' . $fieldName . '"]);' . PHP_EOL;
+                        }
+                    }
+
                 }
                 $createBody .= '$this->entityManager->persist($' . strtolower($classModel) . ');' . PHP_EOL;
                 $createBody .= '$this->entityManager->flush();' . PHP_EOL;
@@ -2745,7 +2812,29 @@ class ModuleGenerator
             $updateBody = '        $' . strtolower($classModel) . '=$this->' . strtolower($classModel) . 'Repository->find($id);' . PHP_EOL;
             if (!empty($this->setters)) {
                 foreach ($this->setters as $fieldName => $setterMethod) {
-                    $updateBody .= '$' . strtolower($classModel) . '->' . $setterMethod . '($data["' . $fieldName . '"]);' . PHP_EOL;
+                    if($fieldName==='id_log_status') {
+                        continue;
+                    }
+
+                    foreach ($fields as $field) {
+                        if ($fieldName !== $field['field_name']) {
+                            continue;
+                        }
+                        if ($fieldName === $field['field_name'] && (int)$field['is_lang'] === 1) {
+
+                            $updateBody .= '        foreach ($data[\''.$fieldName.'\'] as $langId => $content) {
+            $'.strtolower($classModel).'Lang = $'.strtolower($classModel).'->get'.ucfirst($classModel).'LangByLangId($langId);
+            if (null === $'.strtolower($classModel).'Lang) {
+                continue;
+            }
+            $'.strtolower($classModel).'Lang->set'.ucfirst($fieldName).'($content);
+        }' . PHP_EOL;
+
+                        } else {
+                            $updateBody .= '$' . strtolower($classModel) . '->' . $setterMethod . '($data["' . $fieldName . '"]);' . PHP_EOL;
+                        }
+                    }
+
                 }
                 $updateBody .= '$this->entityManager->persist($' . strtolower($classModel) . ');' . PHP_EOL;
                 $updateBody .= '$this->entityManager->flush();' . PHP_EOL;
@@ -2772,32 +2861,70 @@ class ModuleGenerator
             $getData->addParameter(strtolower($classModel) . 'Id');
             $getData->addComment('@inheritdoc');
             $getDataBody = '        $' . strtolower($classModel) . '=$this->' . strtolower($classModel) . 'Repository->find($' . strtolower($classModel) . 'Id)' . ';' . PHP_EOL;
+
             if (!empty($this->getters)) {
-                $getDataBody .= 'return [' . PHP_EOL;
+                $getDataBody .= '$' . strtolower($classModel) . 'Data = [' . PHP_EOL;
                 foreach ($this->getters as $fieldName => $getterMethod) {
-                    $getDataBody .= "'" . $fieldName . "'=>$" . strtolower($classModel) . "->" . $getterMethod . "()," . PHP_EOL;
+                    foreach ($fields as $field) {
+                        if ($field['field_name'] !== $fieldName) {
+                            continue;
+                        }
+                        if ($field['field_name'] === $fieldName && $field['is_lang'] != 1) {
+                            $getDataBody .= "'" . $fieldName . "'=>$" . strtolower($classModel) . "->" . $getterMethod . "()," . PHP_EOL;
+                        }
+                    }
+
                 }
                 $getDataBody .= '];' . PHP_EOL;
-            }
-            $getData->setBody($getDataBody);
-            $getDefaultData = $class->addMethod('getDefaultData');
-            $getDefaultData->addComment('@inheritdoc');
-            $getDefaultDataBody = '        ' . PHP_EOL;
-            if (!empty($this->getters)) {
-                $getDefaultDataBody .= 'return [' . PHP_EOL;
                 foreach ($this->getters as $fieldName => $getterMethod) {
-                    $getDefaultDataBody .= "'" . $fieldName . "'=>''," . PHP_EOL;
-                }
-                $getDefaultDataBody .= '];' . PHP_EOL;
-            }
-            $getDefaultData->setBody($getDefaultDataBody);
-            $code = $printer->printNamespace($namespace);
-            $this->createDir('Form');
-            file_put_contents($this->module_dir . '/src/Form/' . $classModel . 'FormDataProvider.php', '<?php declare(strict_types=1);');
-            file_put_contents($this->module_dir . '/src/Form/' . $classModel . 'FormDataProvider.php', PHP_EOL, FILE_APPEND);
-            file_put_contents($this->module_dir . '/src/Form/' . $classModel . 'FormDataProvider.php', $code, FILE_APPEND);
-            return true;
+                    foreach ($fields as $field) {
+                        if ($field['field_name'] !== $fieldName) {
+                            continue;
+                        }
+                        if ($field['field_name'] === $fieldName && $field['is_lang'] == 1) {
+                            $getDataBody .= 'foreach ($' . strtolower($classModel) . '->get' . ucfirst($classModel) . 'Langs() as $' . strtolower($classModel) . 'Lang) {
+                                $' . strtolower($classModel) . 'Data[\'' . $fieldName . '\'][$' . strtolower($classModel) . 'Lang->getLang()->getId()] = $' . strtolower($classModel) . 'Lang->get' . ucfirst($fieldName) . '();
+                            }' . PHP_EOL;
 
+                        }
+
+                    }
+                }
+                $getDataBody .= 'return $' . strtolower($classModel) . 'Data;'.PHP_EOL;
+                $getData->setBody($getDataBody);
+                $getDefaultData = $class->addMethod('getDefaultData');
+                $getDefaultData->addComment('@inheritdoc');
+                $getDefaultDataBody = '        ' . PHP_EOL;
+                if (!empty($this->getters)) {
+                    $getDefaultDataBody .= 'return [' . PHP_EOL;
+                    foreach ($this->getters as $fieldName => $getterMethod) {
+                        if($fieldName==='id_lang'){
+                            continue;
+                        }
+                        foreach ($fields as $field) {
+                            if ($field['field_name'] !== $fieldName) {
+                                continue;
+                            }
+                            if ($field['field_name'] === $fieldName && $field['is_lang'] == 1) {
+                                $getDefaultDataBody .= "'" . $fieldName . "'=>[]," . PHP_EOL;
+
+                            }else{
+                                $getDefaultDataBody .= "'" . $fieldName . "'=>''," . PHP_EOL;
+                            }
+
+                        }
+                    }
+                    $getDefaultDataBody .= '];' . PHP_EOL;
+                }
+                $getDefaultData->setBody($getDefaultDataBody);
+                $code = $printer->printNamespace($namespace);
+                $this->createDir('Form');
+                file_put_contents($this->module_dir . '/src/Form/' . $classModel . 'FormDataProvider.php', '<?php declare(strict_types=1);');
+                file_put_contents($this->module_dir . '/src/Form/' . $classModel . 'FormDataProvider.php', PHP_EOL, FILE_APPEND);
+                file_put_contents($this->module_dir . '/src/Form/' . $classModel . 'FormDataProvider.php', $code, FILE_APPEND);
+                return true;
+
+            }
         }
     }
 
@@ -2908,9 +3035,9 @@ class ModuleGenerator
                 continue;
             }
             $content = file_get_contents($this->base_dir . '/samples/gridController.php');
-            if(!empty($this->langFields)){
+            if (!empty($this->langFields)) {
                 $content = str_replace('/*use PrestaShop\Module\DemoDoctrine\Entity\QuoteLang;*/', 'use PrestaShop\Module\DemoDoctrine\Entity\QuoteLang;', $content);
-            }else{
+            } else {
                 $content = str_replace('/*use PrestaShop\Module\DemoDoctrine\Entity\QuoteLang;*/', '', $content);
             }
             $content = $this->replaceStandardStrings($content);
@@ -2959,7 +3086,7 @@ class ModuleGenerator
             }
             foreach ($finder as $file) {
                 $path = str_replace($this->base_dir . DIRECTORY_SEPARATOR . 'samples', '', $file->getRealPath());
-                $path = str_replace('quotes', strtolower($classModel).'s', $path);
+                $path = str_replace('quotes', strtolower($classModel) . 's', $path);
                 $path = str_replace('.webpack', 'webpack', $path);
                 $fileSystem->copy($file->getRealPath(), $this->module_dir . $path);
                 $content = file_get_contents($this->module_dir . $path);
@@ -2972,6 +3099,7 @@ class ModuleGenerator
 
         return true;
     }
+
     private function generateCompiledJs()
     {
         $fileSystem = new Filesystem();
@@ -2983,7 +3111,7 @@ class ModuleGenerator
             }
             foreach ($finder as $file) {
                 $path = str_replace($this->base_dir . DIRECTORY_SEPARATOR . 'samples', '', $file->getRealPath());
-                $path = str_replace('quotes', strtolower($classModel).'s', $path);
+                $path = str_replace('quotes', strtolower($classModel) . 's', $path);
                 $path = str_replace('.webpack', 'webpack', $path);
                 $path = str_replace('src\gridJs', 'views\js', $path);
 
@@ -2997,6 +3125,7 @@ class ModuleGenerator
         }
         return true;
     }
+
     private function generateCompiledCss()
     {
         $fileSystem = new Filesystem();
@@ -3008,7 +3137,7 @@ class ModuleGenerator
             }
             foreach ($finder as $file) {
                 $path = str_replace($this->base_dir . DIRECTORY_SEPARATOR . 'samples', '', $file->getRealPath());
-                $path = str_replace('quotes', strtolower($classModel).'s', $path);
+                $path = str_replace('quotes', strtolower($classModel) . 's', $path);
                 $path = str_replace('.webpack', 'webpack', $path);
                 $path = str_replace('src\gridCss', 'views\css', $path);
                 $fileSystem->copy($file->getRealPath(), $this->module_dir . $path);
@@ -3024,8 +3153,8 @@ class ModuleGenerator
 
     private function setGridTab()
     {
-        $const='';
-        $tabs="    /**
+        $const = '';
+        $tabs = "    /**
      * Returns module tabs data
      *
      * @param Module /+module Module object
@@ -3049,31 +3178,31 @@ class ModuleGenerator
                 'class_name' => self::CONTROLLER_MODULE,
                 'module_tab' => true,
                 'icon' => 'repeat',
-            ],".PHP_EOL;
-        $const.="const CONTROLLER_EVOGROUP = 'AdminEvoGroup';".PHP_EOL;
-        $const.="const CONTROLLER_MODULE = 'Admin".$this->params['upper']['module_name']."';".PHP_EOL;
+            ]," . PHP_EOL;
+        $const .= "const CONTROLLER_EVOGROUP = 'AdminEvoGroup';" . PHP_EOL;
+        $const .= "const CONTROLLER_MODULE = 'Admin" . $this->params['upper']['module_name'] . "';" . PHP_EOL;
         foreach ($this->module_data['models'] as $index => $modelData) {
             if (empty($classModel = $modelData['class'])) {
                 continue;
             }
-            $const.="const CONTROLLER_".strtoupper($classModel)." = 'Admin".$classModel."';".PHP_EOL;
-            $this->addLegacyController("Admin".$classModel);
-            $tabs.="            [
-                'name' => /+module->l('".$modelData['table']."', __CLASS__),
+            $const .= "const CONTROLLER_" . strtoupper($classModel) . " = 'Admin" . $classModel . "';" . PHP_EOL;
+            $this->addLegacyController("Admin" . $classModel);
+            $tabs .= "            [
+                'name' => /+module->l('" . $modelData['table'] . "', __CLASS__),
                 'parent' => self::CONTROLLER_MODULE,
-                'class_name' => self::CONTROLLER_".strtoupper($classModel).",
+                'class_name' => self::CONTROLLER_" . strtoupper($classModel) . ",
                 'module_tab' => false,
                 'modules_tab' => true,
                 'icon' => 'repeat',
-            ],".PHP_EOL;
+            ]," . PHP_EOL;
             $tabs = $this->replaceStandardStrings($tabs);
             $tabs = str_replace('quote', strtolower($classModel), $tabs);
             $tabs = str_replace('Quote', $classModel, $tabs);
 
         }
-        $tabs.="        ];
-    }".PHP_EOL;
-        $tabs.="    /**
+        $tabs .= "        ];
+    }" . PHP_EOL;
+        $tabs .= "    /**
      * Function used to install module tabs
      * Collects error messages if install process is not successful
      *
@@ -3211,11 +3340,11 @@ class ModuleGenerator
         }
 
         return true;
-    }".PHP_EOL;
+    }" . PHP_EOL;
         $const = str_replace('/*', '$', $const);
         $tabs = str_replace('/+', '$', $tabs);
-        $this->tabs['const']=$const;
-        $this->tabs['tabs']=$tabs;
+        $this->tabs['const'] = $const;
+        $this->tabs['tabs'] = $tabs;
 
         return true;
     }
@@ -3275,11 +3404,11 @@ class ModuleGenerator
      */
     private function addLegacyController(string $controllerName)
     {
-        $class = new ClassType($controllerName.'Controller');
+        $class = new ClassType($controllerName . 'Controller');
         $class->setExtends('ModuleAdminController');
-        $method=$class->addMethod('__construct');
-        $body='     parent::__construct();
-        Tools::redirectAdmin(Context::getContext()->link->getAdminLink(\''.str_replace('Admin', 'Admin'.$this->params['upper']['module_name'], $controllerName).'\'));'.PHP_EOL;
+        $method = $class->addMethod('__construct');
+        $body = '     parent::__construct();
+        Tools::redirectAdmin(Context::getContext()->link->getAdminLink(\'' . str_replace('Admin', 'Admin' . $this->params['upper']['module_name'], $controllerName) . '\'));' . PHP_EOL;
         $method->setBody($body);
         $folder = $this->module_dir . '/controllers/admin';
         if (!is_dir($folder) && !@mkdir($folder, 0777, true) && !is_dir($folder)) {
@@ -3288,9 +3417,9 @@ class ModuleGenerator
         $printer = new Printer;
         $printer->setTypeResolving(false);
         $code = $printer->printClass($class);
-        file_put_contents($this->module_dir . '/controllers/'.$controllerName.'Controller' . '.php', '<?php declare(strict_types=1);');
-        file_put_contents($this->module_dir . '/controllers/'.$controllerName.'Controller' . '.php', PHP_EOL, FILE_APPEND);
-        file_put_contents($this->module_dir . '/controllers/'.$controllerName.'Controller' . '.php', $code, FILE_APPEND);
+        file_put_contents($this->module_dir . '/controllers/' . $controllerName . 'Controller' . '.php', '<?php declare(strict_types=1);');
+        file_put_contents($this->module_dir . '/controllers/' . $controllerName . 'Controller' . '.php', PHP_EOL, FILE_APPEND);
+        file_put_contents($this->module_dir . '/controllers/' . $controllerName . 'Controller' . '.php', $code, FILE_APPEND);
         return true;
     }
 
