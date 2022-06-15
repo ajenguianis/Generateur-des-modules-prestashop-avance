@@ -3064,11 +3064,14 @@ class ModuleGenerator
             foreach ($finder as $file) {
                 $path = str_replace($this->base_dir . DIRECTORY_SEPARATOR . 'samples', '', $file->getRealPath());
                 $path = str_replace('grid', 'admin', $path);
+                $path = str_replace('quote', strtolower($classModel), $path);
+                $path = str_replace('Quote', $classModel, $path);
                 $fileSystem->copy($file->getRealPath(), $this->module_dir . $path);
                 $content = file_get_contents($this->module_dir . $path);
                 $content = $this->replaceStandardStrings($content);
                 $content = str_replace('quote', strtolower($classModel), $content);
                 $content = str_replace('Quote', $classModel, $content);
+                $content = str_replace('demodoctrine', strtolower($this->module_data['module_name']), $content);
                 file_put_contents($this->module_dir . $path, $content);
             }
         }
@@ -3087,7 +3090,7 @@ class ModuleGenerator
             foreach ($finder as $file) {
                 $path = str_replace($this->base_dir . DIRECTORY_SEPARATOR . 'samples', '', $file->getRealPath());
                 $path = str_replace('quotes', strtolower($classModel) . 's', $path);
-                $path = str_replace('.webpack', 'webpack', $path);
+//                $path = str_replace('.webpack', 'webpack', $path);
                 $fileSystem->copy($file->getRealPath(), $this->module_dir . $path);
                 $content = file_get_contents($this->module_dir . $path);
                 $content = $this->replaceStandardStrings($content);
@@ -3111,8 +3114,9 @@ class ModuleGenerator
             }
             foreach ($finder as $file) {
                 $path = str_replace($this->base_dir . DIRECTORY_SEPARATOR . 'samples', '', $file->getRealPath());
+                $path = str_replace('quote', strtolower($classModel), $path);
                 $path = str_replace('quotes', strtolower($classModel) . 's', $path);
-                $path = str_replace('.webpack', 'webpack', $path);
+//                $path = str_replace('.webpack', 'webpack', $path);
                 $path = str_replace('src\gridJs', 'views\js', $path);
 
                 $fileSystem->copy($file->getRealPath(), $this->module_dir . $path);
