@@ -2775,14 +2775,15 @@ class ModuleGenerator
 
             if (!empty($this->setters)) {
                 foreach ($this->setters as $fieldName => $setterMethod) {
-                    if($fieldName==='id_log_status') {
-                        continue;
-                    }
 
                     foreach ($fields as $field) {
                         if ($fieldName !== $field['field_name']) {
                             continue;
                         }
+                        if($fieldName===$field['field_name'] && ((string)$field['is_auto_increment']==='1')){
+                            continue;
+                        }
+
                         if ($fieldName === $field['field_name'] && (int)$field['is_lang'] === 1) {
                             $createBody .= '        foreach ($data[\''.$fieldName.'\'] as $langId => $lang'.ucfirst($fieldName).') {
             $lang = $this->langRepository->findOneById($langId);
@@ -2795,7 +2796,12 @@ class ModuleGenerator
         }' . PHP_EOL;
 
                         } else {
-                            $createBody .= '$' . strtolower($classModel) . '->' . $setterMethod . '($data["' . $fieldName . '"]);' . PHP_EOL;
+                            $type=$field['field_type'];
+                            $castTo='';
+                            if($type==='INT'){
+                                $castTo='(int)';
+                            }
+                            $createBody .= '$' . strtolower($classModel) . '->' . $setterMethod . '('.$castTo.'$data["' . $fieldName . '"]);' . PHP_EOL;
                         }
                     }
 
@@ -2812,12 +2818,12 @@ class ModuleGenerator
             $updateBody = '        $' . strtolower($classModel) . '=$this->' . strtolower($classModel) . 'Repository->find($id);' . PHP_EOL;
             if (!empty($this->setters)) {
                 foreach ($this->setters as $fieldName => $setterMethod) {
-                    if($fieldName==='id_log_status') {
-                        continue;
-                    }
 
                     foreach ($fields as $field) {
                         if ($fieldName !== $field['field_name']) {
+                            continue;
+                        }
+                        if($fieldName===$field['field_name'] && ((string)$field['is_auto_increment']==='1')){
                             continue;
                         }
                         if ($fieldName === $field['field_name'] && (int)$field['is_lang'] === 1) {
@@ -2831,7 +2837,12 @@ class ModuleGenerator
         }' . PHP_EOL;
 
                         } else {
-                            $updateBody .= '$' . strtolower($classModel) . '->' . $setterMethod . '($data["' . $fieldName . '"]);' . PHP_EOL;
+                            $type=$field['field_type'];
+                            $castTo='';
+                            if($type==='INT'){
+                                $castTo='(int)';
+                            }
+                            $updateBody .= '$' . strtolower($classModel) . '->' . $setterMethod . '('.$castTo.'$data["' . $fieldName . '"]);' . PHP_EOL;
                         }
                     }
 
@@ -3421,9 +3432,9 @@ class ModuleGenerator
         $printer = new Printer;
         $printer->setTypeResolving(false);
         $code = $printer->printClass($class);
-        file_put_contents($this->module_dir . '/controllers/' . $controllerName . 'Controller' . '.php', '<?php declare(strict_types=1);');
-        file_put_contents($this->module_dir . '/controllers/' . $controllerName . 'Controller' . '.php', PHP_EOL, FILE_APPEND);
-        file_put_contents($this->module_dir . '/controllers/' . $controllerName . 'Controller' . '.php', $code, FILE_APPEND);
+        file_put_contents($folder . '/' . $controllerName . 'Controller' . '.php', '<?php declare(strict_types=1);');
+        file_put_contents($folder . '/' . $controllerName . 'Controller' . '.php', PHP_EOL, FILE_APPEND);
+        file_put_contents($folder . '/' . $controllerName . 'Controller' . '.php', $code, FILE_APPEND);
         return true;
     }
 
