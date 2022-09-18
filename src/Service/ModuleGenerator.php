@@ -6,6 +6,7 @@ use App\Entity\TableMapping;
 use Doctrine\Persistence\ObjectRepository;
 use Exception;
 use Nette\PhpGenerator\PsrPrinter;
+use PrestaShop\PrestaShop\Core\Grid\Column\Type\Common\DateTimeColumn;
 use PrestaShop\PrestaShop\Core\Grid\Column\Type\DataColumn;
 use PrestaShop\PrestaShop\Core\Grid\Filter\Filter;
 use PrestaShopBundle\Form\Admin\Type\SearchAndResetType;
@@ -1963,9 +1964,9 @@ class ModuleGenerator
                 if (($field['field_type'] === 'DATE' || $field['field_type'] === 'DATETIME')) {
                     $has_callBack = true;
                     $name = $this->refactorFieldName($field['field_name'], true);
-                    $body .= '$this->set' . $name . '(new DateTime());' . PHP_EOL;
+                    $body .= '$this->set' . $name . '(new \DateTime());' . PHP_EOL;
                     $body .= 'if ($this->get' . $name . '() == null) {' . PHP_EOL;
-                    $body .= '$this->set' . $name . '(new DateTime());' . PHP_EOL;
+                    $body .= '$this->set' . $name . '(new \DateTime());' . PHP_EOL;
                     $body .= '}' . PHP_EOL;
                 }
             }
@@ -2077,7 +2078,7 @@ class ModuleGenerator
                 $property->addComment('@ORM\Column(name="' . $field['field_name'] . '",type="decimal", scale=6' . $nullableCondition . ')');
             }
             if (($field['field_type'] === 'DATE' || $field['field_type'] === 'DATETIME')) {
-                $property->addComment('@var DateTime');
+                $property->addComment('@var \DateTime');
                 $property->addComment('@ORM\Column(name="' . $field['field_name'] . '", type="datetime", scale=6' . $nullableCondition . ')');
             }
         }
@@ -2259,12 +2260,12 @@ class ModuleGenerator
                 }
                 if (($field['field_type'] === 'DATE' || $field['field_type'] === 'DATETIME') && $condition) {
                     $getter = $class->addMethod('get' . $methodName);
-                    $getter->addComment('@return DateTime');
+                    $getter->addComment('@return \DateTime');
                     $getter->setBody('return $this->' . $name . ';');
                     $setter = $class->addMethod('set' . $methodName);
-                    $setter->addComment('@param DateTime $' . $name);
+                    $setter->addComment('@param \DateTime $' . $name);
                     $setter->addComment('@return $this');
-                    $setter->addParameter($name)->setType('DateTime');
+                    $setter->addParameter($name)->setType('\DateTime');
                     $setter->setBody('$this->' . $name . ' = $' . $name . ';' . PHP_EOL . 'return $this;');
                 }
 
@@ -2454,7 +2455,18 @@ class ModuleGenerator
                                         ])
                                     )
             ' . PHP_EOL;
-            } else {
+            }elseif ($field['field_type']==='DATETIME'){
+                $this->use[$modelData['class'] . 'GridDefinitionFactory']['DateTimeColumn'] = 'PrestaShop\PrestaShop\Core\Grid\Column\Type\Common\DateTimeColumn';
+                $column .= '                            ->add((new DateTimeColumn(\'' . $field['field_name'] . '\'))
+                    ->setName($this->trans(\'' . $field['field_name'] . '\', [],  \'Modules.Demodoctrine.Admin\'))
+                    ->setOptions([
+                        "format" => "Y-m-d H:i",
+                        "field" => \'' . $field['field_name'] . '\',
+                    ])
+                )' . PHP_EOL;
+
+            }
+            else {
                 $column .= '            ->add((new DataColumn(\'' . $field['field_name'] . '\'))
                 ->setName($this->trans(\'' . $field['field_name'] . '\', [], \'Modules.Demodoctrine.Admin\'))
                 ->setOptions([
@@ -2515,7 +2527,21 @@ class ModuleGenerator
                 ])
                 ->setAssociatedColumn(\'id_quote\')
             )' . PHP_EOL;
-            } else {
+            }elseif($field['field_type']==='DATETIME'){
+                $this->use[$modelData['class'] . 'GridDefinitionFactory']['DateRangeType'] = 'PrestaShopBundle\Form\Admin\Type\DateRangeType';
+                $filters .= '             ->add((new Filter(\'' . $field['field_name'] . '\', DateRangeType::class))
+                    ->setTypeOptions([
+                        "required" => false,
+                        "attr" => [
+                            "placeholder" => $this->trans(\'' . $field['field_name'] . '\', [], \'Modules.Demodoctrine.Admin\'),
+                        ],
+                        "date_format" => "YYYY-MM-DD HH:mm:ss",
+                    ])
+                    ->setAssociatedColumn(\'' . $field['field_name'] . '\')
+                )' . PHP_EOL;
+
+            }
+            else {
                 if ($field['field_type'] === 'TINYINT' || $field['field_type'] === 'BOOLEAN') {
                     $this->use[$modelData['class'] . 'GridDefinitionFactory']['YesAndNoChoiceType'] = 'PrestaShopBundle\Form\Admin\Type\YesAndNoChoiceType';
                     $filters .= '            ->add((new Filter(\'' . $field['field_name'] . '\', YesAndNoChoiceType::class))
@@ -2693,7 +2719,7 @@ class ModuleGenerator
                         $addFieldsBody .= "TranslatableType::class," . PHP_EOL;
                         $addFieldsBody .= "[" . PHP_EOL;
                         $addFieldsBody .= '\'label\'=>$this->trans(\'' . $item['field_name'] . '\', \'Modules.' . $this->params['upper']['module_name'] . '.Admin\', []),' . PHP_EOL;
-                        $addFieldsBody .= '\'type\'=>TextareaType::class,' . PHP_EOL;
+                        $addFieldsBody .= '\'type\'=>TextType::class,' . PHP_EOL;
                         $addFieldsBody .= '\'required\'=>true,' . PHP_EOL;
                         $addFieldsBody .= '\'constraints\'=>[new DefaultLanguage([
                         \'message\' => $this->trans(
@@ -2796,12 +2822,16 @@ class ModuleGenerator
         }' . PHP_EOL;
 
                         } else {
+                            $fieldData='$data["' . $fieldName . '"]';
                             $type=$field['field_type'];
                             $castTo='';
                             if($type==='INT'){
                                 $castTo='(int)';
                             }
-                            $createBody .= '$' . strtolower($classModel) . '->' . $setterMethod . '('.$castTo.'$data["' . $fieldName . '"]);' . PHP_EOL;
+                            if($type==='DATETIME'){
+                                $fieldData= 'new \DateTime($data["' . $fieldName . '"])';
+                            }
+                            $createBody .= '$' . strtolower($classModel) . '->' . $setterMethod . '('.$castTo.$fieldData.');' . PHP_EOL;
                         }
                     }
 
