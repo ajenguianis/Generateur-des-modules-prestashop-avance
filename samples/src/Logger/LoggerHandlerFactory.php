@@ -1,6 +1,6 @@
 <?php
 
-namespace \Module\Moduleclass\Logger;
+namespace EvoGroup\Module\Moduleclass\Logger;
 
 use Monolog\Handler\HandlerInterface;
 use Monolog\Handler\RotatingFileHandler;
