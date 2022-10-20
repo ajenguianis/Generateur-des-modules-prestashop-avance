@@ -1,4 +1,5 @@
 <?php
+$
 namespace EvoGroup\Module\Moduleclass\Logger;
 
 use Monolog\Logger;
