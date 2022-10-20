@@ -1,8 +1,8 @@
 <?php
-namespace \Module\Moduleclass\Logger;
+namespace EvoGroup\Module\Moduleclass\Logger;
 
 use Monolog\Logger;
-use \Module\Moduleclass\Configuration\PrestaShopConfiguration;
+use EvoGroup\Module\Moduleclass\Configuration\PrestaShopConfiguration;
 
 /**
  * Class responsible for returning logger settings
