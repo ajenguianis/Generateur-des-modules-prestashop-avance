@@ -1,7 +1,7 @@
 <?php
 
 
-namespace \Module\Moduleclass\Configuration;
+namespace EvoGroup\Module\Moduleclass\Configuration;
 
 use Configuration;
 
