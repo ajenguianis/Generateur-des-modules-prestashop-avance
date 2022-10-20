@@ -1,6 +1,6 @@
 <?php
 
-namespace Evogroup\Module\Moduleclass\Logger;
+namespace \Module\Moduleclass\Logger;
 
 /**
  * Class responsible for returning log directory path.
