@@ -7,8 +7,6 @@ on:
   # Triggers the workflow on push or pull request events but only for the master branch
   push:
     branches: [ master ]
-    paths:
-      - '**.php'
   pull_request:
     branches: [ master ]
 
@@ -57,9 +55,9 @@ jobs:
       - name: deploy file
         uses: appleboy/ssh-action@master
         with:
-          host: '217.182.241.177'
-          username: 'modgen'
-          password: 'cQ_3JCcbzNzwV'
+          host: ${{ secrets.MODGEN_HOST }}
+          username: ${{ secrets.MODGEN_USERNAME }}
+          password: ${{ secrets.MODGEN_PASSWORD }}
           port: 2222
           script: |
             cd ..
