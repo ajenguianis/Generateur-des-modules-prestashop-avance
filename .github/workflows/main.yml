@@ -57,9 +57,9 @@ jobs:
       - name: deploy file
         uses: appleboy/ssh-action@master
         with:
-          username: 'modgen'
           host: '217.182.241.177'
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          username: 'modgen'
+          password: 'cQ_3JCcbzNzwV'
           port: 2222
           script: |
             cd ..
