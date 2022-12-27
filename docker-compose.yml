@@ -1,0 +1,49 @@
+version: '3.8'
+services:
+  mariadb-generator:
+    image: mariadb:10.4.25
+    container_name: generator_db
+    restart: always
+    environment:
+      MYSQL_ALLOW_EMPTY_PASSWORD: 'yes'
+      MYSQL_USER: user
+      MYSQL_PASSWORD: user
+    expose:
+      - "40003"
+    ports:
+      - "40003:3306"
+    volumes:
+      - mariadb-generator:/var/lib/mysql
+    networks:
+      - dev-generator
+  phpmyadmin-generator:
+    image: phpmyadmin:5.2.0
+    container_name: generator_phpmyadmin
+    restart: always
+    depends_on:
+      - mariadb-generator
+    ports:
+      - 8086:80
+    environment:
+      PMA_HOST: mariadb-generator
+      PMA_PORT: 3306
+    networks:
+      - dev-generator
+  www-generator:
+    build: .
+    container_name: generator_www
+    ports:
+      - 8078:80
+    volumes:
+      - ./docker/vhosts:/etc/apache2/sites-enabled
+      - ./docker/upload.ini:/usr/local/etc/php/conf.d/uploads.ini
+      - ./:/var/www
+    restart: always
+    networks:
+      - dev-generator
+
+networks:
+  dev-generator:
+
+volumes:
+  mariadb-generator:
