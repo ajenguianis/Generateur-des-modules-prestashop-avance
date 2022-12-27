@@ -458,7 +458,7 @@ class ModuleGenerator
             }
             if (!empty($fieldsDataSql_lang)) {
                 $fieldsDataSql_lang .= ') ENGINE=/*_MYSQL_ENGINE_*/ DEFAULT CHARSET=utf8;' . PHP_EOL;
-                $fieldsDataSql_lang .= 'ALTER TABLE `/*_DB_PREFIX_*/' . $modelData['table'] . '_lang` DROP PRIMARY KEY, ADD PRIMARY KEY (`' . $modelData['primary'] . '`, `id_lang`) USING BTREE;' . PHP_EOL;
+                $fieldsDataSql_lang .= 'ALTER TABLE `/*_DB_PREFIX_*/' . $modelData['table'] . '_lang` DROP PRIMARY KEY, ADD PRIMARY KEY (`' . $modelData['primary'] . '`, `id_lang`, `id_shop`) USING BTREE;' . PHP_EOL;
                 $fieldsDataSql_lang = str_replace(array("/*", "*/", 'NUL)'), array("'.", ".'", 'NULL)'), $fieldsDataSql_lang);
                 $sql_lang .= '$sql[]=' . $fieldsDataSql_lang . "';" . PHP_EOL;
             }
@@ -470,6 +470,9 @@ class ModuleGenerator
 
             if (!empty($fieldsDataSql_lang)) {
                 $definition['multilang'] = true;
+            }
+            if (!empty($fieldsDataSql_shop)) {
+                $definition['multilang_shop'] = true;
             }
             $definition['fields'] = $fields;
             if (!empty($fieldsDataSql_shop)) {
@@ -637,7 +640,8 @@ class ModuleGenerator
                 $default_value = ' DEFAULT ' . $fieldData['default_value'];
             }
             $is_shop_fields = !empty($fieldData['is_shop']) && $fieldData['is_shop'] !== '' && $fieldData['is_shop'] !== null;
-            if ($is_shop_fields) {
+            $is_lang_fields = !empty($fieldData['is_lang']) && $fieldData['is_lang'] !== '' && $fieldData['is_lang'] !== null;
+            if ($is_shop_fields && !$is_lang_fields) {
                 $fieldsDef[$index]['shop'] = true;
 
                 if ($firstShopIteration == 1) {
@@ -654,7 +658,7 @@ class ModuleGenerator
                         if ($fieldData['field_type'] === 'INT') {
                             $sql_shop .= '`' . $fieldData['field_name'] . '` INT(11) ' . $nullableCondition . $default_value . $separator . PHP_EOL;
                         }
-                    } elseif (($fieldData['field_type'] === 'EMAIL' || $fieldData['field_type'] === 'VARCHAR' || $fieldData['field_type'] === 'HTML' || $fieldData['field_type'] === 'PERCENT')) {
+                    } elseif (($fieldData['field_type'] === 'EMAIL' || $fieldData['field_type'] === 'VARCHAR' || $fieldData['field_type'] === 'HTML' || $fieldData['field_type'] === 'PERCENT') && !$is_lang_fields) {
                         $size = $fieldsDef[$index]['size'] ?? 255;
                         $sql_shop .= '`' . $fieldData['field_name'] . '` VARCHAR(' . $size . ')  ' . $nullableCondition . $default_value . $separator . PHP_EOL;
                     } elseif (($fieldData['field_type'] === 'DECIMAL' || $fieldData['field_type'] === 'FLOAT')) {
@@ -664,7 +668,7 @@ class ModuleGenerator
                         $size = $size ?? 20.6;
                         $size = str_replace('.', ',', $size);
                         $sql_shop .= '`' . $fieldData['field_name'] . '` DECIMAL(' . $size . ')  ' . $nullableCondition . $default_value . $separator . PHP_EOL;
-                    } elseif (($fieldData['field_type'] === 'TEXT' || $fieldData['field_type'] === 'LONGTEXT')) {
+                    } elseif (($fieldData['field_type'] === 'TEXT' || $fieldData['field_type'] === 'LONGTEXT') && !$is_lang_fields) {
                         $sql_shop .= '`' . $fieldData['field_name'] . '` ' . $fieldData['field_type'] . $nullableCondition . $default_value . $separator . PHP_EOL;
 
                     } elseif (($fieldData['field_type'] === 'TINYINT' || $fieldData['field_type'] === 'BOOLEAN')) {
@@ -675,7 +679,7 @@ class ModuleGenerator
                         $sql_shop .= '`' . $fieldData['field_name'] . '` TINYINT(' . $size . ')  ' . $nullableCondition . $default_value . $separator . PHP_EOL;
                     } elseif (($fieldData['field_type'] === 'DATE' || $fieldData['field_type'] === 'DATETIME')) {
                         $sql_shop .= '`' . $fieldData['field_name'] . '` ' . $fieldData['field_type'] . '  ' . $separator . PHP_EOL;
-                    } else {
+                    } elseif(!$is_lang_fields) {
                         $fieldData['field_length'] = str_replace('.', ',', $fieldData['field_length']);
                         $sql_shop .= '`' . $fieldData['field_name'] . '` ' . $fieldData['field_type'] . '(' . $fieldData['field_length'] . ')' . $nullableCondition . $default_value . ',' . PHP_EOL;
                     }
@@ -684,7 +688,7 @@ class ModuleGenerator
                 $firstShopIteration++;
             }
 
-            $is_lang_fields = !empty($fieldData['is_lang']) && $fieldData['is_lang'] !== '' && $fieldData['is_lang'] !== null;
+
             $in_two_table = !$is_lang_fields;
             if ($is_lang_fields) {
                 $fieldsDef[$index]['lang'] = true;
@@ -694,6 +698,7 @@ class ModuleGenerator
                     $sql_uninstall .= '$sql[]=\'DROP TABLE `/*_DB_PREFIX_*/' . $modelData['table'] . '_lang`;\';' . PHP_EOL;
                     $sql_lang .= '`' . $modelData['primary'] . '` int(11) NOT NULL,' . PHP_EOL;
                     $sql_lang .= '`id_lang` int(11) UNSIGNED NOT NULL,' . PHP_EOL;
+                    $sql_lang .= '`id_shop` int(11) UNSIGNED NOT NULL,' . PHP_EOL;
                 }
                 $type = $fieldData['field_type'] . '(' . $fieldData['field_length'] . ')';
                 if ($fieldData['field_type'] !== 'VARCHAR' && $fieldData['field_type'] !== 'TEXT' && $fieldData['field_type'] !== 'LONGTEXT') {
