@@ -4,17 +4,16 @@ namespace App\Controller;
 
 use App\Entity\User;
 use App\Form\RegistrationFormType;
+use App\Security\LoginFormAuthenticator;
 use phpDocumentor\Reflection\DocBlock\Tags\Throws;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Core\Authentication\Token\UsernamePasswordToken;
 use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
-use App\Security\LoginFormAuthenticator;
-use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Security\Guard\GuardAuthenticatorHandler;
+
 class RegistrationController extends AbstractController
 {
     /**
@@ -71,7 +70,7 @@ class RegistrationController extends AbstractController
                     $form->get('plainPassword')->getData()
                 )
             );
-            if($form->get('plainPassword')->getData() !==$request->request->get('plainPassword_validation')){
+            if ($form->get('plainPassword')->getData() !== $request->request->get('plainPassword_validation')) {
                 throw new \Exception('Password confirmation is wrong!');
             }
 
@@ -82,9 +81,11 @@ class RegistrationController extends AbstractController
             $this->addFlash('success', 'The registration is successfull');
             $token = new UsernamePasswordToken($user, null, 'main', $user->getRoles());
             $this->get('security.token_storage')->setToken($token);
+
             return $this->redirectToRoute('app_home');
         }
-        throw new \Exception('Something went wrong! '.json_encode($this->getErrorMessages($form)) );
+
+        throw new \Exception('Something went wrong! '.json_encode($this->getErrorMessages($form)));
     }
 
     /**
@@ -94,14 +95,14 @@ class RegistrationController extends AbstractController
      */
     private function getErrorMessages(\Symfony\Component\Form\Form $form)
     {
-        $errors = array();
+        $errors = [];
 
         if ($form->count() > 0) {
             foreach ($form->all() as $child) {
                 /**
                  * @var \Symfony\Component\Form\Form $child
                  */
-                if (!$child->isValid()) {
+                if (! $child->isValid()) {
                     $errors[$child->getName()] = $this->getErrorMessages($child);
                 }
             }

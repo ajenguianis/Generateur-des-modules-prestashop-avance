@@ -60,8 +60,10 @@ class TableMapping
     public function setClass(string $class): self
     {
         $this->class = $class;
+
         return $this;
     }
+
     public function getHasShopTable(): ?bool
     {
         return $this->hasShopTable;
