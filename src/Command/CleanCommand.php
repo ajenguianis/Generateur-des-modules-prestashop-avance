@@ -18,7 +18,8 @@ class CleanCommand extends Command
      */
     private $container;
 
-    public function __construct(ContainerInterface $container) {
+    public function __construct(ContainerInterface $container)
+    {
         $this->container = $container;
         parent::__construct();
     }
@@ -38,7 +39,7 @@ class CleanCommand extends Command
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         ini_set('memory_limit', '-1');
-        if (!$this->lock()) {
+        if (! $this->lock()) {
             $output->writeln('The command is already running in another process.');
 
             return 0;
@@ -46,14 +47,15 @@ class CleanCommand extends Command
         $output->writeln(['START', '============', '']);
         $base_dir = $this->container->getParameter('kernel.project_dir'); // get basedir
         $this->dir = $base_dir . DIRECTORY_SEPARATOR . 'downloads';
-        $filesystem=new Filesystem();
+        $filesystem = new Filesystem();
         $filesystem->remove($this->dir);
-        if (!is_dir($this->dir) && !@mkdir($this->dir, 0777, true) && !is_dir($this->dir)) {
+        if (! is_dir($this->dir) && ! @mkdir($this->dir, 0777, true) && ! is_dir($this->dir)) {
             throw new \RuntimeException(sprintf('Cannot create directory "%s"', $this->dir));
         }
 
         $output->writeln(['END', '============', '']);
         $this->release();
+
         return Command::SUCCESS;
     }
 }

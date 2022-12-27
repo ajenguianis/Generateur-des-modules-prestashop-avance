@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Service;
 
 use ZipArchive;
@@ -11,7 +12,8 @@ class Hzip
      * @param ZipArchive $zipFile
      * @param int $exclusiveLength Number of text to be exclusived from the file path.
      */
-    private static function folderToZip($folder, &$zipFile, $exclusiveLength) {
+    private static function folderToZip($folder, &$zipFile, $exclusiveLength)
+    {
         $handle = opendir($folder);
         while (false !== $f = readdir($handle)) {
             if ($f != '.' && $f != '..') {
