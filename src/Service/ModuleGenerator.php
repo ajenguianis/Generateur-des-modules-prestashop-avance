@@ -242,7 +242,8 @@ class ModuleGenerator
                     $method->setBody($body);
                 }
             }
-            $content = str_replace("registerHook('backOfficeHeader')", "registerHook('backOfficeHeader')\n" . $register_hooks, $content);
+            $content = str_replace("registerHook('backOfficeHeader')", "registerHook('actionAdminControllerSetMedia')\n" . $register_hooks, $content);
+            $content = str_replace("registerHook('header')", "registerHook('actionFrontControllerSetMedia')\n" . $register_hooks, $content);
             $content = str_replace("method", '$this', $content);
 
             file_put_contents($this->module_dir . DIRECTORY_SEPARATOR . $this->module_data['module_name'] . '.php', $content);
