@@ -272,6 +272,8 @@ class ModuleGenerator
             }
             $content = file_get_contents($this->module_dir . '/' . $this->module_data['module_name'] . '.php');
             $content = str_replace('/** add uses */', $useContent, $content);
+            $content = str_replace('hookHeader', 'hookActionFrontControllerSetMedia', $content);
+            $content = str_replace('hookBackOfficeHeader', 'hookActionAdminControllerSetMedia', $content);
             file_put_contents($this->module_dir . '/' . $this->module_data['module_name'] . '.php', $content);
         }
 
