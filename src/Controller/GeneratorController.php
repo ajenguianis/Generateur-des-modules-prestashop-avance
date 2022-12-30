@@ -109,6 +109,9 @@ class GeneratorController extends AbstractController
         if (isset($this->_codeGen->module_data['objectModels']) && ! empty($this->_codeGen->module_data['objectModels'])) {
             $this->_codeGen->generateModelCustomFields();
         }
+        if (isset($this->_codeGen->module_data['imageFormModels']) && ! empty($this->_codeGen->module_data['imageFormModels'])) {
+            $this->_codeGen->generateModelCustomImages();
+        }
         $this->_codeGen->generateModuleClass();
         if (isset($this->_codeGen->module_data['settings']) && ! empty($this->_codeGen->module_data['settings'])) {
             $this->_codeGen->generateSettings();
@@ -148,6 +151,7 @@ class GeneratorController extends AbstractController
         $services = [];
         $models = [];
         $objectModels = [];
+        $ImageFormModels = [];
         $hooks = [];
         if (! empty($data = $request->request->all())) {
             $i = 0;
@@ -240,10 +244,31 @@ class GeneratorController extends AbstractController
                         $objectModels[$objectIteration]['listing'][$fieldIteration] = $objectModels[$objectIteration]['fields'][$fieldIteration];
                     }
                 }
+                if (! empty($item) && strpos($key, 'object_model_image') !== false) {
+                    $object_name_key = explode('_', $key);
+
+                    if (! isset($object_name_key[3])) {
+                        continue;
+                    }
+                    $objectIteration = $object_name_key[3];
+                    $ImageFormModels[$objectIteration]['class'] = $item;
+                }
+                if (! empty($item) && strpos($key, 'column_image_name') !== false) {
+                    $field_name_key = explode('_', $key);
+
+                    $objectIteration = $field_name_key[4];
+                    $fieldIteration = $field_name_key[3];
+                    $associationIteration = $fieldIteration . '_' . $objectIteration;
+
+                    $ImageFormModels[$objectIteration]['fields'][$fieldIteration]['column_image_name'] = $item;
+                    $ImageFormModels[$objectIteration]['fields'][$fieldIteration]['column_image_width'] = $data['column_image_width_' . $associationIteration];
+                    $ImageFormModels[$objectIteration]['fields'][$fieldIteration]['column_image_height'] = $data['column_image_height_' . $associationIteration] ?? null;
+                }
             }
         }
 
         $data = $request->request->all();
+
         if (! empty($commands)) {
             $data = array_merge(['commands' => $commands], $data);
         }
@@ -258,6 +283,9 @@ class GeneratorController extends AbstractController
         }
         if (! empty($objectModels)) {
             $data = array_merge(['objectModels' => $objectModels], $data);
+        }
+        if (! empty($ImageFormModels)) {
+            $data = array_merge(['imageFormModels' => $ImageFormModels], $data);
         }
         if (! empty($settings)) {
             $data = array_merge(['settings' => $settings], $data);
