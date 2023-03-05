@@ -1,0 +1,15 @@
+  module_class.category_data_Handler:
+    class: 'EvoGroup\Module\Moduleclass\Handler\CategoryFormDataHandler'
+    arguments:
+      - '@prestashop.core.command_bus'
+      - '@prestashop.adapter.image.uploader.category_cover_image_uploader'
+      - '@prestashop.adapter.image.uploader.category_thumbnail_image_uploader'
+      - '@prestashop.adapter.image.uploader.category_menu_thumbnail_image_uploader'
+@service
+    decorates: 'prestashop.core.form.identifiable_object.data_handler.category_form_data_handler'
+  $uploaders
+  module_class.category.image.provider:
+    class: EvoGroup\Module\Moduleclass\Provider\ImageProvider
+    public: true
+    arguments:
+      - '@prestashop.core.image.parser.image_tag_source_parser'

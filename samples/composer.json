@@ -12,9 +12,12 @@
     "preferred-install": "dist",
     "prepend-autoloader": false
   },
+  "require": {
+    "php": ">=7.2.0"
+  },
   "autoload": {
     "psr-4": {
-      "$companyName\\Module\\$nameSpace\\": "src/"
+      "EvoGroup\\Module\\$nameSpace\\": "src/"
     },
     "classmap": ["$moduleName.php", "src/"],
     "exclude-from-classmap": []

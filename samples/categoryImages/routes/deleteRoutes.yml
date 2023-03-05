@@ -1,0 +1,11 @@
+admin_categories_delete_img_banner_left:
+  path: /{categoryId}/delete/img_banner_left
+  methods: [POST]
+  defaults:
+    _controller: EvoGroup\Module\Moduleclass\Controller\CategoryController::deleteBannerImageLeftAction
+    _legacy_controller: AdminCustomCategories
+    _legacy_link: AdminCustomCategories:deleteBannerImageLeft
+    _legacy_parameters:
+      id_category: categoryId
+  requirements:
+    categoryId: \d+
