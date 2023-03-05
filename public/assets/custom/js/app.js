@@ -609,6 +609,111 @@ $(document).ready(function () {
             $(elm).closest('.modal-body').find('.liste-box').attr('data-currentCount', modelCount)
             $(elm).attr('data-model', parseInt(modelCount) + 1);
         }
+        if (type == 'custom-image') {
+            let html = '<div class="liste-box" data-currentCount="1">\n' +
+                '                    <div class="snippet-fields row">\n' +
+                '                        <div class="field-input col-xs-8">\n' +
+                '                            <div class="form-group label-floating">\n' +
+                '                                <select name="object_model_image_' + modelCount + '" class="form-control" required>\n' +
+                '                                    <option value="">Choose Object Model</option>\n' +
+                '                                    <option value="Category">Category</option>\n' +
+                '                                </select>\n' +
+                '                            </div>\n' +
+                '                        </div>\n' +
+                '\n' +
+                '                    </div>\n' +
+                '\n' +
+                '                    <div class="row">\n' +
+                '                        <div class="field-input col-xs-8">\n' +
+                '                        </div>\n' +
+                '                        <div class="field-input col-xs-2">\n' +
+                '                            <div class="form-group">\n' +
+                '                                <button type="button" id="field-count" class="btn btn-default add-new" data-child="2" data-type="custom-image-inputs">\n' +
+                '                                    New image\n' +
+                '                                </button>\n' +
+                '                            </div>\n' +
+                '                        </div>\n' +
+                '                    </div>\n' +
+                '\n' +
+                '                    <div class="snippet-fields row">\n' +
+                '                        <div class="field-input">\n' +
+                '                            <div class="form-group">\n' +
+                '                                <label for="column_image_name-1" class="control-label">Image name</label>\n' +
+                '                                <input value="" id="service-1" name="column_image_name_' + count + '_' + modelCount + '" class="form-control" type="text"\n' +
+                '                                       placeholder="">\n' +
+                '                                <div class="help-block"></div>\n' +
+                '                            </div>\n' +
+                '                        </div>\n' +
+
+                '                        <div class="field-input">\n' +
+                '                            <div class="form-group">\n' +
+                '                                <label for="column_image_width-1" class="control-label">Width</label>\n' +
+                '                                <input id="service-1" name="column_image_width_' + count + '_' + modelCount + '" class="form-control" type="text"\n' +
+                '                                       placeholder="">\n' +
+                '                                <div class="help-block"></div>\n' +
+                '                            </div>\n' +
+                '                        </div>\n' +
+                '\n' +
+                '                        <div class="field-input">\n' +
+                '                            <div class="form-group">\n' +
+                '                                <label for="column_image_height-1" class="control-label">Height</label>\n' +
+                '                                <input id="service-1" name="column_image_height_' + count + '_' + modelCount + '" class="form-control" type="text"\n' +
+                '                                       placeholder="">\n' +
+                '                                <div class="help-block"></div>\n' +
+                '                            </div>\n' +
+                '                        </div>\n' +
+                '\n' +
+                '                        <div class="field-input">\n' +
+                '                            <div class="form-group">\n' +
+                '                                <button type="button" class="btn btn-danger remove">\n' +
+                '                                    Remove\n' +
+                '                                </button>\n' +
+                '                            </div>\n' +
+                '                        </div>\n' +
+                '                    </div>\n' +
+                '                </div>';
+            $(elm).closest('.modal-body').append(html);
+            // $(elm).attr('data-child', parseInt(count) + 1);
+            $(elm).closest('.modal-body').find('.liste-box').attr('data-currentCount', modelCount)
+            $(elm).attr('data-model', parseInt(modelCount) + 1);
+        }
+        if (type == 'custom-image-inputs') {
+            let html = '           <div class="snippet-fields row">\n' +
+                '                    <div class="field-input">\n' +
+                '                        <div class="form-group">\n' +
+                '                            <label for="column_image_name_' + count + '_' + CurentModelCount + '" class="control-label">Image name</label>\n' +
+                '                            <input value="" id="service_' + count + '_' + CurentModelCount + '" name="column_image_name_' + count + '_' + CurentModelCount + '" class="form-control" type="text"\n' +
+                '                                   placeholder="">\n' +
+                '                            <div class="help-block"></div>\n' +
+                '                        </div>\n' +
+                '                    </div>\n' +
+                '                    <div class="field-input">\n' +
+                '                        <div class="form-group">\n' +
+                '                            <label for="column_image_width_' + count + '_' + CurentModelCount + '" class="control-label">Width</label>\n' +
+                '                            <input value="" id="service_' + count + '_' + CurentModelCount + '" name="column_image_width_' + count + '_' + CurentModelCount + '" class="form-control" type="text"\n' +
+                '                                   placeholder="">\n' +
+                '                            <div class="help-block"></div>\n' +
+                '                        </div>\n' +
+                '                    </div>\n' +
+                '                    <div class="field-input">\n' +
+                '                        <div class="form-group">\n' +
+                '                            <label for="column_image_height_' + count + '_' + CurentModelCount + '" class="control-label">Height</label>\n' +
+                '                            <input value="" id="service_' + count + '_' + CurentModelCount + '" name="column_image_height_' + count + '_' + CurentModelCount + '" class="form-control" type="text"\n' +
+                '                                   placeholder="">\n' +
+                '                            <div class="help-block"></div>\n' +
+                '                        </div>\n' +
+                '                    </div>\n' +
+                '                    <div class="field-input">\n' +
+                '                        <div class="form-group">\n' +
+                '                            <button type="button" class="btn btn-danger remove">\n' +
+                '                                Remove\n' +
+                '                            </button>\n' +
+                '                        </div>\n' +
+                '                    </div>\n' +
+                '                </div>';
+            $(elm).closest('.liste-box').append(html);
+            $(elm).attr('data-child', parseInt(count) + 1);
+        }
         if (type == 'custom-field-inputs') {
             let html = '           <div class="snippet-fields row">\n' +
                 '                    <div class="field-input">\n' +
