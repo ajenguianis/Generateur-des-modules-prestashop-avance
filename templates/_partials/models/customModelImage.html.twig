@@ -1,0 +1,90 @@
+<div class="modal fade bd-example-modal-lg" id="custom-image" role="dialog">
+    <div class="modal-dialog modal-lg">
+
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">Custom Image</h4>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="field-input col-xs-8">
+                    </div>
+                    <div class="field-input col-xs-2">
+                        <div class="form-group">
+                            <button type="button" id="model-count" class="btn btn-default add-new" data-model="2" data-type="custom-image">
+                                Alter Other Model
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="liste-box" data-currentCount="1">
+                    <div class="snippet-fields row">
+                        <div class="field-input col-xs-8">
+                            <div class="form-group label-floating">
+                                <select name="object_model_image_1" class="form-control" required>
+                                    <option value="">Choose Object Model</option>
+                                    <option value="Category">Category</option>
+                                </select>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <div class="row">
+                        <div class="field-input col-xs-8">
+                        </div>
+                        <div class="field-input col-xs-2">
+                            <div class="form-group">
+                                <button type="button" id="field-count" class="btn btn-default add-new" data-child="2" data-type="custom-image-inputs">
+                                    New image
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="snippet-fields row">
+                        <div class="field-input">
+                            <div class="form-group">
+                                <label for="column_image_name-1" class="control-label">Image name</label>
+                                <input value="" id="service-1" name="column_image_name_1_1" class="form-control" type="text"
+                                       placeholder="">
+                                <div class="help-block"></div>
+                            </div>
+                        </div>
+
+                        <div class="field-input">
+                            <div class="form-group">
+                                <label for="column_image_width-1" class="control-label">Width</label>
+                                <input id="service-1" name="column_image_width_1_1" class="form-control" type="text"
+                                       placeholder="">
+                                <div class="help-block"></div>
+                            </div>
+                        </div>
+                        <div class="field-input">
+                            <div class="form-group">
+                                <label for="column_image_height-1" class="control-label">Height</label>
+                                <input id="service-1" name="column_image_height_1_1" class="form-control" type="text"
+                                       placeholder="">
+                                <div class="help-block"></div>
+                            </div>
+                        </div>
+
+                        <div class="field-input">
+                            <div class="form-group">
+                                <button type="button" class="btn btn-danger remove">
+                                    Remove
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-success" data-dismiss="modal">Save changes</button>
+            </div>
+        </div>
+
+    </div>
+</div>
