@@ -17,7 +17,7 @@
   },
   "autoload": {
     "psr-4": {
-      "$companyName\\Module\\$nameSpace\\": "src/"
+      "EvoGroup\\Module\\$nameSpace\\": "src/"
     },
     "classmap": ["$moduleName.php", "src/"],
     "exclude-from-classmap": []

@@ -3,6 +3,7 @@
 $finder = Symfony\Component\Finder\Finder::create()
     ->in([
         __DIR__ . '/src',
+        __DIR__ . '/downloads',
         __DIR__ . '/tests',
     ])
     ->name('*.php')

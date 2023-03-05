@@ -1,0 +1,24 @@
+{% block category_img_banner_left %}
+    {% if categoryBannerImageLeft is defined and categoryBannerImageLeft is not null %}
+        <div>
+            <form action="">
+                <figure class="figure">
+                    <img src="{{ categoryBannerImageLeft.path }}" class="figure-img img-fluid img-thumbnail">
+                    <figcaption class="figure-caption">
+                        <p>{{ 'File size'|trans({}, 'Admin.Advparameters.Feature') }} {{ categoryBannerImageLeft.size }}</p>
+                        <button class="btn btn-outline-danger btn-sm js-form-submit-btn"
+                                data-form-submit-url="{{ path('admin_categories_delete_img_banner_left', {'categoryId': app.request.get('categoryId')}) }}"
+                                data-form-csrf-token="{{ csrf_token('delete-img_banner_left') }}"
+                                type="button"
+                        >
+                            <i class="material-icons">
+                                delete_forever
+                            </i>
+                            {{ 'Delete'|trans({}, 'Admin.Actions') }}
+                        </button>
+                    </figcaption>
+                </figure>
+            </form>
+        </div>
+    {% endif %}
+{% endblock %}

@@ -821,11 +821,21 @@ class ModuleGenerator
             }
             $this->module_data['hooks'][strtolower($modelData['class'])] = [];
             if (is_array($modelData['fields']) && !empty($modelData['fields'])) {
-                if($modelData['class']==='Category'){
+                if ($modelData['class'] === 'Category') {
                     $this->modifyQueryBuilder($modelData);
+                    $this->addUploader($modelData);
+                    $this->addController($modelData);
+                    $this->addRoutes($modelData);
+                    $this->addHandler($modelData);
+                    $this->addProvider($modelData);
+                    $this->addTemplates($modelData);
+                    $this->addServices($modelData);
                 }
+                $this->addImageTypes($modelData);
+                $this->removeImageTypes($modelData);
             }
         }
+        return true;
     }
 
     public function generateModelCustomFields()
@@ -1197,7 +1207,7 @@ class ModuleGenerator
                     $namespace->addUse('PrestaShopBundle\Form\Admin\Type\SwitchType');
                     $addFieldsBody .= "SwitchType::class," . PHP_EOL;
                     $addFieldsBody .= "[" . PHP_EOL;
-                    $addFieldsBody .= '\'label\'=>$this->module->l(\'' . $item['column_name'] . '\'),' . PHP_EOL;
+                    $addFieldsBody .= '\'label\'=>$this->module->l(\'' . str_replace("_", " ", $item['column_name']) . '\'),' . PHP_EOL;
                     $addFieldsBody .= '\'required\'=>false,' . PHP_EOL;
                     $addFieldsBody .= "]" . PHP_EOL;
                     $addFieldsBody .= ')' . PHP_EOL;
@@ -1210,7 +1220,7 @@ class ModuleGenerator
                     $namespace->addUse('PrestaShop\PrestaShop\Core\ConstraintValidator\Constraints\DefaultLanguage');
                     $addFieldsBody .= "TranslatableType::class," . PHP_EOL;
                     $addFieldsBody .= "[" . PHP_EOL;
-                    $addFieldsBody .= '\'label\'=>$this->module->l(\'' . $item['column_name'] . '\'),' . PHP_EOL;
+                    $addFieldsBody .= '\'label\'=>$this->module->l(\'' . str_replace("_", " ", $item['column_name']) . '\'),' . PHP_EOL;
                     $addFieldsBody .= '\'type\'=>TextareaType::class,' . PHP_EOL;
                     $addFieldsBody .= '\'required\'=>false,' . PHP_EOL;
                     $addFieldsBody .= '\'constraints\'=>[new DefaultLanguage()],' . PHP_EOL;
@@ -1268,7 +1278,7 @@ class ModuleGenerator
             $use[$this->params['upper']['company_name'] . '\\' . 'Module' . '\\' . $this->params['upper']['module_name'] . '\\' . 'Grid' . '\\' . $classModel . 'FormBuilderModifier'] = $this->params['upper']['company_name'] . '\\' . 'Module' . '\\' . $this->params['upper']['module_name'] . '\\' . 'Grid' . '\\' . $classModel . 'FormBuilderModifier';
 
             $formBuilderContent = '$' . strtolower($classModel) . 'FormBuilderModifier= new ' . $classModel . 'FormBuilderModifier(' . PHP_EOL;
-            $classModelFormBuilderModifierNameSpace = str_replace('Egaddextrafields', $this->params['upper']['module_name'], $this->params['upper']['company_name'] . "\Module". '\\' . $this->params['upper']['module_name']. '\\' ."Grid" . '\\' . $classModel . "FormBuilderModifier");
+            $classModelFormBuilderModifierNameSpace = str_replace('Egaddextrafields', $this->params['upper']['module_name'], $this->params['upper']['company_name'] . "\Module" . '\\' . $this->params['upper']['module_name'] . '\\' . "Grid" . '\\' . $classModel . "FormBuilderModifier");
 
             $use[$classModelFormBuilderModifierNameSpace] = $classModelFormBuilderModifierNameSpace;
             $formBuilderContent .= '$this,' . PHP_EOL;
@@ -1761,11 +1771,11 @@ class ModuleGenerator
 
     private function modifyQueryBuilder($modelData)
     {
-        $classModel=$modelData['class'];
-        if(empty($this->module_data['use'])){
-            $this->module_data['use']=[];
-            if(empty($this->module_data['use'][strtolower($classModel)])){
-                $this->module_data['use'][strtolower($classModel)]=[];
+        $classModel = $modelData['class'];
+        if (empty($this->module_data['use'])) {
+            $this->module_data['use'] = [];
+            if (empty($this->module_data['use'][strtolower($classModel)])) {
+                $this->module_data['use'][strtolower($classModel)] = [];
             }
         }
 
@@ -1805,9 +1815,9 @@ class ModuleGenerator
             $i = 0;
 
             $addFieldsBody = '$this->formBuilder' . PHP_EOL;
-            $fields=$modelData['fields'];
+            $fields = $modelData['fields'];
             foreach ($fields as $index => $item) {
-                $column_name=$this->slugify($item['column_image_name']);
+                $column_name = $this->slugify($item['column_image_name']);
                 $addFieldsBody .= '->add(' . PHP_EOL;
                 $addFieldsBody .= "'" . $this->slugify($column_name) . "'," . PHP_EOL;
                 $namespace->addUse('Symfony\Component\Form\Extension\Core\Type\FileType');
@@ -1839,7 +1849,7 @@ class ModuleGenerator
             $use[$this->params['upper']['company_name'] . '\\' . 'Module' . '\\' . $this->params['upper']['module_name'] . '\\' . 'Grid' . '\\' . $classModel . 'FormBuilderModifier'] = $this->params['upper']['company_name'] . '\\' . 'Module' . '\\' . $this->params['upper']['module_name'] . '\\' . 'Grid' . '\\' . $classModel . 'FormBuilderModifier';
 
             $formBuilderContent = '$' . strtolower($classModel) . 'FormBuilderModifier= new ' . $classModel . 'FormBuilderModifier(' . PHP_EOL;
-            $classModelFormBuilderModifierNameSpace = str_replace('Egaddextrafields', $this->params['upper']['module_name'], $this->params['upper']['company_name'] . "\Module". '\\' . $this->params['upper']['module_name']. '\\' ."Grid" . '\\' . $classModel . "FormBuilderModifier");
+            $classModelFormBuilderModifierNameSpace = str_replace('Egaddextrafields', $this->params['upper']['module_name'], $this->params['upper']['company_name'] . "\Module" . '\\' . $this->params['upper']['module_name'] . '\\' . "Grid" . '\\' . $classModel . "FormBuilderModifier");
 
             $use[$classModelFormBuilderModifierNameSpace] = $classModelFormBuilderModifierNameSpace;
             $formBuilderContent .= '$this,' . PHP_EOL;
@@ -1856,7 +1866,367 @@ class ModuleGenerator
             $this->module_data['hooksContents']['actionAfterCreate' . $classModel . 'FormHandler'] = $formHandlerContent;
             $this->module_data['hooksContents']['actionAfterUpdate' . $classModel . 'FormHandler'] = $formHandlerContent;
             $this->module_data['use'][strtolower($classModel)] = array_merge($this->module_data['use'][strtolower($classModel)], $use);
-            
+
         }
+    }
+
+    private function addImageTypes($modelData)
+    {
+
+        $imageTypes = '';
+        $data = "[";
+
+        foreach ($modelData['fields'] as $item) {
+            $data .= PHP_EOL . "
+                [
+                'name'=>'" . $item['column_image_name'] . "',
+                'width'=>" . $item['column_image_width'] . ",
+                'height'=>" . $item['column_image_height'] . ",
+                'products'=>" . ($modelData['class'] === 'Product' ? '1' : '0') . ",
+                'categories'=>" . ($modelData['class'] === 'Category' ? '1' : '0') . ",
+                'manufacturers'=>" . ($modelData['class'] === 'Manufacturer' ? '1' : '0') . ",
+                'suppliers'=>" . ($modelData['class'] === 'Supplier' ? '1' : '0') . ",
+                'stores'=>" . ($modelData['class'] === 'Store' ? '1' : '0') . ",
+                ],
+            ";
+
+        }
+        $data .= "]";
+        $imageTypes = PHP_EOL . "\Db::getInstance()->insert(
+                                               'image_type',
+                                               " . $data . "
+                                               );";
+        $imageTypes = $imageTypes . PHP_EOL . 'return true;';
+        file_put_contents($this->module_dir . DIRECTORY_SEPARATOR . 'sql/install.php', $imageTypes, FILE_APPEND);
+        return true;
+    }
+
+    private function removeImageTypes($modelData)
+    {
+
+        $dropQuery = '';
+        $data = "[";
+
+        foreach ($modelData['fields'] as $item) {
+            $dropQuery .= PHP_EOL . "\Db::getInstance()->execute('DELETE FROM '._DB_PREFIX_.'image_type WHERE name=\'" . $item['column_image_name'] . "\'');";
+
+        }
+
+        $dropQuery = $dropQuery . PHP_EOL . 'return true;';
+        file_put_contents($this->module_dir . DIRECTORY_SEPARATOR . 'sql/uninstall.php', $dropQuery, FILE_APPEND);
+        return true;
+    }
+
+    private function addUploader($modelData)
+    {
+        foreach ($modelData['fields'] as $item) {
+            $adapterName = str_replace('_', '', ucwords($item['column_image_name'], '_'));
+
+            $content = file_get_contents($this->base_dir . '/samples/src/Adapter/Image/Uploader/CategoryBannerLeftImageUploader.php');
+            $content = $this->replaceStandardStrings($content);
+            $content = str_replace('BannerLeftImage', $adapterName, $content);
+            $content = str_replace('img_banner_left', $item['column_image_name'], $content);
+            $adapterDir = $this->module_dir . DIRECTORY_SEPARATOR . 'src' . DIRECTORY_SEPARATOR . 'Adapter' . DIRECTORY_SEPARATOR . 'Image' . DIRECTORY_SEPARATOR . 'Uploader';
+            if (!is_dir($adapterDir) && !@mkdir($adapterDir, 0777, true) && !is_dir($adapterDir)) {
+                throw new \RuntimeException(sprintf('Cannot create directory "%s"', $adapterDir));
+            }
+            file_put_contents($adapterDir . DIRECTORY_SEPARATOR . 'Category' . $adapterName . 'Uploader.php', $content);
+        }
+        return true;
+    }
+
+    private function addController($modelData)
+    {
+        $content = file_get_contents($this->base_dir . '/samples/src/Controller/CategoryController.php');
+        $content = $this->replaceStandardStrings($content);
+        $images = '';
+        $deleteMethods = "";
+
+        foreach ($modelData['fields'] as $item) {
+            $adapterName = str_replace('_', '', ucwords($item['column_image_name'], '_'));
+            $images .= "'category$adapterName' => /*imageProvider->getCategory".$adapterName."(/*categoryId)," . PHP_EOL;
+            $deleteMethod = '    public function deleteBannerImageLeftAction(Request $request, $categoryId)
+    {
+        if (!$this->isCsrfTokenValid(\'delete-banner-left-image\', $request->request->get(\'_csrf_token\'))) {
+            return $this->redirectToRoute(\'admin_security_compromised\', [
+                \'uri\' => $this->generateUrl(\'admin_categories_edit\', [
+                    \'categoryId\' => $categoryId,
+                ], UrlGeneratorInterface::ABSOLUTE_URL),
+            ]);
+        }
+        $thumbnailPath = $this->configuration->get(\'_PS_CAT_IMG_DIR_\') . $categoryId . \'-category_img_banner_left.jpg\';
+        $this->filesystem= new \Symfony\Component\Filesystem\Filesystem();
+        try {
+            if ($this->filesystem->exists($thumbnailPath)) {
+                $this->filesystem->remove($thumbnailPath);
+            }
+            $this->addFlash(
+                \'success\',
+                $this->trans(\'The image was successfully deleted.\', \'Admin.Notifications.Success\')
+            );
+        } catch (IOException $e) {
+            $this->addFlash(\'error\', $this->getErrorMessageForException($e, $this->getErrorMessages()));
+        }
+
+        return $this->redirectToRoute(\'admin_categories_edit\', [
+            \'categoryId\' => $categoryId,
+        ]);
+    }' . PHP_EOL;
+            $deleteMethod = str_replace('BannerLeftImage', $adapterName, $deleteMethod);
+            $deleteMethod = str_replace('BannerImageLeft', $adapterName, $deleteMethod);
+            $deleteMethod = str_replace('img_banner_left', $item['column_image_name'], $deleteMethod);
+            $deleteMethod = str_replace('banner-left-image', $item['column_image_name'], $deleteMethod);
+            $deleteMethods .= $deleteMethod;
+        }
+
+        $images = str_replace('/*', '$', $images);
+        $content = str_replace('/*add your custom images*/', $images, $content);
+        $content = str_replace('/*add your delete methods*/', $deleteMethods, $content);
+
+        $controllerDir = $this->module_dir . DIRECTORY_SEPARATOR . 'src' . DIRECTORY_SEPARATOR . 'Controller';
+        if (!is_dir($controllerDir) && !@mkdir($controllerDir, 0777, true) && !is_dir($controllerDir)) {
+            throw new \RuntimeException(sprintf('Cannot create directory "%s"', $controllerDir));
+        }
+        file_put_contents($controllerDir . DIRECTORY_SEPARATOR . 'CategoryController.php', $content);
+        return true;
+    }
+
+    private function addRoutes($modelData)
+    {
+        $content = file_get_contents($this->base_dir . '/samples/categoryImages/routes/routes.yml');
+        $content = $this->replaceStandardStrings($content);
+        $routes = "";
+        foreach ($modelData['fields'] as $item) {
+            $adapterName = str_replace('_', '', ucwords($item['column_image_name'], '_'));
+            $deleteRoute = file_get_contents($this->base_dir . '/samples/categoryImages/routes/deleteRoutes.yml');
+            $deleteRoute = $this->replaceStandardStrings($deleteRoute);
+            $deleteRoute = str_replace('BannerLeftImage', $adapterName, $deleteRoute);
+            $deleteRoute = str_replace('BannerImageLeft', $adapterName, $deleteRoute);
+            $deleteRoute = str_replace('img_banner_left', $item['column_image_name'], $deleteRoute);
+            $deleteRoute = str_replace('banner-left-image', $item['column_image_name'], $deleteRoute);
+            $routes .= PHP_EOL . $deleteRoute;
+        }
+        $content = str_replace('#images routes', $routes, $content);
+        $configDir = $this->module_dir . DIRECTORY_SEPARATOR . 'config';
+        if (!is_dir($configDir) && !@mkdir($configDir, 0777, true) && !is_dir($configDir)) {
+            throw new \RuntimeException(sprintf('Cannot create directory "%s"', $configDir));
+        }
+
+        file_put_contents($configDir . DIRECTORY_SEPARATOR . 'routes.yml', $content);
+        return true;
+    }
+
+    private function addHandler($modelData)
+    {
+        $content = file_get_contents($this->base_dir . '/samples/categoryImages/Handler/CategoryFormDataHandler.php');
+        $content = $this->replaceStandardStrings($content);
+
+        $definitions = '';
+        $constructArguments='';
+        $constructAssignments='';
+        $arguments='';
+        $constraints='';
+        $uploadedFileArguments='';
+        foreach ($modelData['fields'] as $index=>$item) {
+            $definition = '    
+    /**
+     * @var ImageUploaderInterface
+     */
+    private $categoryLeftBannerImageUploader;';
+            $constructArgument='  ImageUploaderInterface $categoryLeftBannerImageUploader'.((int)$index===(count($modelData['fields'])) ? '' : ',');
+            $constructAssignment='   $this->categoryLeftBannerImageUploader = $categoryLeftBannerImageUploader;';
+            $argument="            /*data['".$item['column_image_name']."']".((int)$index===(count($modelData['fields'])) ? '' : ',');
+            $constraint='        if (null !== $category_img_banner_left) {
+            $this->categoryLeftBannerImageUploader->upload($categoryId->getValue(), $category_img_banner_left);
+        }';
+            $uploadedFileArgument='UploadedFile $category_img_banner_left = null'.((int)$index===(count($modelData['fields'])) ? '' : ',');
+            $adapterName = str_replace('_', '', ucwords($item['column_image_name'], '_'));
+            $constraint = str_replace('category_img_banner_left', $item['column_image_name'], $constraint);
+            $uploadedFileArgument = str_replace('category_img_banner_left', $item['column_image_name'], $uploadedFileArgument);
+            $constraint = str_replace('LeftBannerImage', $adapterName, $constraint);
+            $definition = str_replace('LeftBannerImage', $adapterName, $definition);
+            $constructArgument = str_replace('LeftBannerImage', $adapterName, $constructArgument);
+            $constructAssignment = str_replace('LeftBannerImage', $adapterName, $constructAssignment);
+            $constructArguments.=$constructArgument.PHP_EOL;
+            $constructAssignments.=$constructAssignment.PHP_EOL;
+            $constraints.=$constraint.PHP_EOL;
+            $uploadedFileArguments.=$uploadedFileArgument.PHP_EOL;
+            $argument=str_replace('/*', '$', $argument);
+            $arguments.=$argument.PHP_EOL;
+            $definitions .= PHP_EOL . $definition;
+        }
+        $content=str_replace('/*add your images uploader attributes*/', $definitions, $content);
+        $content=str_replace('/*add your images argument uploader*/', $constructArguments, $content);
+        $content=str_replace('/*add your images definition uploader*/', $constructAssignments, $content);
+        $content=str_replace('/*add your arguments uploader*/', $arguments, $content);
+        $content=str_replace('/*add your uploaders conditions*/', $constraints, $content);
+        $content=str_replace('/*uploaded file arguments*/', $uploadedFileArguments, $content);
+        $handlerDir = $this->module_dir . DIRECTORY_SEPARATOR . 'src'. DIRECTORY_SEPARATOR .'Handler';
+        if (!is_dir($handlerDir) && !@mkdir($handlerDir, 0777, true) && !is_dir($handlerDir)) {
+            throw new \RuntimeException(sprintf('Cannot create directory "%s"', $handlerDir));
+        }
+
+        file_put_contents($handlerDir . DIRECTORY_SEPARATOR . 'CategoryFormDataHandler.php', $content);
+        return true;
+    }
+
+    private function addProvider($modelData)
+    {
+        $content = file_get_contents($this->base_dir . '/samples/categoryImages/Provider/ImageProvider.php');
+        $content = $this->replaceStandardStrings($content);
+        $getters='';
+        foreach ($modelData['fields'] as $index=>$item) {
+           $getter="    /**
+     * @param /+categoryId
+     *
+     * @return array|null cover image data or null if category does not have cover
+     */
+    public function getCategoryBannerImageLeft(/+categoryId)
+    {
+        /+imageType = 'jpg';
+        /+image = _PS_CAT_IMG_DIR_ . /+categoryId . '-category_img_banner_left.' . /+imageType;
+
+        /+imageTag = ImageManager::thumbnail(
+            /+image,
+            'category' . '_' . /+categoryId . '-category_img_banner_left.' . /+imageType,
+            350,
+            /+imageType,
+            true,
+            true
+        );
+
+        /+imageSize = file_exists(/+image) ? filesize(/+image) / 1000 : '';
+
+        if (empty(/+imageTag) || empty(/+imageSize)) {
+            return null;
+        }
+
+        return [
+            'size' => sprintf('%skB', /+imageSize),
+            'path' => /+this->imageTagSourceParser->parse(/+imageTag),
+        ];
+    }";
+            $adapterName = str_replace('_', '', ucwords($item['column_image_name'], '_'));
+            $getter=str_replace('BannerImageLeft', $adapterName, $getter);
+            $getter=str_replace('/+', '$', $getter);
+            $getter=str_replace('img_banner_left', $item['column_image_name'], $getter);
+            $getters.=$getter.PHP_EOL;
+        }
+        $content=str_replace('/*add your getter methods*/', $getters, $content);
+        $providerDir = $this->module_dir . DIRECTORY_SEPARATOR . 'src'. DIRECTORY_SEPARATOR .'Provider';
+        if (!is_dir($providerDir) && !@mkdir($providerDir, 0777, true) && !is_dir($providerDir)) {
+            throw new \RuntimeException(sprintf('Cannot create directory "%s"', $providerDir));
+        }
+
+        file_put_contents($providerDir . DIRECTORY_SEPARATOR . 'ImageProvider.php', $content);
+        return true;
+    }
+
+    private function addTemplates($modelData)
+    {
+        $formDir = $this->module_dir . DIRECTORY_SEPARATOR . 'views'. DIRECTORY_SEPARATOR .'PrestaShop'. DIRECTORY_SEPARATOR .'Admin'. DIRECTORY_SEPARATOR .'Sell'. DIRECTORY_SEPARATOR .'Catalog'. DIRECTORY_SEPARATOR .'Categories'. DIRECTORY_SEPARATOR .'Blocks'. DIRECTORY_SEPARATOR .'Forms';
+        if (!is_dir($formDir) && !@mkdir($formDir, 0777, true) && !is_dir($formDir)) {
+            throw new \RuntimeException(sprintf('Cannot create directory "%s"', $formDir));
+        }
+        $form18 = file_get_contents($this->base_dir . '/samples/categoryImages/PrestaShop/Admin/Sell/Catalog/Categories/Blocks/Forms/form_1.8.html.twig');
+        $form17 = file_get_contents($this->base_dir . '/samples/categoryImages/PrestaShop/Admin/Sell/Catalog/Categories/Blocks/Forms/form_1.7.html.twig');
+
+        $imageBlocs='';
+        foreach ($modelData['fields'] as $index=>$item) {
+         $imageBloc='                {% if categoryForm.category_img_banner_left is defined %}
+                    <div class="form-group row">
+                        <label class="form-control-label">
+                            {{ \'Category left categories Image\'|trans({}, \'Admin.Catalog.Feature\') }}
+                        </label>
+                        <div class="col-sm">
+                            {% include \'@PrestaShop/Admin/Sell/Catalog/Categories/Blocks/category_img_banner_left.html.twig\' %}
+
+                            {{ form_widget(categoryForm.category_img_banner_left) }}
+                        </div>
+                    </div>
+                {% endif %}';
+            $imageBloc=str_replace('category_img_banner_left', $item['column_image_name'], $imageBloc);
+            $imageBloc=str_replace('left categories Image', $item['column_image_name'], $imageBloc);
+            $imageBlocs.=$imageBloc.PHP_EOL;
+            $imgForm = file_get_contents($this->base_dir . '/samples/categoryImages/PrestaShop/Admin/Sell/Catalog/Categories/Blocks/category_img_banner_left.html.twig');
+            $imgForm=str_replace('category_img_banner_left', $item['column_image_name'], $imgForm);
+            $adapterName = str_replace('_', '', ucwords($item['column_image_name'], '_'));
+            $imgForm=str_replace('BannerImageLeft', $adapterName, $imgForm);
+            file_put_contents($this->module_dir . DIRECTORY_SEPARATOR . 'views'. DIRECTORY_SEPARATOR .'PrestaShop'. DIRECTORY_SEPARATOR .'Admin'. DIRECTORY_SEPARATOR .'Sell'. DIRECTORY_SEPARATOR .'Catalog'. DIRECTORY_SEPARATOR .'Categories'. DIRECTORY_SEPARATOR .'Blocks' . DIRECTORY_SEPARATOR . 'category_'.$item['column_image_name'].'.html.twig', $imgForm);
+
+        }
+        $form18=str_replace('<!-- add images blocs -->', $imageBlocs, $form18);
+        $form17=str_replace('<!-- add images blocs -->', $imageBlocs, $form17);
+        file_put_contents($this->module_dir . DIRECTORY_SEPARATOR . 'views'. DIRECTORY_SEPARATOR .'PrestaShop'. DIRECTORY_SEPARATOR .'Admin'. DIRECTORY_SEPARATOR .'Sell'. DIRECTORY_SEPARATOR .'Catalog'. DIRECTORY_SEPARATOR .'Categories'. DIRECTORY_SEPARATOR .'Blocks' . DIRECTORY_SEPARATOR .'Forms'. DIRECTORY_SEPARATOR . 'form_1.8.html.twig', $form18);
+        file_put_contents($this->module_dir . DIRECTORY_SEPARATOR . 'views'. DIRECTORY_SEPARATOR .'PrestaShop'. DIRECTORY_SEPARATOR .'Admin'. DIRECTORY_SEPARATOR .'Sell'. DIRECTORY_SEPARATOR .'Catalog'. DIRECTORY_SEPARATOR .'Categories'. DIRECTORY_SEPARATOR .'Blocks' . DIRECTORY_SEPARATOR .'Forms'. DIRECTORY_SEPARATOR . 'form_1.7.html.twig', $form17);
+
+    }
+
+    private function addServices($modelData)
+    {
+        $ymlLog = file_get_contents($this->base_dir . '/samples/log_sys.yml');
+        $ymlLog = $this->replaceStandardStrings($ymlLog);
+        $ymlLog = $this->replaceStandardStrings($ymlLog);
+        $this->addService($ymlLog);
+        $ymlService=file_get_contents($this->base_dir . '/samples/category_image.yml');
+        $uploader='';
+        $arguments='';
+
+        foreach ($modelData['fields'] as $index=>$item){
+            $adapterName = str_replace('_', '', ucwords($item['column_image_name'], '_'));
+            $uploader.=PHP_EOL.
+                "  module_class.adapter.image.uploader.category_".$item['column_image_name']."_uploader:
+    class: 'EvoGroup\Module\Moduleclass\Adapter\Image\Uploader\Category".$adapterName."Uploader'
+                ";
+        }
+        if($index===1){
+            $arguments.="      - '@module_class.adapter.image.uploader.category_".$item['column_image_name']."_uploader'";
+        }else{
+            $arguments.=PHP_EOL."      - '@module_class.adapter.image.uploader.category_".$item['column_image_name']."_uploader'";
+        }
+
+        $uploader = $this->replaceStandardStrings($uploader);
+        $ymlService=str_replace('$uploaders', $uploader, $ymlService);
+        $ymlService=str_replace('@service', $arguments, $ymlService);
+        $ymlService = $this->replaceStandardStrings($ymlService);
+        $ymlService=PHP_EOL.$ymlService;
+        $this->addService($ymlService);
+        return true;
+    }
+
+    public function copyForm()
+    {
+        $content = file_get_contents($this->base_dir . '/downloads/'.$this->params['lower']['module_name'].'/'.$this->params['lower']['module_name'].'.php');
+
+        $versionCompare="        if (version_compare(phpversion(), '7.2', '<')) {
+            /+this->_errors[] = sprintf(/+this->l('This module requires at least PHP version 7.2. Your current version is: %s'), phpversion());
+
+            return false;
+        }
+        if (version_compare(_PS_VERSION_, '8.0.0', '>=')) {
+            // PrestaShop 1.8.0.0+
+            /+file=_PS_MODULE_DIR_./+this->name.'/views/PrestaShop/Admin/Sell/Catalog/Categories/Blocks/Forms/form_1.8.html.twig';
+            /+newfile=_PS_MODULE_DIR_./+this->name.'/views/PrestaShop/Admin/Sell/Catalog/Categories/Blocks/form.html.twig';
+            if (!Tools::copy(/+file, /+newfile)) {
+                /+this->_errors[]=/+this->l('Cannot copy category forms');
+                return false;
+            }
+        } else {
+            // PrestaShop < 1.8.0
+            /+file=_PS_MODULE_DIR_./+this->name.'/views/PrestaShop/Admin/Sell/Catalog/Categories/Blocks/Forms/form_1.7.html.twig';
+            /+newfile=_PS_MODULE_DIR_./+this->name.'/views/PrestaShop/Admin/Sell/Catalog/Categories/Blocks/form.html.twig';
+            if (!Tools::copy(/+file, /+newfile)) {
+                /+this->_errors[]=/+this->l('Cannot copy category forms');
+                return false;
+            }
+        }";
+        $content=str_replace("include dirname(__FILE__) . '/sql/install.php';",
+            "include dirname(__FILE__) . '/sql/install.php';".PHP_EOL.$versionCompare,
+            $content
+        );
+
+        $content=str_replace('/+', '$', $content);
+        file_put_contents($this->base_dir . '/downloads/'.$this->params['lower']['module_name'].'/'.$this->params['lower']['module_name'].'.php', $content);
+        return true;
     }
 }

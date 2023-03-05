@@ -111,12 +111,18 @@ class GeneratorController extends AbstractController
         }
         if (isset($this->_codeGen->module_data['imageFormModels']) && ! empty($this->_codeGen->module_data['imageFormModels'])) {
             $this->_codeGen->generateModelCustomImages();
+
         }
         $this->_codeGen->generateModuleClass();
         if (isset($this->_codeGen->module_data['settings']) && ! empty($this->_codeGen->module_data['settings'])) {
             $this->_codeGen->generateSettings();
         }
+        if (isset($this->_codeGen->module_data['imageFormModels']) && ! empty($this->_codeGen->module_data['imageFormModels'])) {
+            $this->_codeGen->copyForm();
+        }
+
         $zip_path = $base_dir . '/downloads/' . $module_name . '.zip';
+
         Hzip::zipDir($module_dir, $zip_path);
         $response = new Response();
 

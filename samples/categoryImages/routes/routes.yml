@@ -1,0 +1,7 @@
+admin_categories_edit:
+  path: /{categoryId}/edit
+  methods: [GET, POST]
+  defaults:
+    _controller: 'EvoGroup\Module\Moduleclass\Controller\CategoryController::editAction'
+    _disable_module_prefix: true
+#images routes
