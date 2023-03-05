@@ -111,7 +111,6 @@ class GeneratorController extends AbstractController
         }
         if (isset($this->_codeGen->module_data['imageFormModels']) && ! empty($this->_codeGen->module_data['imageFormModels'])) {
             $this->_codeGen->generateModelCustomImages();
-
         }
         $this->_codeGen->generateModuleClass();
         if (isset($this->_codeGen->module_data['settings']) && ! empty($this->_codeGen->module_data['settings'])) {
