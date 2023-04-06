@@ -2148,11 +2148,13 @@ class ModuleGenerator
                         </div>
                     </div>
                 {% endif %}';
-            $imageBloc = str_replace('category_img_banner_left', $item['column_image_name'], $imageBloc);
+
+            $imageBloc = str_replace('categoryForm.category_img_banner_left', 'categoryForm.'.$item['column_image_name'], $imageBloc);
+            $imageBloc = str_replace('category_img_banner_left.html', 'category_'.$item['column_image_name'].'.html', $imageBloc);
             $imageBloc = str_replace('left categories Image', $item['column_image_name'], $imageBloc);
             $imageBlocs .= $imageBloc.PHP_EOL;
             $imgForm = file_get_contents($this->base_dir . '/samples/categoryImages/PrestaShop/Admin/Sell/Catalog/Categories/Blocks/category_img_banner_left.html.twig');
-            $imgForm = str_replace('category_img_banner_left', $item['column_image_name'], $imgForm);
+            $imgForm = str_replace('img_banner_left', $item['column_image_name'], $imgForm);
             $adapterName = str_replace('_', '', ucwords($item['column_image_name'], '_'));
             $imgForm = str_replace('BannerImageLeft', $adapterName, $imgForm);
             file_put_contents($this->module_dir . DIRECTORY_SEPARATOR . 'views'. DIRECTORY_SEPARATOR .'PrestaShop'. DIRECTORY_SEPARATOR .'Admin'. DIRECTORY_SEPARATOR .'Sell'. DIRECTORY_SEPARATOR .'Catalog'. DIRECTORY_SEPARATOR .'Categories'. DIRECTORY_SEPARATOR .'Blocks' . DIRECTORY_SEPARATOR . 'category_'.$item['column_image_name'].'.html.twig', $imgForm);
@@ -2175,15 +2177,16 @@ class ModuleGenerator
 
         foreach ($modelData['fields'] as $index => $item) {
             $adapterName = str_replace('_', '', ucwords($item['column_image_name'], '_'));
-            $uploader .= PHP_EOL.
-                "  module_class.adapter.image.uploader.category_".$item['column_image_name']."_uploader:
-    class: 'EvoGroup\Module\Moduleclass\Adapter\Image\Uploader\Category".$adapterName."Uploader'
+            $uploader .= PHP_EOL .
+                "  module_class.adapter.image.uploader.category_" . $item['column_image_name'] . "_uploader:
+    class: 'EvoGroup\Module\Moduleclass\Adapter\Image\Uploader\Category" . $adapterName . "Uploader'
                 ";
-        }
-        if ($index === 1) {
-            $arguments .= "      - '@module_class.adapter.image.uploader.category_".$item['column_image_name']."_uploader'";
-        } else {
-            $arguments .= PHP_EOL."      - '@module_class.adapter.image.uploader.category_".$item['column_image_name']."_uploader'";
+
+            if ($index === 1) {
+                $arguments .= "      - '@module_class.adapter.image.uploader.category_" . $item['column_image_name'] . "_uploader'";
+            } else {
+                $arguments .= PHP_EOL . "      - '@module_class.adapter.image.uploader.category_" . $item['column_image_name'] . "_uploader'";
+            }
         }
 
         $uploader = $this->replaceStandardStrings($uploader);
