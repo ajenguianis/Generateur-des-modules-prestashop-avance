@@ -743,7 +743,7 @@ class ModuleGenerator
                     $fieldsDef[$index]['validate'] = 'isCleanHtml';
                 }
                 if ($fieldData['field_type'] === 'VARCHAR') {
-//                    $fieldsDef[$index]['validate'] = 'isGenericName';
+                    //                    $fieldsDef[$index]['validate'] = 'isGenericName';
                 }
                 if (! empty($fieldData['field_length']) && $fieldData['field_length'] !== '') {
                     $fieldsDef[$index]['size'] = (int)$fieldData['field_length'];
