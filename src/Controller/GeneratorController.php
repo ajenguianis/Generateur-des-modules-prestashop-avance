@@ -67,7 +67,7 @@ class GeneratorController extends AbstractController
 
         $module_dir = $this->dir . '/' . $module_name;
         $filesystem = new Filesystem();
-        if(is_dir($module_dir)){
+        if(is_dir($module_dir)) {
             $filesystem->remove($module_dir);
         }
         if (file_exists($module_dir)) {
